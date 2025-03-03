@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import { auth, db } from '../../firebase'; // Убедись, что путь правильный
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function SignUp() {
   const navigate = useNavigate();
