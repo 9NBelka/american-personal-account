@@ -30,13 +30,15 @@ export default function Login() {
         // Перенаправляем в зависимости от роли
         console.log(userData.role);
         if (userData.role === 'admin') {
-          navigate('/dashboard');
+          window.location.href = 'https://lms-theta-nine.vercel.app/dashboard'; // Перенаправляем на внешнюю страницу логина
         } else {
-          navigate('/personal-account');
+          alert('Недостаточно прав. Вы не являетесь администратором.');
+          window.location.href = 'https://lms-theta-nine.vercel.app/personal-account'; // Перенаправляем на внешнюю страницу логина
         }
       } else {
         // Если данных в Firestore нет (например, пользователь зарегистрировался, но данные не сохранились)
-        navigate('/personal-account'); // По умолчанию перенаправляем на /account
+        console.error('Ошибка при загрузке данных пользователя');
+        window.location.href = 'https://lms-theta-nine.vercel.app/personal-account'; // Перенаправляем на внешнюю страницу логина
       }
     } catch (error) {
       if (
