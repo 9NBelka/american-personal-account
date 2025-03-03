@@ -77,6 +77,9 @@ export default function SignUp() {
               <ErrorMessage name='password' component='div' style={{ color: 'red' }} />
             </div>
             {errors.general && <div style={{ color: 'red' }}>{errors.general}</div>}
+            <p>
+              Есть аккаунт? <Link to='/login'>Войти</Link>
+            </p>
             <button type='submit' disabled={isSubmitting}>
               Зарегистрироваться
             </button>
