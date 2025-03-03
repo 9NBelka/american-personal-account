@@ -23,16 +23,15 @@ export default function Login() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Получаем данные пользователя из Firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         console.log('Роль пользователя:', userData.role);
 
         if (userData.role === 'admin') {
-          // Получаем токен и перенаправляем на дашборд с токеном
           try {
-            const token = await getAuthToken();
+            const token = await user.getIdToken(true); // Убедимся, что получаем ID Token
+            console.log('Получен токен для админа:', token);
             if (token) {
               window.location.href = `https://american-dashboard.vercel.app/dashboard?token=${encodeURIComponent(
                 token,
@@ -41,13 +40,13 @@ export default function Login() {
               throw new Error('Не удалось получить токен авторизации');
             }
           } catch (tokenError) {
-            console.error('Ошибка при получении токена:', tokenError);
+            console.error('Ошибка при получении токена для админа:', tokenError);
             setFieldError('general', 'Ошибка при перенаправлении: ' + tokenError.message);
           }
         } else if (userData.role === 'student' || userData.role === 'guest') {
-          // Перенаправляем студентов и гостей на личный кабинет (можно также передать токен, если нужно)
           try {
-            const token = await getAuthToken();
+            const token = await user.getIdToken(true);
+            console.log('Получен токен для студента/гостя:', token);
             if (token) {
               window.location.href = `https://lms-theta-nine.vercel.app/personal-account?token=${encodeURIComponent(
                 token,
