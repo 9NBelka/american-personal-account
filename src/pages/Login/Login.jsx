@@ -30,9 +30,10 @@ export default function Login() {
         // Перенаправляем в зависимости от роли
         console.log(userData.role);
         if (userData.role === 'admin') {
+          console.log('admin');
           window.location.href = 'https://lms-theta-nine.vercel.app/dashboard'; // Перенаправляем на внешнюю страницу логина
         } else {
-          alert('Недостаточно прав. Вы не являетесь администратором.');
+          console.log('student or guest');
           window.location.href = 'https://lms-theta-nine.vercel.app/personal-account'; // Перенаправляем на внешнюю страницу логина
         }
       } else {
