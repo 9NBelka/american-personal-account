@@ -1,10 +1,9 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { auth, db } from '../../firebase'; // Добавляем db для Firestore
+import { auth, db, getAuthToken } from '../../firebase'; // Добавляем db для Firestore
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore'; // Импортируем для работы с Firestore
 import { Link, useNavigate } from 'react-router-dom';
-import { getAuthToken } from './firebase';
 
 export default function Login() {
   const navigate = useNavigate();
