@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import { auth, db } from '../../firebase'; // Добавляем db для Firestore
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore'; // Импортируем для работы с Firestore
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -70,6 +70,9 @@ export default function Login() {
               <ErrorMessage name='password' component='div' style={{ color: 'red' }} />
             </div>
             {errors.general && <div style={{ color: 'red' }}>{errors.general}</div>}
+            <p>
+              Нет аккаунта? <Link to='/signUp'>Зарегистрироваться</Link>
+            </p>
             <button type='submit' disabled={isSubmitting}>
               Войти
             </button>
