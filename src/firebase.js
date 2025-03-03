@@ -1,7 +1,7 @@
 // firebase.js
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, getIdToken } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyDDNQg46t_eyi5vaaGf97kQPHI0qz2D8j4',
@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Настраиваем персистентность сессии (локальное хранилище)
+// Настраиваем персистентность сессии
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
     console.log('Персистентность сессии настроена на локальное хранилище');
@@ -25,5 +25,15 @@ setPersistence(auth, browserLocalPersistence)
   .catch((error) => {
     console.error('Ошибка настройки персистентности:', error);
   });
+
+// Экспортируем функцию для получения ID токена (для передачи между доменами)
+export const getAuthToken = async () => {
+  const user = auth.currentUser;
+  if (user) {
+    const token = await getIdToken(user, true); // true для принудительного обновления токена
+    return token;
+  }
+  return null;
+};
 
 export { auth, db };

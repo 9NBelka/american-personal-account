@@ -4,6 +4,7 @@ import { auth, db } from '../../firebase'; // Добавляем db для Fires
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore'; // Импортируем для работы с Firestore
 import { Link, useNavigate } from 'react-router-dom';
+import { getAuthToken } from './firebase';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,19 +28,45 @@ export default function Login() {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        // Перенаправляем в зависимости от роли
-        console.log(userData.role);
+        console.log('Роль пользователя:', userData.role);
+
         if (userData.role === 'admin') {
-          console.log('admin');
-          window.location.href = 'https://american-dashboard.vercel.app/dashboard'; // Перенаправляем на внешнюю страницу логина
+          // Получаем токен и перенаправляем на дашборд с токеном
+          try {
+            const token = await getAuthToken();
+            if (token) {
+              window.location.href = `https://american-dashboard.vercel.app/dashboard?token=${encodeURIComponent(
+                token,
+              )}`;
+            } else {
+              throw new Error('Не удалось получить токен авторизации');
+            }
+          } catch (tokenError) {
+            console.error('Ошибка при получении токена:', tokenError);
+            setFieldError('general', 'Ошибка при перенаправлении: ' + tokenError.message);
+          }
+        } else if (userData.role === 'student' || userData.role === 'guest') {
+          // Перенаправляем студентов и гостей на личный кабинет (можно также передать токен, если нужно)
+          try {
+            const token = await getAuthToken();
+            if (token) {
+              window.location.href = `https://lms-theta-nine.vercel.app/personal-account?token=${encodeURIComponent(
+                token,
+              )}`;
+            } else {
+              window.location.href = 'https://lms-theta-nine.vercel.app/personal-account';
+            }
+          } catch (tokenError) {
+            console.error('Ошибка при перенаправлении студента/гостя:', tokenError);
+            setFieldError('general', 'Ошибка при перенаправлении: ' + tokenError.message);
+          }
         } else {
-          console.log('student or guest');
-          window.location.href = 'https://lms-theta-nine.vercel.app/personal-account'; // Перенаправляем на внешнюю страницу логина
+          setFieldError('general', 'Неизвестная роль пользователя');
         }
       } else {
-        // Если данных в Firestore нет (например, пользователь зарегистрировался, но данные не сохранились)
         console.error('Ошибка при загрузке данных пользователя');
-        window.location.href = 'https://lms-theta-nine.vercel.app/personal-account'; // Перенаправляем на внешнюю страницу логина
+        setFieldError('general', 'Данные пользователя не найдены в базе данных');
+        window.location.href = 'https://lms-theta-nine.vercel.app/login';
       }
     } catch (error) {
       if (
