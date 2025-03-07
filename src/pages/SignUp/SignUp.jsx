@@ -1,12 +1,37 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { auth, db } from '../../firebase'; // Убедись, что путь правильный
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
+import { createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false); // Состояние для видимости пароля
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.role === 'admin') {
+            navigate('/dashboard');
+          } else {
+            navigate('/personal-account');
+          }
+        } else {
+          navigate('/personal-account');
+        }
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   const initialValues = {
     name: '',
@@ -29,18 +54,15 @@ export default function SignUp() {
         values.email,
         values.password,
       );
-      // Получаем текущую дату и время
-      const registrationDate = new Date().toISOString(); // Формат ISO для Firestore
+      const registrationDate = new Date().toISOString();
 
-      // Сохраняем данные в Firestore с добавлением role и registrationDate
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         name: values.name,
         email: values.email,
-        role: 'guest', // Роль "guest" по умолчанию
-        registrationDate: registrationDate, // Дата регистрации
+        role: 'guest',
+        registrationDate: registrationDate,
       });
 
-      // Опционально: обновление displayName в auth
       await updateProfile(userCredential.user, {
         displayName: values.name,
       });
@@ -54,6 +76,10 @@ export default function SignUp() {
     }
     setSubmitting(false);
   };
+
+  if (isLoading) {
+    return <div>Загрузка...</div>;
+  }
 
   return (
     <div>
@@ -72,8 +98,28 @@ export default function SignUp() {
               <Field type='email' name='email' placeholder='Email' />
               <ErrorMessage name='email' component='div' style={{ color: 'red' }} />
             </div>
-            <div>
-              <Field type='password' name='password' placeholder='Пароль' />
+            <div style={{ position: 'relative' }}>
+              <Field
+                type={showPassword ? 'text' : 'password'}
+                name='password'
+                placeholder='Пароль'
+                style={{ paddingRight: '30px' }} // Отступ для иконки
+              />
+              <button
+                type='button'
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                }}>
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
               <ErrorMessage name='password' component='div' style={{ color: 'red' }} />
             </div>
             {errors.general && <div style={{ color: 'red' }}>{errors.general}</div>}

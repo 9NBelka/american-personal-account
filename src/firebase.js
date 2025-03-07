@@ -1,19 +1,19 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; // Импортируем getAuth для аутентификации
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyDDNQg46t_eyi5vaaGf97kQPHI0qz2D8j4',
-  authDomain: 'k-syndicate.firebaseapp.com',
-  projectId: 'k-syndicate',
-  storageBucket: 'k-syndicate.firebasestorage.app',
-  messagingSenderId: '348161030150',
-  appId: '1:348161030150:web:2d544e1a390004883bab87',
-  measurementId: 'G-B1HF4BS8KP',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app); // Инициализируем объект аутентификации
+const auth = getAuth(app);
 
-export { db, auth }; // Экспортируем и db, и auth
+export { db, auth };

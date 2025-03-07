@@ -1,12 +1,37 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { auth, db } from '../../firebase'; // Добавляем db для Firestore
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore'; // Импортируем для работы с Firestore
+import { auth, db } from '../../firebase';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false); // Состояние для видимости пароля
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.role === 'admin') {
+            navigate('/dashboard');
+          } else {
+            navigate('/personal-account');
+          }
+        } else {
+          navigate('/personal-account');
+        }
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   const initialValues = {
     email: '',
@@ -23,23 +48,16 @@ export default function Login() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Получаем данные пользователя из Firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        // Перенаправляем в зависимости от роли
-        console.log(userData.role);
         if (userData.role === 'admin') {
-          console.log('admin');
-          window.location.href = 'https://american-dashboard.vercel.app/dashboard'; // Перенаправляем на внешнюю страницу логина
+          navigate('/dashboard');
         } else {
-          console.log('student or guest');
-          window.location.href = 'https://lms-theta-nine.vercel.app/personal-account'; // Перенаправляем на внешнюю страницу логина
+          navigate('/personal-account');
         }
       } else {
-        // Если данных в Firestore нет (например, пользователь зарегистрировался, но данные не сохранились)
-        console.error('Ошибка при загрузке данных пользователя');
-        window.location.href = 'https://lms-theta-nine.vercel.app/personal-account'; // Перенаправляем на внешнюю страницу логина
+        navigate('/personal-account');
       }
     } catch (error) {
       if (
@@ -55,6 +73,10 @@ export default function Login() {
     setSubmitting(false);
   };
 
+  if (isLoading) {
+    return <div>Загрузка...</div>;
+  }
+
   return (
     <div>
       <h2>Вход</h2>
@@ -65,11 +87,31 @@ export default function Login() {
         {({ isSubmitting, errors }) => (
           <Form>
             <div>
-              <Field type='email' name='email' placeholder='Email' />
+              <Field type='email' name='email' placeholder='Email' autoFocus />
               <ErrorMessage name='email' component='div' style={{ color: 'red' }} />
             </div>
-            <div>
-              <Field type='password' name='password' placeholder='Пароль' />
+            <div style={{ position: 'relative' }}>
+              <Field
+                type={showPassword ? 'text' : 'password'}
+                name='password'
+                placeholder='Пароль'
+                style={{ paddingRight: '30px' }} // Отступ для иконки
+              />
+              <button
+                type='button'
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                }}>
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
               <ErrorMessage name='password' component='div' style={{ color: 'red' }} />
             </div>
             {errors.general && <div style={{ color: 'red' }}>{errors.general}</div>}
