@@ -1,37 +1,27 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { auth, db } from '../../firebase';
-import { createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [showPassword, setShowPassword] = useState(false); // Состояние для видимости пароля
+  const { userRole, isLoading } = useAuth(); // Используем контекст
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.role === 'admin') {
-            navigate('/dashboard');
-          } else {
-            navigate('/personal-account');
-          }
-        } else {
-          navigate('/personal-account');
-        }
+    if (userRole) {
+      if (userRole === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/personal-account');
       }
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
+    }
+  }, [userRole, navigate]);
 
   const initialValues = {
     name: '',
@@ -103,7 +93,7 @@ export default function SignUp() {
                 type={showPassword ? 'text' : 'password'}
                 name='password'
                 placeholder='Пароль'
-                style={{ paddingRight: '30px' }} // Отступ для иконки
+                style={{ paddingRight: '30px' }}
               />
               <button
                 type='button'

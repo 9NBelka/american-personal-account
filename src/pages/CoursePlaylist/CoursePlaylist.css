@@ -57,3 +57,23 @@
 .lesson:hover {
   background-color: #e0e0e0;
 }
+
+.progress-bar {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.progress {
+  width: 100%;
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease-in-out;
+  border-radius: 10px;
+}

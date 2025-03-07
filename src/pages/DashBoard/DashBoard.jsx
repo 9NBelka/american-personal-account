@@ -1,29 +1,20 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from '../../firebase.js';
-import { collection, addDoc, query, where, getDocs, doc, getDoc } from 'firebase/firestore'; // Все импорты из firestore
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export default function DashBoard() {
   const navigate = useNavigate();
+  const { userRole, isLoading } = useAuth(); // Используем контекст
   const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (!userDoc.exists() || userDoc.data().role !== 'admin') {
-          navigate('/personal-account');
-        }
-      } else {
-        navigate('/login');
-      }
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
+    if (!isLoading && (!userRole || userRole !== 'admin')) {
+      navigate('/personal-account');
+    }
+  }, [userRole, isLoading, navigate]);
 
   if (isLoading) {
     return <div>Загрузка...</div>;

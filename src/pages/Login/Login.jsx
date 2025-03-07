@@ -1,37 +1,27 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { auth, db } from '../../firebase';
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [showPassword, setShowPassword] = useState(false); // Состояние для видимости пароля
+  const { userRole, isLoading } = useAuth(); // Используем контекст
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.role === 'admin') {
-            navigate('/dashboard');
-          } else {
-            navigate('/personal-account');
-          }
-        } else {
-          navigate('/personal-account');
-        }
+    if (userRole) {
+      if (userRole === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/personal-account');
       }
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
+    }
+  }, [userRole, navigate]);
 
   const initialValues = {
     email: '',
@@ -51,11 +41,8 @@ export default function Login() {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        if (userData.role === 'admin') {
-          navigate('/dashboard');
-        } else {
-          navigate('/personal-account');
-        }
+        // Роль уже обновится через AuthContext
+        navigate(userData.role === 'admin' ? '/dashboard' : '/personal-account');
       } else {
         navigate('/personal-account');
       }
@@ -87,7 +74,7 @@ export default function Login() {
         {({ isSubmitting, errors }) => (
           <Form>
             <div>
-              <Field type='email' name='email' placeholder='Email' autoFocus />
+              <Field type='email' name='email' placeholder='Email' />
               <ErrorMessage name='email' component='div' style={{ color: 'red' }} />
             </div>
             <div style={{ position: 'relative' }}>
@@ -95,7 +82,7 @@ export default function Login() {
                 type={showPassword ? 'text' : 'password'}
                 name='password'
                 placeholder='Пароль'
-                style={{ paddingRight: '30px' }} // Отступ для иконки
+                style={{ paddingRight: '30px' }}
               />
               <button
                 type='button'
