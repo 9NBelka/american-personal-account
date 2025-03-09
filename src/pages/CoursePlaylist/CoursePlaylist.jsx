@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../../firebase.js';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { useParams } from 'react-router-dom';
 import './CoursePlaylist.css';
 import { useAuth } from '../../context/AuthContext';
+import PlayListLoadingIndicator from '../../components/PlayListLoadingIndicator/PlayListLoadingIndicator.jsx';
+import PlayListProgressBar from '../../components/PlayListProgressBar/PlayListProgressBar.jsx';
+import PlayListVideoSection from '../../components/PlayListVideoSection/PlayListVideoSection.jsx';
+import PlayListModuleBlock from '../../components/PlayListModuleBlock/PlayListModuleBlock.jsx';
 
 export default function CoursePlaylist() {
   const { courseId } = useParams();
@@ -22,8 +26,15 @@ export default function CoursePlaylist() {
   const [expandedModule, setExpandedModule] = useState(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [courseTitle, setCourseTitle] = useState('');
+  const [totalLessons, setTotalLessons] = useState(0);
+  const [completedLessonsCount, setCompletedLessonsCount] = useState(0);
+  const [totalDuration, setTotalDuration] = useState('0 мин');
+  const subscriptionsRef = useRef();
 
   useEffect(() => {
+    let unsubscribe;
+
     const loadData = async () => {
       if (!user || !user.uid) {
         if (!authLoading) {
@@ -40,11 +51,11 @@ export default function CoursePlaylist() {
           return;
         }
 
-        // Проверяем, куплен ли курс
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
-          const purchasedCourses = userDoc.data().purchasedCourses || [];
-          if (!purchasedCourses.includes(courseId)) {
+          const purchasedCourses = userDoc.data().purchasedCourses || {};
+          const courseAccess = purchasedCourses[courseId]?.access || 'denied';
+          if (courseAccess === 'denied') {
             alert('У вас нет доступа к этому курсу. Приобретите его.');
             setLoading(false);
             return;
@@ -52,14 +63,15 @@ export default function CoursePlaylist() {
           setHasAccess(true);
         }
 
-        // Обновляем данные курса только если courseId изменился
-        if (courseId) {
-          await updateCourseData(courseId);
-        }
+        updateCourseData(courseId);
 
         const courseDoc = await getDoc(doc(db, 'courses', courseId));
         if (courseDoc.exists()) {
           const courseData = courseDoc.data();
+          setCourseTitle(
+            courseData.title ||
+              courseId.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          );
           const modulesData = courseData.modules || {};
 
           const sortedModuleKeys = Object.keys(modulesData).sort((a, b) => {
@@ -75,7 +87,30 @@ export default function CoursePlaylist() {
           }));
           setModules(modulesArray);
 
-          const nextLesson = findNextLesson(modulesArray, completedLessons);
+          const total = modulesArray.reduce((sum, module) => sum + module.links.length, 0);
+          setTotalLessons(total);
+
+          const courseCompletedLessons = completedLessons[courseId] || {};
+          const completedCount = Object.values(courseCompletedLessons).reduce(
+            (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
+            0,
+          );
+          setCompletedLessonsCount(completedCount);
+
+          const allLessons = modulesArray.flatMap((module) => module.links);
+          const totalMinutes = allLessons.reduce((sum, lesson) => {
+            const time = parseInt(lesson.videoTime, 10) || 0;
+            return sum + (isNaN(time) ? 0 : time);
+          }, 0);
+          if (totalMinutes >= 60) {
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            setTotalDuration(`${hours} ч ${minutes} мин`);
+          } else {
+            setTotalDuration(`${totalMinutes} мин`);
+          }
+
+          const nextLesson = findNextLesson(modulesArray, courseCompletedLessons);
           if (nextLesson) {
             setVideoUrl(nextLesson.videoUrl);
             setExpandedModule(
@@ -85,9 +120,40 @@ export default function CoursePlaylist() {
             setVideoUrl(modulesArray[0].links[0].videoUrl);
             setExpandedModule(0);
           }
+
+          // Настраиваем подписку на обновления
+          const userDocRef = doc(db, 'users', user.uid);
+          unsubscribe = onSnapshot(
+            userDocRef,
+            (docSnap) => {
+              if (docSnap.exists()) {
+                const purchasedCourses = docSnap.data().purchasedCourses || {};
+                const courseData = purchasedCourses[courseId] || {
+                  completedLessons: {},
+                  progress: 0,
+                };
+                setCompletedLessons((prev) => ({
+                  ...prev,
+                  [courseId]: courseData.completedLessons || {},
+                }));
+                setProgress((prev) => ({
+                  ...prev,
+                  [courseId]: courseData.progress || 0,
+                }));
+              }
+            },
+            (error) => {
+              console.error('Error in snapshot listener:', error);
+            },
+          );
+          subscriptionsRef.current = unsubscribe;
         } else {
           setModules([]);
           setVideoUrl('');
+          setCourseTitle('');
+          setTotalLessons(0);
+          setCompletedLessonsCount(0);
+          setTotalDuration('0 мин');
         }
       } catch (error) {
         console.error('Ошибка при загрузке данных курса:', error);
@@ -97,12 +163,20 @@ export default function CoursePlaylist() {
     };
 
     loadData();
-  }, [user, userRole, authLoading, courseId]); // Убрали updateCourseData из зависимостей
 
-  const findNextLesson = (modules, completedLessons) => {
+    // Очистка подписки при размонтировании
+    return () => {
+      if (subscriptionsRef.current) {
+        subscriptionsRef.current();
+        subscriptionsRef.current = null;
+      }
+    };
+  }, [user, userRole, authLoading, courseId, updateCourseData, setCompletedLessons, setProgress]);
+
+  const findNextLesson = (modules, courseCompletedLessons) => {
     for (let i = 0; i < modules.length; i++) {
       const module = modules[i];
-      const completed = completedLessons[module.id] || [];
+      const completed = courseCompletedLessons[module.id] || [];
       const maxCompletedIndex = Math.max(...completed, -1);
 
       if (maxCompletedIndex < module.links.length - 1) {
@@ -134,38 +208,50 @@ export default function CoursePlaylist() {
     if (!user || !user.uid) return;
 
     try {
-      const currentModuleLessons = completedLessons[moduleId] || [];
-      const newLessons = currentModuleLessons.includes(lessonIndex)
-        ? currentModuleLessons.filter((index) => index !== lessonIndex)
-        : [...currentModuleLessons, lessonIndex];
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const currentCompletedLessons = completedLessons[courseId] || {};
+        const currentModuleLessons = currentCompletedLessons[moduleId] || [];
+        const newLessons = currentModuleLessons.includes(lessonIndex)
+          ? currentModuleLessons.filter((index) => index !== lessonIndex)
+          : [...currentModuleLessons, lessonIndex];
 
-      const updatedCompletedLessons = {
-        ...completedLessons,
-        [moduleId]: newLessons,
-      };
+        const updatedCompletedLessons = {
+          ...currentCompletedLessons,
+          [moduleId]: newLessons,
+        };
 
-      const totalLessons = modules.reduce((sum, module) => sum + module.links.length, 0);
-      const completedLessonsCount = Object.values(updatedCompletedLessons).reduce(
-        (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
-        0,
-      );
-      const newProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
+        const totalLessons = modules.reduce((sum, module) => sum + module.links.length, 0);
+        const completedLessonsCount = Object.values(updatedCompletedLessons).reduce(
+          (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
+          0,
+        );
+        const newProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
 
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        [`courses.${courseId}.completedLessons`]: updatedCompletedLessons,
-        [`courses.${courseId}.progress`]: Math.round(newProgress),
-      });
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          [`purchasedCourses.${courseId}.completedLessons`]: updatedCompletedLessons,
+          [`purchasedCourses.${courseId}.progress`]: Math.round(newProgress),
+        });
 
-      setCompletedLessons(updatedCompletedLessons);
-      setProgress(Math.round(newProgress));
+        setCompletedLessons((prev) => ({
+          ...prev,
+          [courseId]: updatedCompletedLessons,
+        }));
+        setProgress((prev) => ({
+          ...prev,
+          [courseId]: newProgress,
+        }));
+        setCompletedLessonsCount(completedLessonsCount);
+      }
     } catch (error) {
       console.error('Ошибка при обновлении прогресса:', error);
     }
   };
 
   const getCompletedCount = (moduleId, links) => {
-    const completed = completedLessons[moduleId] || [];
+    const courseCompletedLessons = completedLessons[courseId] || {};
+    const completed = courseCompletedLessons[moduleId] || [];
     return {
       completed: completed.length,
       total: links.length,
@@ -187,7 +273,7 @@ export default function CoursePlaylist() {
   };
 
   if (authLoading || loading) {
-    return <div className='loading'>Загрузка...</div>;
+    return <PlayListLoadingIndicator />;
   }
 
   if (!hasAccess) {
@@ -196,69 +282,23 @@ export default function CoursePlaylist() {
 
   return (
     <div className='playlist-container'>
-      <div className='progress-bar'>
-        <p>
-          Общий прогресс ({courseId}): {progress}%
-        </p>
-        <div className='progress'>
-          <div className='progress-fill' style={{ width: `${progress}%` }} />
-        </div>
-      </div>
-      <div className='video-section'>
-        {videoUrl ? (
-          <iframe
-            src={videoUrl}
-            title='Course Video'
-            width='100%'
-            height='500px'
-            frameBorder='0'
-            allowFullScreen
-          />
-        ) : (
-          <p>Выберите урок для просмотра</p>
-        )}
-      </div>
+      <PlayListProgressBar courseId={courseId} progress={progress[courseId] || 0} />
+      <PlayListVideoSection videoUrl={videoUrl} />
       <div className='modules-section'>
-        {modules.map((module, index) => {
-          const { completed, total } = getCompletedCount(module.id, module.links);
-          const totalDuration = getTotalDuration(module.links);
-
-          return (
-            <div key={module.id} className='module'>
-              <h3 onClick={() => toggleModule(index)} className='module-title'>
-                {module.moduleTitle}
-                <span className='completion-count'>
-                  {' '}
-                  {completed}/{total} | {totalDuration}
-                </span>
-                {expandedModule === index ? ' ▼' : ' ►'}
-              </h3>
-              {expandedModule === index && (
-                <ul className='lessons-list'>
-                  {module.links.map((lesson, lessonIndex) => {
-                    const isCompleted = (completedLessons[module.id] || []).includes(lessonIndex);
-                    return (
-                      <li
-                        key={lessonIndex}
-                        onClick={() => handleLessonClick(lesson.videoUrl)}
-                        className={`lesson ${isCompleted ? 'completed' : ''}`}>
-                        <input
-                          type='checkbox'
-                          checked={isCompleted}
-                          onChange={() => toggleLessonCompletion(module.id, lessonIndex)}
-                        />
-                        {lesson.title}
-                        {lesson.videoTime && (
-                          <span className='lesson-time'>{lesson.videoTime} мин</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          );
-        })}
+        <PlayListModuleBlock
+          courseTitle={courseTitle}
+          modules={modules}
+          completedLessonsCount={completedLessonsCount}
+          totalLessons={totalLessons}
+          expandedModule={expandedModule}
+          toggleModule={toggleModule}
+          handleLessonClick={handleLessonClick}
+          completedLessons={completedLessons[courseId] || {}}
+          toggleLessonCompletion={toggleLessonCompletion}
+          getCompletedCount={getCompletedCount}
+          getTotalDuration={getTotalDuration}
+          totalDuration={totalDuration}
+        />
       </div>
     </div>
   );
