@@ -1,0 +1,76 @@
+.checkboxContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1.1vw;
+
+  label {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5vw;
+  }
+
+  .text {
+    font-size: 0.75vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    margin: 0;
+
+    & .link {
+      color: var(--color-orange);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  }
+
+  & p {
+    font-size: 0.85vw;
+    color: var(--color-red);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-normal);
+    margin: 0;
+    margin-top: 0.5vw;
+  }
+}
+
+.checkbox {
+  display: none; // Скрываем нативный чекбокс
+}
+
+.checkmark {
+  width: 1vw;
+  height: 1vw;
+  background-color: #fff;
+  border: 0;
+  border-radius: 0.1vw;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:before {
+    content: '✔'; // Символ галочки
+    color: black;
+    font-size: 0.75vw;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+}
+
+.checkbox:checked + .checkmark {
+  background-color: var(--color-orange); // Оранжевый цвет как на изображении
+}
+
+.checkbox:checked + .checkmark:before {
+  opacity: 1;
+}

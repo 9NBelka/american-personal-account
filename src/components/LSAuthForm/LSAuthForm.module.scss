@@ -1,0 +1,146 @@
+.mainLSBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80%;
+
+  form {
+    width: 100%;
+  }
+}
+
+.titleLS {
+  font-size: 2vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--font-lineh-normal);
+}
+
+.answerAboutAccount {
+  font-size: 0.85vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-weight: var(--font-weight-small);
+  line-height: var(--font-lineh-normal);
+  margin: 0;
+  margin-top: 0.25vw;
+
+  & a {
+    color: var(--color-orange);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    text-decoration: underline;
+  }
+}
+
+.nameContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 1.5vw;
+}
+
+.nameContainerHalf {
+  display: flex;
+  flex-direction: row;
+  gap: 1vw;
+  margin-top: 2.5vw;
+
+  > div {
+    flex: 1; // Каждое поле занимает 50% ширины контейнера
+  }
+
+  > div input {
+    margin-top: 0vw;
+  }
+}
+
+.buttonSubmit {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0.9vw 0;
+  border: 0;
+  border-radius: 0.3vw;
+  background-color: var(--color-orange);
+  font-size: 0.85vw;
+  color: var(--color-white);
+  font-family: var(--font-albertSans);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--font-lineh-small);
+  margin-top: 3vw;
+  cursor: pointer;
+}
+
+// Стили для разделителя
+.orSeparator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin-top: 2vw;
+
+  span {
+    padding: 0 1vw;
+    color: #919191;
+    font-size: 0.85vw;
+    font-family: var(--font-albertSans);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    opacity: 0.6;
+  }
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 0.1vw;
+    background-color: #919191; // Цвет линий
+    opacity: 0.5;
+  }
+
+  &::before {
+    margin-right: 0.8vw;
+  }
+
+  &::after {
+    margin-left: 0.8vw;
+  }
+}
+
+.socialButtonsBlock {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2vw;
+}
+
+.socialButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75vw;
+  width: 100%;
+  padding: 0.85vw 0;
+  border: 0.1vw solid var(--color-orange);
+  border-radius: 0.3vw;
+  background-color: #1e1e1e;
+  font-size: 0.8vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-weight: var(--font-weight-small);
+  line-height: var(--font-lineh-small);
+  margin-top: 2vw;
+  transition: 0.3s ease-in-out;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--color-orange-opacity20);
+  }
+
+  & .iconSocial {
+    width: 1.1vw;
+    height: 1.1vw;
+    fill: var(--color-orange);
+  }
+}

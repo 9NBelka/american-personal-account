@@ -1,47 +1,44 @@
-import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import scss from './Login.module.scss';
+import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
+import { BsBoxArrowInRight } from 'react-icons/bs';
+import LSPrivacyCheckbox from '../../components/LSPrivacyCheckbox/LSPrivacyCheckbox';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { userRole, isLoading } = useAuth(); // Используем контекст
-  const [showPassword, setShowPassword] = useState(false);
+  const { userRole, isLoading } = useAuth();
 
   useEffect(() => {
     if (userRole) {
-      if (userRole === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/personal-account');
-      }
+      navigate(userRole === 'admin' ? '/dashboard' : '/personal-account');
     }
   }, [userRole, navigate]);
 
   const initialValues = {
     email: '',
     password: '',
+    agreeToPrivacy: false, // Новое поле для чекбокса
   };
 
   const validationSchema = Yup.object({
-    email: Yup.string().email('Неверный формат email').required('Обязательное поле'),
-    password: Yup.string().required('Обязательное поле'),
+    email: Yup.string().email('*Invalid email format').required('*Required field'),
+    password: Yup.string().required('*Required field'),
+    agreeToPrivacy: Yup.boolean().oneOf([true], '*You must agree to the Privacy Policy'), // Обязательное поле
   });
 
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
-
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        // Роль уже обновится через AuthContext
         navigate(userData.role === 'admin' ? '/dashboard' : '/personal-account');
       } else {
         navigate('/personal-account');
@@ -52,9 +49,9 @@ export default function Login() {
         error.code === 'auth/wrong-password' ||
         error.code === 'auth/invalid-credential'
       ) {
-        setFieldError('general', 'Неверный email или пароль');
+        setFieldError('general', '*Incorrect email or password');
       } else {
-        setFieldError('general', 'Ошибка входа: ' + error.message);
+        setFieldError('general', '*Login error: ' + error.message);
       }
     }
     setSubmitting(false);
@@ -64,53 +61,38 @@ export default function Login() {
     return <div>Загрузка...</div>;
   }
 
+  const fields = [
+    { name: 'email', type: 'email', placeholder: 'Email' },
+    { name: 'password', type: 'password', placeholder: 'Password' },
+  ];
+
   return (
-    <div>
-      <h2>Вход</h2>
-      <Formik
-        initialValues={initialValues}
-        validationSchema={validationSchema}
-        onSubmit={handleSubmit}>
-        {({ isSubmitting, errors }) => (
-          <Form>
-            <div>
-              <Field type='email' name='email' placeholder='Email' />
-              <ErrorMessage name='email' component='div' style={{ color: 'red' }} />
-            </div>
-            <div style={{ position: 'relative' }}>
-              <Field
-                type={showPassword ? 'text' : 'password'}
-                name='password'
-                placeholder='Пароль'
-                style={{ paddingRight: '30px' }}
-              />
-              <button
-                type='button'
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                }}>
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-              <ErrorMessage name='password' component='div' style={{ color: 'red' }} />
-            </div>
-            {errors.general && <div style={{ color: 'red' }}>{errors.general}</div>}
-            <p>
-              Нет аккаунта? <Link to='/signUp'>Зарегистрироваться</Link>
-            </p>
-            <button type='submit' disabled={isSubmitting}>
-              Войти
-            </button>
-          </Form>
-        )}
-      </Formik>
+    <div className={scss.container}>
+      <div className={scss.mainBlock}>
+        <div className={scss.imageAndLinkBlock}>
+          <img src='/src/assets/img/LogInImage.webp' alt='loginImage' />
+          <Link to=''>
+            Back to WebSite <BsBoxArrowInRight className={scss.icon} />
+          </Link>
+        </div>
+        <div className={scss.formBlock}>
+          <LSAuthForm
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+            title='Login to your account'
+            fields={fields}
+            submitText='Login'
+            linkText='Don`t have an account?'
+            linkToText='Sign In'
+            linkTo='/signUp'
+            isSubmitting={isLoading}
+            otherPointsText='Log in'>
+            {/* Передаем LSPrivacyCheckbox как дочерний элемент */}
+            <LSPrivacyCheckbox />
+          </LSAuthForm>
+        </div>
+      </div>
     </div>
   );
 }
