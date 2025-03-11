@@ -250,8 +250,8 @@ export default function PersonalAccount() {
                   return sum + (isNaN(time) ? 0 : time);
                 }, 0);
                 return totalMinutes >= 60
-                  ? `${Math.floor(totalMinutes / 60)} ч ${totalMinutes % 60} мин`
-                  : `${totalMinutes} мин`;
+                  ? `${Math.floor(totalMinutes / 60)} h ${totalMinutes % 60} m`
+                  : `${totalMinutes} m`;
               }}
             />
           </div>
