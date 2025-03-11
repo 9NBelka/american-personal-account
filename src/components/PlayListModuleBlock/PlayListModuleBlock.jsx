@@ -1,4 +1,4 @@
-import PlayListModule from '../PlayListModule/PlayListModule';
+import CourseLessonsList from '../CourseLessonsList/CourseLessonsList';
 import PlayListModuleHeader from '../PlayListModuleHeader/PlayListModuleHeader';
 
 export default function PlayListModuleBlock({
@@ -26,7 +26,7 @@ export default function PlayListModuleBlock({
         />
       )}
       {modules.map((module, index) => (
-        <PlayListModule
+        <CourseLessonsList
           key={module.id}
           module={module}
           index={index}

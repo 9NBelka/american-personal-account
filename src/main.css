@@ -63,7 +63,9 @@ a {
   --font-lineh-small: 1em;
 
   --color-white: white;
+  --color-lightGrey: #919191;
   --color-orange: #ff7b00;
+  --color-lightGreen: #26ff00;
   --color-red: red;
   --color-orange-opacity20: rgba(255, 123, 0, 0.2);
 }

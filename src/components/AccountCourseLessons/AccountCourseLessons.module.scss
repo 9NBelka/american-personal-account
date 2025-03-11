@@ -1,0 +1,51 @@
+.courseSection {
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e1e;
+}
+
+.courseHeader {
+  display: flex;
+  flex-direction: column;
+}
+
+.courseHeaderPackageTimeNubmStud {
+  display: flex;
+  flex-direction: row;
+
+  & .courseHeaderPackage {
+    font-size: 0.85vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    margin: 0;
+
+    & span {
+      font-size: 0.85vw;
+      color: var(--color-orange);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      text-transform: capitalize;
+    }
+  }
+
+  & .courseHeaderTime {
+    font-size: 0.85vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    margin: 0;
+  }
+}
+
+.courseName {
+  font-size: 2vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-weight: var(--font-weight-small);
+  line-height: var(--font-lineh-small);
+  text-transform: uppercase;
+}

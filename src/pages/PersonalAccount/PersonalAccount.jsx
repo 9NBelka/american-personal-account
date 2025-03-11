@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import AccountCoursesBlock from '../../components/AccountCoursesBlock/AccountCoursesBlock';
 import AccountUserProfileInfo from '../../components/AccountUserProfileInfo/AccountUserProfileInfo';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
-import PlayListModuleCourseLessons from '../../components/PlayListModuleCourseLessons/PlayListModuleCourseLessons';
+import AccountCourseLessons from '../../components/AccountCourseLessons/AccountCourseLessons';
 
 export default function PersonalAccount() {
   const navigate = useNavigate();
@@ -224,9 +224,12 @@ export default function PersonalAccount() {
         .filter((course) => course.available)
         .map((course) => (
           <div key={course.id} className='course-lessons-container'>
-            <h4>{course.title}</h4>
-            <PlayListModuleCourseLessons
+            <h4>{course.title}</h4> {/* Отображаем title как заголовок */}
+            <AccountCourseLessons
               courseId={course.id}
+              courses={courses}
+              progress={progress} // Передаем прогресс для курса
+              courseTitle={course.title} // Передаем title курса
               modules={course.modules}
               completedLessons={completedLessons[course.id] || {}}
               completedLessonsCount={course.completedLessonsCount}

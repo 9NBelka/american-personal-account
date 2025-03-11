@@ -1,0 +1,127 @@
+.moduleMainBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.moduleTitleAndIconBlock {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 0.75vw 0.75vw;
+  padding-left: 1.5vw;
+  border-top: 0.1vw solid var(--color-lightGrey);
+
+  & .moduleTitleAndCountBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5vw;
+
+    & .moduleTitle {
+      font-size: 1vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      text-transform: capitalize;
+    }
+
+    & .moduleCompletionCount {
+      font-size: 0.8vw;
+      color: var(--color-lightGrey);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      padding-left: 1.2vw;
+    }
+  }
+
+  & .icon {
+    display: flex;
+    fill: var(--color-white);
+    width: 1vw;
+    height: 1vw;
+  }
+}
+
+.lessonsList {
+  display: flex;
+  flex-direction: column;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  padding: 0.5vw 1vw;
+  padding-left: 2.25vw;
+  padding-top: 0;
+
+  & .lesson {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    padding: 0.5vw 0vw;
+    transition: 0.3s ease-in-out;
+    cursor: pointer;
+
+    &.completed {
+      color: var(--color-white);
+    }
+
+    &:hover {
+      color: var(--color-white);
+    }
+
+    & .checkboxAndTitleLesson {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 1vw;
+
+      & .checkbox {
+        display: none; // Скрываем нативный чекбокс
+      }
+
+      & .checkmark {
+        width: 1vw;
+        height: 1vw;
+        background-color: transparent;
+        border: 0.05vw solid var(--color-white);
+        border-radius: 0.2vw;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:before {
+          content: '✔'; // Символ галочки
+          color: black;
+          font-size: 0.75vw;
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+      }
+    }
+
+    & .lessonTime {
+      font-size: 0.8vw;
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+    }
+
+    .checkbox:checked + .checkmark {
+      background-color: var(--color-lightGreen); // Оранжевый цвет как на изображении
+      border: 0.1vw solid var(--color-lightGreen);
+    }
+
+    .checkbox:checked + .checkmark:before {
+      opacity: 1;
+    }
+  }
+}

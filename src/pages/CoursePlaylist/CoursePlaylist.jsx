@@ -282,7 +282,6 @@ export default function CoursePlaylist() {
 
   return (
     <div className='playlist-container'>
-      <PlayListProgressBar courseId={courseId} progress={progress[courseId] || 0} />
       <PlayListVideoSection videoUrl={videoUrl} />
       <div className='modules-section'>
         <PlayListModuleBlock
