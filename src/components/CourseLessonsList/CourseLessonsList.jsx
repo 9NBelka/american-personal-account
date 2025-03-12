@@ -58,7 +58,7 @@ export default function CourseLessonsList({
                   {lessonIndex + 1 + `. `}
                   {lesson.title}
                 </div>
-                {lesson.videoTime && <span className={scss.lessonTime}>{lesson.videoTime} m</span>}
+                {lesson.videoTime && <span className={scss.lessonTime}>{lesson.videoTime}m</span>}
               </li>
             );
           })}

@@ -1,0 +1,130 @@
+.courseCard {
+  display: flex;
+  flex-direction: column;
+  width: 33.33%;
+  background-color: transparent;
+  border: 0.05vw solid var(--color-orange);
+  border-radius: 0.75vw;
+  padding: 1.2vw 1.2vw;
+
+  &.borderOrange {
+    border: 0.05vw solid var(--color-orange);
+  }
+
+  &.borderGreen {
+    border: 0.05vw solid var(--color-lightGreen);
+  }
+
+  &.borderBlue {
+    border: 0.05vw solid var(--color-blue);
+  }
+
+  & .categoryText {
+    display: flex;
+    font-size: 0.85vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    margin: 0;
+    text-transform: capitalize;
+  }
+
+  & .courseNameBlock {
+    display: flex;
+    height: 100%;
+    margin-top: 0.5vw;
+    & .courseName {
+      display: flex;
+      font-size: 1.2vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-normal);
+      text-transform: uppercase;
+    }
+  }
+
+  & .completedCourseBlock {
+    margin-top: 0.4vw;
+
+    & .completedCourse {
+      display: flex;
+      font-size: 0.85vw;
+      // color: var(--color-orange);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      margin: 0;
+      transition: 0.3s ease-in-out;
+
+      &:hover {
+        opacity: 0.7;
+        text-decoration: underline;
+      }
+
+      &.completedCourseOrange {
+        color: var(--color-orange);
+      }
+      &.completedCourseGreen {
+        color: var(--color-lightGreen);
+      }
+      &.completedCourseBlue {
+        color: var(--color-blue);
+      }
+
+      &.noCompletedCourse {
+        color: var(--color-lightGrey);
+
+        &:hover {
+          opacity: 1;
+          text-decoration: none;
+        }
+      }
+    }
+  }
+
+  & .watchButtonBlock {
+    display: flex;
+    justify-content: center;
+    margin-top: 2.5vw;
+
+    & .watchButton {
+      display: flex;
+      justify-content: center;
+      padding: 0.6vw 2vw;
+      background-color: #1e1e1e;
+      border: 0.05vw solid var(--color-lightGrey);
+      border-radius: 0.4vw;
+      font-size: 0.85vw;
+      color: var(--color-lightGrey);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      cursor: pointer;
+
+      &.borderOrange {
+        border: 0.05vw solid var(--color-orange);
+      }
+      &.borderGreen {
+        border: 0.05vw solid var(--color-lightGreen);
+      }
+      &.borderBlue {
+        border: 0.05vw solid var(--color-blue);
+      }
+
+      &.watchButtonOrange {
+        background-color: var(--color-orange-opacity20);
+        color: var(--color-white);
+      }
+      &.watchButtonGreen {
+        background-color: var(--color-green-opacity20);
+        color: var(--color-white);
+      }
+      &.watchButtonBlue {
+        background-color: var(--color-blue-opacity20);
+        color: var(--color-white);
+      }
+    }
+  }
+}

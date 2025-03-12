@@ -66,6 +66,9 @@ a {
   --color-lightGrey: #919191;
   --color-orange: #ff7b00;
   --color-lightGreen: #26ff00;
+  --color-blue: #0084ff;
   --color-red: red;
   --color-orange-opacity20: rgba(255, 123, 0, 0.2);
+  --color-green-opacity20: rgba(38, 255, 0, 0.2);
+  --color-blue-opacity20: rgba(0, 132, 255, 0.2);
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useCallback, useState } from 'react';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -12,7 +12,9 @@ export function AuthProvider({ children }) {
   const [progress, setProgress] = useState({});
   const [completedLessons, setCompletedLessons] = useState({});
   const [error, setError] = useState(null);
-  const [lastCourseId, setLastCourseId] = useState(null);
+  const [lastCourseId, setLastCourseId] = useState(() => {
+    return localStorage.getItem('lastCourseId') || null;
+  });
 
   const updateCourseData = useCallback(
     async (courseId) => {
@@ -35,10 +37,7 @@ export function AuthProvider({ children }) {
             [courseId]: courseData.progress || 0,
           }));
           setLastCourseId(courseId);
-          console.log(`Updated course data for ${courseId}:`, {
-            completedLessons: courseData.completedLessons,
-            progress: courseData.progress,
-          });
+          localStorage.setItem('lastCourseId', courseId);
         }
       } catch (error) {
         console.error('Ошибка при обновлении данных курса:', error);
@@ -50,7 +49,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('Auth state changed, firebaseUser:', firebaseUser);
       if (firebaseUser) {
         const userData = {
           uid: firebaseUser.uid,
@@ -59,18 +57,31 @@ export function AuthProvider({ children }) {
         };
         try {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          console.log('User document data:', userDoc.data());
           if (userDoc.exists()) {
             setUser(userData);
             setUserRole(userDoc.data().role);
             const purchasedCourses = userDoc.data().purchasedCourses || {};
-            const defaultCourseId = Object.keys(purchasedCourses)[0] || 'architecture';
-            const courseData = purchasedCourses[defaultCourseId] || {
-              completedLessons: {},
-              progress: 0,
-            };
-            setCompletedLessons({ [defaultCourseId]: courseData.completedLessons || {} });
-            setProgress({ [defaultCourseId]: courseData.progress || 0 });
+
+            // Инициализируем progress для всех курсов
+            const initialProgress = {};
+            const initialCompletedLessons = {};
+            Object.keys(purchasedCourses).forEach((courseId) => {
+              const courseData = purchasedCourses[courseId] || {
+                completedLessons: {},
+                progress: 0,
+              };
+              initialProgress[courseId] = courseData.progress || 0;
+              initialCompletedLessons[courseId] = courseData.completedLessons || {};
+            });
+            setProgress(initialProgress);
+            setCompletedLessons(initialCompletedLessons);
+
+            const defaultCourseId =
+              localStorage.getItem('lastCourseId') ||
+              Object.keys(purchasedCourses)[0] ||
+              'architecture';
+            setLastCourseId(defaultCourseId);
+            localStorage.setItem('lastCourseId', defaultCourseId);
           } else {
             setUser(userData);
             setUserRole('guest');
@@ -86,6 +97,8 @@ export function AuthProvider({ children }) {
         setUserRole(null);
         setCompletedLessons({});
         setProgress({});
+        setLastCourseId(null);
+        localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
     });
@@ -104,6 +117,7 @@ export function AuthProvider({ children }) {
     updateCourseData,
     error,
     lastCourseId,
+    setLastCourseId,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

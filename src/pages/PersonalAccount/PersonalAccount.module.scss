@@ -1,0 +1,45 @@
+.personalAccountBackground {
+  background-color: #111111;
+}
+
+.container {
+  width: 68.75vw;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.mainHalfToHalfBlock {
+  display: flex;
+  flex-direction: row;
+  gap: 1.3vw;
+}
+
+.courseLessonsContainer {
+  display: flex;
+  flex-direction: column;
+  width: 40%;
+}
+
+.courseAccessContainer {
+  display: flex;
+  flex-direction: column;
+  width: 60%;
+
+  & .courseAccessTitle {
+    font-size: 2.15vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+  }
+
+  & .courseAccessDescrtiption {
+    font-size: 0.85vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    margin: 0;
+    margin-top: 0.5vw;
+  }
+}

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { auth, db } from '../../firebase';
-import { doc, getDoc, collection, getDocs, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AccountCoursesBlock from '../../components/AccountCoursesBlock/AccountCoursesBlock';
 import AccountUserProfileInfo from '../../components/AccountUserProfileInfo/AccountUserProfileInfo';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
 import AccountCourseLessons from '../../components/AccountCourseLessons/AccountCourseLessons';
+import scss from './PersonalAccount.module.scss';
 
 export default function PersonalAccount() {
   const navigate = useNavigate();
@@ -19,12 +20,12 @@ export default function PersonalAccount() {
     setProgress,
     progress,
     updateCourseData,
+    lastCourseId,
   } = useAuth();
   const [userName, setUserName] = useState('');
   const [registrationDate, setRegistrationDate] = useState('');
   const [courses, setCourses] = useState([]);
   const [error, setError] = useState(null);
-  const subscriptionsRef = useRef({});
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -83,14 +84,15 @@ export default function PersonalAccount() {
                 }, 0);
                 const totalDuration =
                   totalMinutes >= 60
-                    ? `${Math.floor(totalMinutes / 60)} ч ${totalMinutes % 60} мин`
-                    : `${totalMinutes} мин`;
+                    ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+                    : `${totalMinutes}m`;
 
                 return {
                   id: doc.id,
                   title:
                     courseData.title ||
                     doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+                  category: courseData.category || 'Uncategorized', // Add the category field here
                   available: isAccessible,
                   access: courseAccess,
                   modules: modulesArray,
@@ -101,35 +103,13 @@ export default function PersonalAccount() {
               }),
             );
             setCourses(courseList);
-            courseList.forEach((course) => {
-              if (!subscriptionsRef.current[course.id]) {
-                const userDocRef = doc(db, 'users', user.uid);
-                subscriptionsRef.current[course.id] = onSnapshot(
-                  userDocRef,
-                  (docSnap) => {
-                    if (docSnap.exists()) {
-                      const purchasedCourses = docSnap.data().purchasedCourses || {};
-                      const courseData = purchasedCourses[course.id] || {
-                        completedLessons: {},
-                        progress: 0,
-                      };
-                      setCompletedLessons((prev) => ({
-                        ...prev,
-                        [course.id]: courseData.completedLessons || {},
-                      }));
-                      setProgress((prev) => ({
-                        ...prev,
-                        [course.id]: courseData.progress || 0,
-                      }));
-                    }
-                  },
-                  (error) => {
-                    console.error('Error in snapshot listener:', error);
-                    setError(error.message);
-                  },
-                );
-              }
-            });
+
+            // Вызываем updateCourseData для последнего выбранного курса
+            if (lastCourseId && courseList.some((course) => course.id === lastCourseId)) {
+              updateCourseData(lastCourseId);
+            } else if (courseList.length > 0) {
+              updateCourseData(courseList[0].id);
+            }
           }
         } catch (error) {
           console.error('Ошибка при загрузке курсов:', error);
@@ -139,13 +119,7 @@ export default function PersonalAccount() {
     };
 
     fetchUserData();
-
-    // Очистка подписок при размонтировании
-    return () => {
-      Object.values(subscriptionsRef.current).forEach((unsubscribe) => unsubscribe());
-      subscriptionsRef.current = {};
-    };
-  }, [user, authLoading, navigate, setCompletedLessons, setProgress]);
+  }, [user, authLoading, navigate, updateCourseData, lastCourseId]);
 
   const handleLogout = async () => {
     try {
@@ -210,59 +184,70 @@ export default function PersonalAccount() {
     return <AccountLoadingIndicator />;
   }
 
+  const activeCourse = courses.find((course) => course.id === lastCourseId && course.available);
   return (
-    <div className='personal-account'>
-      <AccountUserProfileInfo
-        userName={userName}
-        userRole={userRole}
-        registrationDate={registrationDate}
-        error={error}
-      />
-      <h3>Доступные курсы:</h3>
-      <AccountCoursesBlock courses={courses} />
-      {courses
-        .filter((course) => course.available)
-        .map((course) => (
-          <div key={course.id} className='course-lessons-container'>
-            <h4>{course.title}</h4> {/* Отображаем title как заголовок */}
-            <AccountCourseLessons
-              courseId={course.id}
-              courses={courses}
-              progress={progress} // Передаем прогресс для курса
-              courseTitle={course.title} // Передаем title курса
-              modules={course.modules}
-              completedLessons={completedLessons[course.id] || {}}
-              completedLessonsCount={course.completedLessonsCount}
-              totalLessons={course.totalLessons}
-              totalDuration={course.totalDuration}
-              toggleLessonCompletion={(moduleId, lessonIndex) =>
-                toggleLessonCompletion(course.id, moduleId, lessonIndex)
-              }
-              handleLessonClick={(videoUrl) => handleLessonClick(course.id, videoUrl)}
-              getCompletedCount={(moduleId, links) => {
-                const courseCompletedLessons = completedLessons[course.id] || {};
-                const completed = courseCompletedLessons[moduleId] || [];
-                return {
-                  completed: completed.length,
-                  total: links.length,
-                };
-              }}
-              getTotalDuration={(links) => {
-                const totalMinutes = links.reduce((sum, lesson) => {
-                  const time = parseInt(lesson.videoTime, 10) || 0;
-                  return sum + (isNaN(time) ? 0 : time);
-                }, 0);
-                return totalMinutes >= 60
-                  ? `${Math.floor(totalMinutes / 60)} h ${totalMinutes % 60} m`
-                  : `${totalMinutes} m`;
-              }}
-            />
+    <div className={scss.personalAccountBackground}>
+      <div className={scss.container}>
+        <div className='personal-account'>
+          <AccountUserProfileInfo
+            userName={userName}
+            userRole={userRole}
+            registrationDate={registrationDate}
+            error={error}
+          />
+
+          <div className={scss.mainHalfToHalfBlock}>
+            {activeCourse && (
+              <div key={activeCourse.id} className={scss.courseLessonsContainer}>
+                <AccountCourseLessons
+                  courseId={activeCourse.id}
+                  courses={courses}
+                  progress={progress}
+                  courseTitle={activeCourse.title}
+                  modules={activeCourse.modules}
+                  completedLessons={completedLessons[activeCourse.id] || {}}
+                  completedLessonsCount={activeCourse.completedLessonsCount}
+                  totalLessons={activeCourse.totalLessons}
+                  totalDuration={activeCourse.totalDuration}
+                  toggleLessonCompletion={(moduleId, lessonIndex) =>
+                    toggleLessonCompletion(activeCourse.id, moduleId, lessonIndex)
+                  }
+                  handleLessonClick={(videoUrl) => handleLessonClick(activeCourse.id, videoUrl)}
+                  getCompletedCount={(moduleId, links) => {
+                    const courseCompletedLessons = completedLessons[activeCourse.id] || {};
+                    const completed = courseCompletedLessons[moduleId] || [];
+                    return {
+                      completed: completed.length,
+                      total: links.length,
+                    };
+                  }}
+                  getTotalDuration={(links) => {
+                    const totalMinutes = links.reduce((sum, lesson) => {
+                      const time = parseInt(lesson.videoTime, 10) || 0;
+                      return sum + (isNaN(time) ? 0 : time);
+                    }, 0);
+                    return totalMinutes >= 60
+                      ? `${Math.floor(totalMinutes / 60)} h ${totalMinutes % 60} m`
+                      : `${totalMinutes} m`;
+                  }}
+                />
+              </div>
+            )}
+            <div className={scss.courseAccessContainer}>
+              <h3 className={scss.courseAccessTitle}>Available courses:</h3>
+              <p className={scss.courseAccessDescrtiption}>
+                Here you can see purchased and future courses
+              </p>
+              <AccountCoursesBlock courses={courses} progress={progress} />
+            </div>
           </div>
-        ))}
-      <br />
-      <button onClick={handleLogout} className='logout-button'>
-        Выйти
-      </button>
+
+          <br />
+          <button onClick={handleLogout} className='logout-button'>
+            Выйти
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

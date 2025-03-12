@@ -105,9 +105,9 @@ export default function CoursePlaylist() {
           if (totalMinutes >= 60) {
             const hours = Math.floor(totalMinutes / 60);
             const minutes = totalMinutes % 60;
-            setTotalDuration(`${hours} ч ${minutes} мин`);
+            setTotalDuration(`${hours}h ${minutes}m`);
           } else {
-            setTotalDuration(`${totalMinutes} мин`);
+            setTotalDuration(`${totalMinutes}m`);
           }
 
           const nextLesson = findNextLesson(modulesArray, courseCompletedLessons);
@@ -153,7 +153,7 @@ export default function CoursePlaylist() {
           setCourseTitle('');
           setTotalLessons(0);
           setCompletedLessonsCount(0);
-          setTotalDuration('0 мин');
+          setTotalDuration('0 m');
         }
       } catch (error) {
         console.error('Ошибка при загрузке данных курса:', error);
@@ -267,9 +267,9 @@ export default function CoursePlaylist() {
     if (totalMinutes >= 60) {
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
-      return `${hours} ч ${minutes} мин`;
+      return `${hours} h ${minutes} m`;
     }
-    return `${totalMinutes} мин`;
+    return `${totalMinutes} m`;
   };
 
   if (authLoading || loading) {
