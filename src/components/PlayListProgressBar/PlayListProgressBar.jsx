@@ -23,7 +23,6 @@ export default function PlayListProgressBar({ progress }) {
           styles={buildStyles({
             rotation: 0,
             strokeLinecap: 'round',
-            textSize: '1vw',
             pathTransitionDuration: 0.5,
             pathColor: `#0084ff`,
             textColor: '#ffffff',

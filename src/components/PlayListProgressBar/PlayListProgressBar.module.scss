@@ -2,21 +2,21 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
+  text-align: center;
 }
 
 .progressBar {
-  width: 4vw;
-  height: 4vw;
-  min-width: 50px;
-  min-height: 50px;
+  width: 3.5vw;
+  height: 3.5vw;
+  min-width: 2.5vw;
+  min-height: 2.5vw;
 }
 
 .customText {
-  font-size: 0.85vw;
+  font-size: 1.1vw !important;
   color: var(--color-lightGrey) !important;
   font-family: var(--font-main-for-account) !important;
   font-weight: var(--font-weight-small) !important;
   line-height: var(--font-lineh-small) !important;
+  text-align: center;
 }

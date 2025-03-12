@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import scss from './AccountCourseLessons.module.scss';
 import PlayListProgressBar from '../PlayListProgressBar/PlayListProgressBar';
 import CourseLessonsList from '../CourseLessonsList/CourseLessonsList';
+import { BsFillStopwatchFill } from 'react-icons/bs';
 
 export default function AccountCourseLessons({
   courseId,
@@ -40,18 +41,19 @@ export default function AccountCourseLessons({
               ) : null;
             })()}
           </div>
-          <div>
-            <p className={scss.courseHeaderTime}>Общее время: {totalDuration}</p>
+          <div className={scss.iconAndTimeBlock}>
+            <BsFillStopwatchFill className={scss.iconClock} />
+            <p className={scss.courseHeaderTime}>{totalDuration}</p>
           </div>
         </div>
 
-        <div>
+        <div className={scss.courseNameAndProgressBar}>
           <h2 className={scss.courseName}>{courseTitle}</h2>
           <PlayListProgressBar courseId={courseId} progress={progress[courseId] || 0} />
         </div>
-        <span className='lessons-count'>
+        {/* <span className='lessons-count'>
           Завершено уроков: {completedLessonsCount}/{totalLessons}
-        </span>
+        </span> */}
       </div>
       {modules.map((module, index) => (
         <CourseLessonsList
