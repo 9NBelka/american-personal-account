@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   background-color: #1e1e1e;
+  border-radius: 0.75vw;
 }
 
 .courseHeader {
@@ -73,5 +74,44 @@
     line-height: var(--font-lineh-center);
     text-transform: uppercase;
     text-align: left;
+  }
+}
+
+.expandToStandartAndGitHubLinkBlock {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.6vw;
+
+  & .expandToStandart {
+    display: flex;
+    font-size: 0.8vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    background-color: var(--color-orange-opacity20);
+    border: 0.05vw solid var(--color-orange);
+    padding: 0.5vw 1.15vw;
+    border-radius: 0.4vw;
+  }
+
+  & .gitHubLink {
+    display: flex;
+    align-items: center;
+    font-size: 0.8vw;
+    color: var(--color-lightGreen);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    text-decoration: underline;
+    gap: 0.5vw;
+
+    & .gitHubLinkIcon {
+      width: 0.85vw;
+      height: 0.85vw;
+      fill: var(--color-lightGreen);
+    }
   }
 }

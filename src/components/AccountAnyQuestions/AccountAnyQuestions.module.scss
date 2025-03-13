@@ -1,0 +1,51 @@
+.accountAnyQuestionsBlock {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-orange-opacity20);
+  border: 0.05vw solid var(--color-orange);
+  border-radius: 0.75vw;
+  width: 32.2%;
+  position: relative;
+}
+
+.titleAndButtonBlock {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  padding: 1.25vw;
+
+  & h4 {
+    width: 50%;
+    font-size: 1.2vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-normal);
+    text-transform: uppercase;
+  }
+
+  & .buttonAskBlock {
+    display: flex;
+    margin-top: 1vw;
+
+    & .buttonAsk {
+      display: flex;
+      justify-content: center;
+      padding: 0.5vw 1.75vw;
+      background-color: var(--color-darkGrey);
+      border: 0.05vw solid var(--color-orange);
+      border-radius: 0.4vw;
+      font-size: 0.8vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      transition: 0.3s ease-in-out;
+      cursor: pointer;
+
+      &:hover {
+        transform: scale(0.96);
+      }
+    }
+  }
+}

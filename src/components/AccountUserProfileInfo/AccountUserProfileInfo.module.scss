@@ -1,0 +1,68 @@
+.userProfileMain {
+  display: flex;
+  flex-direction: column;
+  padding-top: 2.2vw;
+
+  & h1 {
+    font-size: 2.15vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+  }
+}
+
+.userProfileBlock {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  & .welcomeText {
+    font-size: 0.8vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    margin: 0;
+    margin-top: 0.5vw;
+
+    & span {
+      color: var(--color-orange);
+      text-transform: capitalize;
+    }
+
+    &.anotherColor {
+      & span {
+        color: var(--color-blue);
+        text-transform: capitalize;
+      }
+    }
+  }
+
+  & .userProfileSocialBlock {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 1vw;
+
+    & a {
+      display: flex;
+      text-decoration: none;
+      transition: 0.3s ease-in-out;
+    }
+
+    & a:hover {
+      transform: translateY(-0.1vw);
+    }
+
+    & .icon {
+      width: 2vw;
+      height: 2vw;
+      fill: var(--color-white);
+      background-color: #000000;
+      border: 0.2vw solid #1e1e1e;
+      border-radius: 5vw;
+      padding: 0.3vw;
+    }
+  }
+}

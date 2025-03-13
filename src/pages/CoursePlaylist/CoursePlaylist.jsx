@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { db } from '../../firebase.js';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { auth, db } from '../../firebase.js';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
-import { useParams } from 'react-router-dom';
-import './CoursePlaylist.css';
+import { useNavigate, useParams } from 'react-router-dom';
+import scss from './CoursePlaylist.module.scss';
 import { useAuth } from '../../context/AuthContext';
 import PlayListLoadingIndicator from '../../components/PlayListLoadingIndicator/PlayListLoadingIndicator.jsx';
-import PlayListProgressBar from '../../components/PlayListProgressBar/PlayListProgressBar.jsx';
 import PlayListVideoSection from '../../components/PlayListVideoSection/PlayListVideoSection.jsx';
 import PlayListModuleBlock from '../../components/PlayListModuleBlock/PlayListModuleBlock.jsx';
+import HeaderPersonalAccount from '../../components/HeaderPersonalAccount/HeaderPersonalAccount.jsx';
 
 export default function CoursePlaylist() {
   const { courseId } = useParams();
@@ -21,6 +23,8 @@ export default function CoursePlaylist() {
     progress,
     updateCourseData,
   } = useAuth();
+  const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [modules, setModules] = useState([]);
   const [expandedModule, setExpandedModule] = useState(null);
@@ -29,7 +33,7 @@ export default function CoursePlaylist() {
   const [courseTitle, setCourseTitle] = useState('');
   const [totalLessons, setTotalLessons] = useState(0);
   const [completedLessonsCount, setCompletedLessonsCount] = useState(0);
-  const [totalDuration, setTotalDuration] = useState('0 мин');
+  const [totalDuration, setTotalDuration] = useState('0 m');
   const subscriptionsRef = useRef();
 
   useEffect(() => {
@@ -38,7 +42,7 @@ export default function CoursePlaylist() {
     const loadData = async () => {
       if (!user || !user.uid) {
         if (!authLoading) {
-          alert('Пожалуйста, войдите в систему.');
+          toast.error('Please log in.');
           setLoading(false);
         }
         return;
@@ -46,17 +50,21 @@ export default function CoursePlaylist() {
 
       try {
         if (userRole !== 'student') {
-          alert('Доступ закрыт. Приобретите курс, чтобы получить доступ.');
+          toast.error("You don't have any courses yet!");
+          navigate('/account');
           setLoading(false);
           return;
         }
 
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
+          const data = userDoc.data();
           const purchasedCourses = userDoc.data().purchasedCourses || {};
           const courseAccess = purchasedCourses[courseId]?.access || 'denied';
+          setUserName(data.name || '');
           if (courseAccess === 'denied') {
-            alert('У вас нет доступа к этому курсу. Приобретите его.');
+            toast.error('You don`t have access to this course. Purchase it.');
+            navigate('/account');
             setLoading(false);
             return;
           }
@@ -156,7 +164,7 @@ export default function CoursePlaylist() {
           setTotalDuration('0 m');
         }
       } catch (error) {
-        console.error('Ошибка при загрузке данных курса:', error);
+        console.error('Error loading course data:', error);
       } finally {
         setLoading(false);
       }
@@ -245,7 +253,16 @@ export default function CoursePlaylist() {
         setCompletedLessonsCount(completedLessonsCount);
       }
     } catch (error) {
-      console.error('Ошибка при обновлении прогресса:', error);
+      console.error('Error updating progress:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error exiting:', error);
     }
   };
 
@@ -277,27 +294,34 @@ export default function CoursePlaylist() {
   }
 
   if (!hasAccess) {
-    return <div>Доступ закрыт</div>;
+    return <div>Access denied</div>;
   }
 
   return (
-    <div className='playlist-container'>
-      <PlayListVideoSection videoUrl={videoUrl} />
-      <div className='modules-section'>
-        <PlayListModuleBlock
-          courseTitle={courseTitle}
-          modules={modules}
-          completedLessonsCount={completedLessonsCount}
-          totalLessons={totalLessons}
-          expandedModule={expandedModule}
-          toggleModule={toggleModule}
-          handleLessonClick={handleLessonClick}
-          completedLessons={completedLessons[courseId] || {}}
-          toggleLessonCompletion={toggleLessonCompletion}
-          getCompletedCount={getCompletedCount}
-          getTotalDuration={getTotalDuration}
-          totalDuration={totalDuration}
-        />
+    <div className={scss.personalAccountBackground}>
+      <div className={scss.container}>
+        <HeaderPersonalAccount userName={userName} handleLogout={handleLogout} />
+        <div className={scss.playlistContainer}>
+          <div className={scss.videoSection}>
+            <PlayListVideoSection videoUrl={videoUrl} />
+          </div>
+          <div className={scss.modulesSection}>
+            <PlayListModuleBlock
+              courseTitle={courseTitle}
+              modules={modules}
+              completedLessonsCount={completedLessonsCount}
+              totalLessons={totalLessons}
+              expandedModule={expandedModule}
+              toggleModule={toggleModule}
+              handleLessonClick={handleLessonClick}
+              completedLessons={completedLessons[courseId] || {}}
+              toggleLessonCompletion={toggleLessonCompletion}
+              getCompletedCount={getCompletedCount}
+              getTotalDuration={getTotalDuration}
+              totalDuration={totalDuration}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -21,7 +21,7 @@
 
   & .categoryText {
     display: flex;
-    font-size: 0.85vw;
+    font-size: 0.8vw;
     color: var(--color-lightGrey);
     font-family: var(--font-main-for-account);
     font-weight: var(--font-weight-small);
@@ -93,10 +93,10 @@
       display: flex;
       justify-content: center;
       padding: 0.6vw 2vw;
-      background-color: #1e1e1e;
+      background-color: var(--color-darkGrey);
       border: 0.05vw solid var(--color-lightGrey);
       border-radius: 0.4vw;
-      font-size: 0.85vw;
+      font-size: 0.8vw;
       color: var(--color-lightGrey);
       font-family: var(--font-main-for-account);
       font-weight: var(--font-weight-small);

@@ -1,0 +1,101 @@
+.header {
+  background-color: transparent;
+  border-bottom: 0.1vw solid var(--color-darkGrey);
+  padding: 1vw 0;
+  padding-bottom: 0.65vw;
+}
+
+.navigationBlock {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  & .logoBlock {
+    display: flex;
+    height: 100%;
+
+    & img {
+      width: 6vw;
+    }
+  }
+
+  & ul {
+    display: flex;
+    flex-direction: row;
+    list-style-type: none;
+    gap: 1.75vw;
+    margin: 0;
+    padding: 0;
+
+    & li {
+      display: flex;
+      font-size: 0.8vw;
+      color: var(--color-lightGrey);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      cursor: pointer;
+      position: relative;
+      text-transform: capitalize;
+      padding: 0 0.25vw;
+      transition: 0.3s ease-in-out;
+
+      &:hover {
+        color: var(--color-orange);
+      }
+
+      &.active {
+        display: flex;
+        color: var(--color-orange);
+
+        &::after {
+          display: flex;
+          content: '';
+          position: absolute;
+          bottom: -0.92vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+          left: 0;
+          width: 100%;
+          height: 0.05vw;
+          background-color: var(--color-orange);
+          z-index: 1;
+        }
+      }
+    }
+  }
+
+  & .profileAndIcons {
+    display: flex;
+    flex-direction: row;
+    gap: 2vw;
+
+    & .studentName {
+      display: flex;
+      font-size: 0.8vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      text-transform: capitalize;
+      margin: 0;
+    }
+
+    & .profileIcons {
+      display: flex;
+      flex-direction: row;
+      gap: 1.25vw;
+
+      & .profileIcon {
+        width: 0.75vw;
+        height: 0.75vw;
+        fill: var(--color-white);
+        cursor: pointer;
+        transition: 0.3s ease-in-out;
+
+        &:hover {
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+}

@@ -16,7 +16,7 @@ export default function Login() {
 
   useEffect(() => {
     if (userRole) {
-      navigate(userRole === 'admin' ? '/dashboard' : '/personal-account');
+      navigate(userRole === 'admin' ? '/dashboard' : '/account');
     }
   }, [userRole, navigate]);
 
@@ -39,9 +39,9 @@ export default function Login() {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        navigate(userData.role === 'admin' ? '/dashboard' : '/personal-account');
+        navigate(userData.role === 'admin' ? '/dashboard' : '/account');
       } else {
-        navigate('/personal-account');
+        navigate('/account');
       }
     } catch (error) {
       if (

@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 
 /*
 Что это даёт?
-Маршруты /personal-account и /playlist доступны только для ролей guest и student.
+Маршруты /account и /playlist доступны только для ролей guest и student.
 Маршрут /dashboard доступен только для admin.
 Если пользователь не авторизован, его перенаправит на /login.
 */
@@ -20,7 +20,7 @@ export default function PrivateRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to='/personal-account' />;
+    return <Navigate to='/account' />;
   }
 
   return children;

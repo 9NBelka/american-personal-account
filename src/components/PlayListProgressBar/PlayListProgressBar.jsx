@@ -16,9 +16,9 @@ export default function PlayListProgressBar({ progress }) {
       <div className={scss.progressBar}>
         <CircularProgressbar
           value={normalizedProgress}
-          text={renderCustomText(normalizedProgress)} // Передаем функцию
+          text={renderCustomText(normalizedProgress)}
           circleRatio={1}
-          strokeWidth={1.25}
+          strokeWidth={1.3}
           background={true}
           styles={buildStyles({
             rotation: 0,
@@ -28,6 +28,7 @@ export default function PlayListProgressBar({ progress }) {
             textColor: '#ffffff',
             trailColor: '#ffffff',
             backgroundColor: 'rgba(0, 132, 255, 0.2)',
+            textSize: `${1.1 * (window.innerWidth / 100)}px`,
           })}
         />
       </div>

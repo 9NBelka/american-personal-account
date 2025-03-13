@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import scss from './AccountCourseLessons.module.scss';
 import PlayListProgressBar from '../PlayListProgressBar/PlayListProgressBar';
 import CourseLessonsList from '../CourseLessonsList/CourseLessonsList';
-import { BsFillStopwatchFill } from 'react-icons/bs';
+import { BsFillStopwatchFill, BsGithub } from 'react-icons/bs';
+import { Link } from 'react-router-dom';
 
 export default function AccountCourseLessons({
   courseId,
@@ -50,6 +51,29 @@ export default function AccountCourseLessons({
         <div className={scss.courseNameAndProgressBar}>
           <h2 className={scss.courseName}>{courseTitle}</h2>
           <PlayListProgressBar courseId={courseId} progress={progress[courseId] || 0} />
+        </div>
+        <div className={scss.expandToStandartAndGitHubLinkBlock}>
+          {(() => {
+            const currentCourse = courses.find(
+              (course) => course.id === courseId && course.available,
+            );
+            return currentCourse.access === 'vanilla' ? (
+              <Link to='' target='_blank' className={scss.expandToStandart}>
+                Expand to Standart
+              </Link>
+            ) : null;
+          })()}
+
+          {(() => {
+            const currentCourse = courses.find(
+              (course) => course.id === courseId && course.available,
+            );
+            return currentCourse.gitHubRepLink ? (
+              <a href={currentCourse.gitHubRepLink} target='_blank' className={scss.gitHubLink}>
+                Download course materials <BsGithub className={scss.gitHubLinkIcon} />
+              </a>
+            ) : null;
+          })()}
         </div>
         {/* <span className='lessons-count'>
           Завершено уроков: {completedLessonsCount}/{totalLessons}

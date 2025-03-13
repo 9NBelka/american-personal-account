@@ -6,7 +6,7 @@ export default function PlayListVideoSection({ videoUrl }) {
       {videoUrl ? (
         <iframe src={videoUrl} title='Course Video' width='100%' height='500px' allowFullScreen />
       ) : (
-        <p>Выберите урок для просмотра</p>
+        <p>Select a lesson to view</p>
       )}
     </div>
   );

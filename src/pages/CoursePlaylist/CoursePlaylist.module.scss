@@ -1,15 +1,24 @@
-.playlist-container {
-  display: flex;
-  gap: 20px;
-  padding: 20px;
+.personalAccountBackground {
+  background-color: #111111;
 }
 
-.video-section {
+.container {
+  width: 68.75vw;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.playlistContainer {
+  display: flex;
+  gap: 1vw;
+}
+
+.videoSection {
   flex: 2; /* Занимает 2/3 ширины */
   min-width: 0; /* Предотвращает переполнение */
 }
 
-.modules-section {
+.modulesSection {
   flex: 1; /* Занимает 1/3 ширины */
   min-width: 0;
 }

@@ -17,7 +17,7 @@ export default function SignUp() {
 
   useEffect(() => {
     if (userRole) {
-      navigate(userRole === 'admin' ? '/dashboard' : '/personal-account');
+      navigate(userRole === 'admin' ? '/dashboard' : '/account');
     }
   }, [userRole, navigate]);
 

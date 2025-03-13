@@ -17,6 +17,17 @@ export default function CourseLessonsList({
   const { completed, total } = getCompletedCount(module.id, module.links);
   const totalDuration = getTotalDuration(module.links);
 
+  // Функция для форматирования времени
+  const formatVideoTime = (minutes) => {
+    if (!minutes) return ''; // Если времени нет, возвращаем пустую строку
+    const hours = Math.floor(minutes / 60); // Целые часы
+    const remainingMinutes = minutes % 60; // Остаток минут
+    if (hours > 0) {
+      return `${hours}h ${remainingMinutes}m`; // Формат "1h 26m"
+    }
+    return `${minutes}m`; // Формат "45m"
+  };
+
   return (
     <div key={module.id} className={scss.moduleMainBlock}>
       <div className={scss.moduleTitleAndIconBlock} onClick={() => toggleModule(index)}>
@@ -58,7 +69,9 @@ export default function CourseLessonsList({
                   {lessonIndex + 1 + `. `}
                   {lesson.title}
                 </div>
-                {lesson.videoTime && <span className={scss.lessonTime}>{lesson.videoTime}m</span>}
+                {lesson.videoTime && (
+                  <span className={scss.lessonTime}>{formatVideoTime(lesson.videoTime)}</span>
+                )}
               </li>
             );
           })}

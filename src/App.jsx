@@ -6,6 +6,7 @@ import CoursePlaylist from './pages/CoursePlaylist/CoursePlaylist';
 import DashBoard from './pages/DashBoard/DashBoard';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute/PrivateRoute';
+import { ToastContainer } from 'react-toastify';
 
 export default function App() {
   return (
@@ -14,7 +15,7 @@ export default function App() {
         <Route path='/login' element={<Login />} />
         <Route path='/signUp' element={<SignUp />} />
         <Route
-          path='/personal-account'
+          path='/account'
           element={
             <PrivateRoute allowedRoles={['guest', 'student']}>
               <PersonalAccount />
@@ -37,8 +38,9 @@ export default function App() {
             </PrivateRoute>
           }
         />
-        <Route path='/' element={<Navigate to='/playlist/architecture' />} />
+        <Route path='/' element={<Navigate to='/login' />} />
       </Routes>
+      <ToastContainer />
     </AuthProvider>
   );
 }

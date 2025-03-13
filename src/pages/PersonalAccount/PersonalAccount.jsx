@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { auth, db } from '../../firebase';
 import { doc, getDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +10,9 @@ import AccountUserProfileInfo from '../../components/AccountUserProfileInfo/Acco
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
 import AccountCourseLessons from '../../components/AccountCourseLessons/AccountCourseLessons';
 import scss from './PersonalAccount.module.scss';
+import HeaderPersonalAccount from '../../components/HeaderPersonalAccount/HeaderPersonalAccount';
+import AccountInfoForCompany from '../../components/AccountInfoForCompany/AccountInfoForCompany';
+import AccountCompanyAndQuestions from '../../components/AccountCompanyAndQuestions/AccountCompanyAndQuestions';
 
 export default function PersonalAccount() {
   const navigate = useNavigate();
@@ -31,6 +36,7 @@ export default function PersonalAccount() {
     const fetchUserData = async () => {
       if (!user || !user.uid) {
         if (!authLoading) {
+          toast.error('Please log in.');
           navigate('/login');
         }
         return;
@@ -93,6 +99,7 @@ export default function PersonalAccount() {
                     courseData.title ||
                     doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
                   category: courseData.category || 'Uncategorized', // Add the category field here
+                  gitHubRepLink: courseData.gitHubRepLink, // Add the category field here
                   available: isAccessible,
                   access: courseAccess,
                   modules: modulesArray,
@@ -112,7 +119,7 @@ export default function PersonalAccount() {
             }
           }
         } catch (error) {
-          console.error('Ошибка при загрузке курсов:', error);
+          console.error('Error loading courses:', error);
           setError(error.message);
         }
       }
@@ -126,7 +133,7 @@ export default function PersonalAccount() {
       await auth.signOut();
       navigate('/login');
     } catch (error) {
-      console.error('Ошибка при выходе:', error);
+      console.error('Error exiting:', error);
     }
   };
 
@@ -188,6 +195,8 @@ export default function PersonalAccount() {
   return (
     <div className={scss.personalAccountBackground}>
       <div className={scss.container}>
+        <HeaderPersonalAccount userName={userName} handleLogout={handleLogout} />
+
         <div className='personal-account'>
           <AccountUserProfileInfo
             userName={userName}
@@ -233,19 +242,17 @@ export default function PersonalAccount() {
                 />
               </div>
             )}
-            <div className={scss.courseAccessContainer}>
-              <h3 className={scss.courseAccessTitle}>Available courses:</h3>
-              <p className={scss.courseAccessDescrtiption}>
-                Here you can see purchased and future courses
-              </p>
-              <AccountCoursesBlock courses={courses} progress={progress} />
+            <div className={scss.courseRightContainer}>
+              <AccountCompanyAndQuestions />
+              <div className={scss.courseAccessBlock}>
+                <h3 className={scss.courseAccessTitle}>Available courses:</h3>
+                <p className={scss.courseAccessDescrtiption}>
+                  Here you can see purchased and future courses
+                </p>
+                <AccountCoursesBlock courses={courses} progress={progress} />
+              </div>
             </div>
           </div>
-
-          <br />
-          <button onClick={handleLogout} className='logout-button'>
-            Выйти
-          </button>
         </div>
       </div>
     </div>
