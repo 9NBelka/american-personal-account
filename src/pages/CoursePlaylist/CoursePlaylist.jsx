@@ -300,7 +300,6 @@ export default function CoursePlaylist() {
   return (
     <div className={scss.personalAccountBackground}>
       <div className={scss.container}>
-        <HeaderPersonalAccount userName={userName} handleLogout={handleLogout} />
         <div className={scss.playlistContainer}>
           <div className={scss.videoSection}>
             <PlayListVideoSection videoUrl={videoUrl} />

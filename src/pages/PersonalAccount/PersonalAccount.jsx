@@ -195,8 +195,6 @@ export default function PersonalAccount() {
   return (
     <div className={scss.personalAccountBackground}>
       <div className={scss.container}>
-        <HeaderPersonalAccount userName={userName} handleLogout={handleLogout} />
-
         <div className='personal-account'>
           <AccountUserProfileInfo
             userName={userName}
