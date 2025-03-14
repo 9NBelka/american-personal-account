@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../../firebase';
-import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import scss from './EditProfile.module.scss';
 import { BsEye, BsEyeSlash } from 'react-icons/bs';
 
 export default function EditProfile() {
-  const { user } = useAuth();
+  const { user, userName, updateUserName, updateUserPassword } = useAuth();
   const navigate = useNavigate();
 
-  // Состояния для формы
   const [name, setName] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -23,22 +19,14 @@ export default function EditProfile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  const MAX_NAME_LENGTH = 15; // Ограничение на длину имени
+  const MAX_NAME_LENGTH = 15;
 
-  // Загружаем текущее имя из Firestore
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setName(userDoc.data().name || '');
-        }
-      }
-    };
-    fetchUserData();
-  }, [user]);
+    if (userName) {
+      setName(userName);
+    }
+  }, [userName]);
 
-  // Обновление имени
   const handleNameUpdate = async () => {
     setLoadingName(true);
     setNameError(null);
@@ -48,9 +36,8 @@ export default function EditProfile() {
         setNameError(`Name cannot exceed ${MAX_NAME_LENGTH} characters.`);
         return;
       }
-      if (name && name !== (user.displayName || '')) {
-        const userRef = doc(db, 'users', user.uid);
-        await updateDoc(userRef, { name });
+      if (name && name !== userName) {
+        await updateUserName(name);
         toast.success('Name updated successfully!');
       } else {
         setNameError('Please enter a new name to update.');
@@ -63,16 +50,13 @@ export default function EditProfile() {
     }
   };
 
-  // Обновление пароля
   const handlePasswordUpdate = async () => {
     setLoadingPassword(true);
     setPasswordError(null);
 
     try {
       if (currentPassword && newPassword) {
-        const credential = EmailAuthProvider.credential(user.email, currentPassword);
-        await reauthenticateWithCredential(auth.currentUser, credential);
-        await updatePassword(auth.currentUser, newPassword);
+        await updateUserPassword(currentPassword, newPassword);
         toast.success('Password updated successfully!');
         setCurrentPassword('');
         setNewPassword('');
@@ -107,7 +91,7 @@ export default function EditProfile() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder='Enter your name'
-                maxLength={MAX_NAME_LENGTH} // Ограничение ввода
+                maxLength={MAX_NAME_LENGTH}
                 disabled={loadingName}
               />
               {nameError && <p className={scss.error}>{nameError}</p>}

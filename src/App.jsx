@@ -1,8 +1,6 @@
-import { doc, getDoc } from 'firebase/firestore';
-import { db, auth } from './firebase';
+import { Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import Login from './pages/Login/Login';
 import PersonalAccount from './pages/PersonalAccount/PersonalAccount';
-import { Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import SignUp from './pages/SignUp/SignUp';
 import CoursePlaylist from './pages/CoursePlaylist/CoursePlaylist';
 import DashBoard from './pages/DashBoard/DashBoard';
@@ -11,6 +9,7 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute/PrivateRoute';
 import { ToastContainer } from 'react-toastify';
 import HeaderPersonalAccount from './components/HeaderPersonalAccount/HeaderPersonalAccount';
+import { auth } from './firebase';
 
 export default function App() {
   const navigate = useNavigate();

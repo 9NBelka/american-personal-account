@@ -1,5 +1,7 @@
-import CourseLessonsList from '../CourseLessonsList/CourseLessonsList';
+import React from 'react';
+import scss from './PlayListModuleBlock.module.scss'; // Убедись, что путь правильный
 import PlayListModuleHeader from '../PlayListModuleHeader/PlayListModuleHeader';
+import CourseLessonsList from '../CourseLessonsList/CourseLessonsList';
 
 export default function PlayListModuleBlock({
   courseTitle,
@@ -16,15 +18,13 @@ export default function PlayListModuleBlock({
   totalDuration,
 }) {
   return (
-    <>
-      {courseTitle && (
-        <PlayListModuleHeader
-          courseTitle={courseTitle}
-          completedLessonsCount={completedLessonsCount}
-          totalLessons={totalLessons}
-          totalDuration={totalDuration}
-        />
-      )}
+    <div className={scss.moduleBlock}>
+      <PlayListModuleHeader
+        courseTitle={courseTitle}
+        completedLessonsCount={completedLessonsCount}
+        totalLessons={totalLessons}
+        totalDuration={totalDuration}
+      />
       {modules.map((module, index) => (
         <CourseLessonsList
           key={module.id}
@@ -39,6 +39,6 @@ export default function PlayListModuleBlock({
           getTotalDuration={getTotalDuration}
         />
       ))}
-    </>
+    </div>
   );
 }

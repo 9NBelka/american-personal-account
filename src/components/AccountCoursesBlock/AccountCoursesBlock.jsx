@@ -3,7 +3,6 @@ import AccountCourseCard from '../AccountCourseCard/AccountCourseCard';
 import scss from './AccountCoursesBlock.module.scss';
 
 export default function AccountCoursesBlock({ courses, progress }) {
-  // console.log(courseCategory);
   return (
     <div className={scss.coursesBlock}>
       {courses.length > 0 ? (

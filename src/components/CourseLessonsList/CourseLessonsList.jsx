@@ -17,15 +17,14 @@ export default function CourseLessonsList({
   const { completed, total } = getCompletedCount(module.id, module.links);
   const totalDuration = getTotalDuration(module.links);
 
-  // Функция для форматирования времени
   const formatVideoTime = (minutes) => {
-    if (!minutes) return ''; // Если времени нет, возвращаем пустую строку
-    const hours = Math.floor(minutes / 60); // Целые часы
-    const remainingMinutes = minutes % 60; // Остаток минут
+    if (!minutes) return '';
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
     if (hours > 0) {
-      return `${hours}h ${remainingMinutes}m`; // Формат "1h 26m"
+      return `${hours}h ${remainingMinutes}m`;
     }
-    return `${minutes}m`; // Формат "45m"
+    return `${minutes}m`;
   };
 
   return (

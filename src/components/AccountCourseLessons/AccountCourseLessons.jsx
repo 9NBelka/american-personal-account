@@ -47,7 +47,6 @@ export default function AccountCourseLessons({
             <p className={scss.courseHeaderTime}>{totalDuration}</p>
           </div>
         </div>
-
         <div className={scss.courseNameAndProgressBar}>
           <h2 className={scss.courseName}>{courseTitle}</h2>
           <PlayListProgressBar courseId={courseId} progress={progress[courseId] || 0} />
@@ -63,7 +62,6 @@ export default function AccountCourseLessons({
               </Link>
             ) : null;
           })()}
-
           {(() => {
             const currentCourse = courses.find(
               (course) => course.id === courseId && course.available,
@@ -75,9 +73,6 @@ export default function AccountCourseLessons({
             ) : null;
           })()}
         </div>
-        {/* <span className='lessons-count'>
-          Завершено уроков: {completedLessonsCount}/{totalLessons}
-        </span> */}
       </div>
       {modules.map((module, index) => (
         <CourseLessonsList

@@ -6,7 +6,6 @@ import scss from './PlayListProgressBar.module.scss';
 export default function PlayListProgressBar({ progress }) {
   const normalizedProgress = Math.min(100, Math.max(0, progress));
 
-  // Кастомная функция для рендеринга текста
   const renderCustomText = (value) => {
     return <tspan className={scss.customText}>{value}%</tspan>;
   };
