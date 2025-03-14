@@ -94,70 +94,74 @@ export default function EditProfile() {
   };
 
   return (
-    <div className={scss.editProfile}>
-      <h2>Edit Profile</h2>
-      <div className={scss.form}>
-        <div className={scss.formGroup}>
-          <label htmlFor='name'>Name (max {MAX_NAME_LENGTH} characters)</label>
-          <input
-            type='text'
-            id='name'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder='Enter your name'
-            maxLength={MAX_NAME_LENGTH} // Ограничение ввода
-            disabled={loadingName}
-          />
-          {nameError && <p className={scss.error}>{nameError}</p>}
-          <button
-            type='button'
-            className={scss.submitButton}
-            onClick={handleNameUpdate}
-            disabled={loadingName}>
-            {loadingName ? 'Saving...' : 'Update Name'}
-          </button>
-        </div>
-        <div className={scss.formGroup}>
-          <label htmlFor='currentPassword'>Current Password</label>
-          <div className={scss.passwordWrapper}>
-            <input
-              type={showCurrentPassword ? 'text' : 'password'}
-              id='currentPassword'
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder='Enter current password'
-              disabled={loadingPassword}
-            />
-            <span
-              className={scss.eyeIcon}
-              onClick={() => setShowCurrentPassword(!showCurrentPassword)}>
-              {showCurrentPassword ? <BsEyeSlash /> : <BsEye />}
-            </span>
+    <div className={scss.editProfileBackground}>
+      <div className={scss.container}>
+        <div className={scss.editProfile}>
+          <h2>Edit Profile</h2>
+          <div className={scss.form}>
+            <div className={scss.formGroup}>
+              <label htmlFor='name'>Name (max {MAX_NAME_LENGTH} characters)</label>
+              <input
+                type='text'
+                id='name'
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder='Enter your name'
+                maxLength={MAX_NAME_LENGTH} // Ограничение ввода
+                disabled={loadingName}
+              />
+              {nameError && <p className={scss.error}>{nameError}</p>}
+              <button
+                type='button'
+                className={scss.submitButton}
+                onClick={handleNameUpdate}
+                disabled={loadingName}>
+                {loadingName ? 'Saving...' : 'Update Name'}
+              </button>
+            </div>
+            <div className={scss.formGroup}>
+              <label htmlFor='currentPassword'>Current Password</label>
+              <div className={scss.passwordWrapper}>
+                <input
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  id='currentPassword'
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder='Enter current password'
+                  disabled={loadingPassword}
+                />
+                <span
+                  className={scss.eyeIcon}
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}>
+                  {showCurrentPassword ? <BsEyeSlash /> : <BsEye />}
+                </span>
+              </div>
+            </div>
+            <div className={scss.formGroup}>
+              <label htmlFor='newPassword'>New Password (min 6 characters)</label>
+              <div className={scss.passwordWrapper}>
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  id='newPassword'
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder='Enter new password'
+                  disabled={loadingPassword}
+                />
+                <span className={scss.eyeIcon} onClick={() => setShowNewPassword(!showNewPassword)}>
+                  {showNewPassword ? <BsEyeSlash /> : <BsEye />}
+                </span>
+              </div>
+              {passwordError && <p className={scss.error}>{passwordError}</p>}
+              <button
+                type='button'
+                className={scss.submitButton}
+                onClick={handlePasswordUpdate}
+                disabled={loadingPassword}>
+                {loadingPassword ? 'Saving...' : 'Update Password'}
+              </button>
+            </div>
           </div>
-        </div>
-        <div className={scss.formGroup}>
-          <label htmlFor='newPassword'>New Password (min 6 characters)</label>
-          <div className={scss.passwordWrapper}>
-            <input
-              type={showNewPassword ? 'text' : 'password'}
-              id='newPassword'
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder='Enter new password'
-              disabled={loadingPassword}
-            />
-            <span className={scss.eyeIcon} onClick={() => setShowNewPassword(!showNewPassword)}>
-              {showNewPassword ? <BsEyeSlash /> : <BsEye />}
-            </span>
-          </div>
-          {passwordError && <p className={scss.error}>{passwordError}</p>}
-          <button
-            type='button'
-            className={scss.submitButton}
-            onClick={handlePasswordUpdate}
-            disabled={loadingPassword}>
-            {loadingPassword ? 'Saving...' : 'Update Password'}
-          </button>
         </div>
       </div>
     </div>
