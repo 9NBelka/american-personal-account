@@ -34,7 +34,7 @@ export default function HeaderPersonalAccount({ handleLogout }) {
       <div className={scss.container}>
         <nav className={scss.navigationBlock}>
           <div className={scss.logoBlock}>
-            <img src='/src/assets/img/knowledgeSyndicateLogo.png' alt='Logo' />
+            <img src='/img/knowledgeSyndicateLogo.png' alt='Logo' />
           </div>
           <ul>
             <li

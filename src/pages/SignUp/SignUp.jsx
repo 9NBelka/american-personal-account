@@ -79,7 +79,7 @@ export default function SignUp() {
       <div className={scss.container}>
         <div className={scss.mainBlock}>
           <div className={scss.imageAndLinkBlock}>
-            <img src='/src/assets/img/SignUpImage.jpg' alt='loginImage' />
+            <img src='/img/SignUpImage.jpg' alt='loginImage' />
             <Link to=''>
               Back to WebSite <BsBoxArrowInRight className={scss.icon} />
             </Link>

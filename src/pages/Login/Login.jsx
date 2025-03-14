@@ -62,7 +62,7 @@ export default function Login() {
       <div className={scss.container}>
         <div className={scss.mainBlock}>
           <div className={scss.imageAndLinkBlock}>
-            <img src='/src/assets/img/LogInImage.jpg' alt='loginImage' />
+            <img src='/img/LogInImage.jpg' alt='loginImage' />
             <Link to=''>
               Back to WebSite <BsBoxArrowInRight className={scss.icon} />
             </Link>
