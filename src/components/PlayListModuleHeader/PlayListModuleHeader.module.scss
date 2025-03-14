@@ -1,0 +1,24 @@
+.courseHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9vw 1.2vw;
+
+  & .courseTitle {
+    font-size: 1.2vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-normal);
+  }
+
+  & .lessonsCount {
+    display: flex;
+    font-size: 0.8vw;
+    color: var(--color-blue);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-normal);
+  }
+}

@@ -1,10 +1,12 @@
 import React from 'react';
+import scss from './PlayListVideoSection.module.scss';
 
 export default function PlayListVideoSection({ videoUrl }) {
+  const src = `https://iframe.dacast.com/vod/${videoUrl}`;
   return (
-    <div className='video-section'>
+    <div className={scss.videoSection}>
       {videoUrl ? (
-        <iframe src={videoUrl} title='Course Video' width='100%' height='500px' allowFullScreen />
+        <iframe src={src} title='Course Video' allowFullScreen />
       ) : (
         <p>Select a lesson to view</p>
       )}

@@ -6,6 +6,7 @@ import { Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-
 import SignUp from './pages/SignUp/SignUp';
 import CoursePlaylist from './pages/CoursePlaylist/CoursePlaylist';
 import DashBoard from './pages/DashBoard/DashBoard';
+import EditProfile from './pages/EditProfile/EditProfile';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute/PrivateRoute';
 import { ToastContainer } from 'react-toastify';
@@ -13,7 +14,7 @@ import HeaderPersonalAccount from './components/HeaderPersonalAccount/HeaderPers
 
 export default function App() {
   const navigate = useNavigate();
-  const location = useLocation(); // Добавляем для проверки текущего маршрута
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -24,9 +25,7 @@ export default function App() {
     }
   };
 
-  // Список маршрутов, где хеддер НЕ нужен
   const noHeaderRoutes = ['/login', '/signUp'];
-  // Проверяем, нужно ли рендерить хеддер
   const shouldRenderHeader = !noHeaderRoutes.includes(location.pathname);
 
   return (
@@ -56,6 +55,14 @@ export default function App() {
           element={
             <PrivateRoute allowedRoles={['guest', 'student']}>
               <CoursePlaylist />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/edit'
+          element={
+            <PrivateRoute allowedRoles={['guest', 'student']}>
+              <EditProfile />
             </PrivateRoute>
           }
         />
