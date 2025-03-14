@@ -1,5 +1,11 @@
 .videoSection {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background-color: var(--color-darkGrey);
+  border-radius: 0.75vw;
+  height: 50vh;
   width: 100%;
 
   & iframe {
@@ -7,5 +13,7 @@
     height: 50vh;
     border: 0;
     border-radius: 0.75vw;
+    transition: opacity 0.3s ease-in-out;
+    opacity: 1;
   }
 }

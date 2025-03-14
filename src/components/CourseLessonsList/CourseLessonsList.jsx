@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import scss from './CourseLessonsList.module.scss';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import clsx from 'clsx';
@@ -27,9 +27,13 @@ export default function CourseLessonsList({
     return `${minutes}m`;
   };
 
+  const handleToggle = () => {
+    toggleModule(index);
+  };
+
   return (
     <div key={module.id} className={scss.moduleMainBlock}>
-      <div className={scss.moduleTitleAndIconBlock} onClick={() => toggleModule(index)}>
+      <div className={scss.moduleTitleAndIconBlock} onClick={handleToggle}>
         <div className={scss.moduleTitleAndCountBlock}>
           <h3 className={scss.moduleTitle}>
             {index + 1 + `. ` + `module | `}

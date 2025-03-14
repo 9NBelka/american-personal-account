@@ -1,19 +1,16 @@
 import * as Yup from 'yup';
-import { auth, db } from '../../firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import scss from './SignUp.module.scss';
 import { BsBoxArrowInRight } from 'react-icons/bs';
-
 import LSPrivacyCheckbox from '../../components/LSPrivacyCheckbox/LSPrivacyCheckbox';
+import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const { userRole, isLoading } = useAuth();
+  const { userRole, isLoading, signUp } = useAuth();
 
   useEffect(() => {
     if (userRole) {
@@ -27,7 +24,7 @@ export default function SignUp() {
     email: '',
     password: '',
     confirmPassword: '',
-    agreeToPrivacy: false, // Новое поле для чекбокса
+    agreeToPrivacy: false,
   };
 
   const validationSchema = Yup.object({
@@ -46,29 +43,12 @@ export default function SignUp() {
     confirmPassword: Yup.string()
       .oneOf([Yup.ref('password'), null], '*Passwords must match')
       .required('*Required field'),
-    agreeToPrivacy: Yup.boolean().oneOf([true], '*You must agree to the Privacy Policy'), // Обязательное поле
+    agreeToPrivacy: Yup.boolean().oneOf([true], '*You must agree to the Privacy Policy'),
   });
 
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        values.email,
-        values.password,
-      );
-      const registrationDate = new Date().toISOString();
-
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        name: values.name,
-        lastName: values.lastName || '',
-        email: values.email,
-        role: 'guest',
-        registrationDate,
-      });
-
-      await updateProfile(userCredential.user, {
-        displayName: `${values.name} ${values.lastName || ''}`.trim(),
-      });
+      await signUp(values.name, values.lastName, values.email, values.password);
       navigate('/login');
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
@@ -81,7 +61,7 @@ export default function SignUp() {
   };
 
   if (isLoading) {
-    return <div>Загрузка...</div>;
+    return <AccountLoadingIndicator />;
   }
 
   const fields = [
@@ -95,31 +75,32 @@ export default function SignUp() {
   const halfInput = true;
 
   return (
-    <div className={scss.container}>
-      <div className={scss.mainBlock}>
-        <div className={scss.imageAndLinkBlock}>
-          <img src='/src/assets/img/SignUpImage.jpg' alt='loginImage' />
-          <Link to=''>
-            Back to WebSite <BsBoxArrowInRight className={scss.icon} />
-          </Link>
-        </div>
-        <div className={scss.formBlock}>
-          <LSAuthForm
-            initialValues={initialValues}
-            validationSchema={validationSchema}
-            onSubmit={handleSubmit}
-            title='Create an account'
-            fields={fields}
-            submitText='Create an account'
-            linkText='Already have an account?'
-            linkToText='Log in'
-            linkTo='/login'
-            isSubmitting={isLoading}
-            halfInput={halfInput}
-            otherPointsText='Register'>
-            {/* Передаем PrivacyCheckbox как дочерний элемент */}
-            <LSPrivacyCheckbox />
-          </LSAuthForm>
+    <div className={scss.backgroundSignUp}>
+      <div className={scss.container}>
+        <div className={scss.mainBlock}>
+          <div className={scss.imageAndLinkBlock}>
+            <img src='/src/assets/img/SignUpImage.jpg' alt='loginImage' />
+            <Link to=''>
+              Back to WebSite <BsBoxArrowInRight className={scss.icon} />
+            </Link>
+          </div>
+          <div className={scss.formBlock}>
+            <LSAuthForm
+              initialValues={initialValues}
+              validationSchema={validationSchema}
+              onSubmit={handleSubmit}
+              title='Create an account'
+              fields={fields}
+              submitText='Create an account'
+              linkText='Already have an account?'
+              linkToText='Log in'
+              linkTo='/login'
+              isSubmitting={isLoading}
+              halfInput={halfInput}
+              otherPointsText='Register'>
+              <LSPrivacyCheckbox />
+            </LSAuthForm>
+          </div>
         </div>
       </div>
     </div>

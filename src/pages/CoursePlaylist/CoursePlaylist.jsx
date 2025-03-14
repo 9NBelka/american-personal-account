@@ -22,7 +22,7 @@ export default function CoursePlaylist() {
   } = useAuth();
   const navigate = useNavigate();
   const [videoUrl, setVideoUrl] = useState('');
-  const [expandedModule, setExpandedModule] = useState(null);
+  const [expandedModule, setExpandedModule] = useState(null); // Может быть null или индекс модуля
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,13 +50,11 @@ export default function CoursePlaylist() {
 
       await updateCourseData(courseId);
 
-      // Логика выбора следующего урока
       const courseCompletedLessons = completedLessons[courseId] || {};
       let nextLessonUrl = '';
-      let nextModuleIndex = 0;
+      let nextModuleIndex = null;
       let allCompleted = true;
 
-      // Проходим по всем модулям и урокам, чтобы найти следующий незавершённый урок
       for (let i = 0; i < course.modules.length; i++) {
         const module = course.modules[i];
         const moduleCompletedLessons = courseCompletedLessons[module.id] || [];
@@ -69,18 +67,16 @@ export default function CoursePlaylist() {
             break;
           }
         }
-        if (nextLessonUrl) break; // Если нашли следующий урок, выходим из цикла
+        if (nextLessonUrl) break;
       }
 
-      // Если все уроки завершены, выбираем последний урок последнего модуля
-      if (allCompleted) {
+      if (allCompleted && course.modules.length > 0) {
         const lastModule = course.modules[course.modules.length - 1];
         nextLessonUrl = lastModule.links[lastModule.links.length - 1].videoUrl;
         nextModuleIndex = course.modules.length - 1;
       }
 
-      // Если ничего не найдено (например, нет уроков), берём первый урок первого модуля
-      if (!nextLessonUrl) {
+      if (!nextLessonUrl && course.modules.length > 0) {
         nextLessonUrl = course.modules[0]?.links[0]?.videoUrl || '';
         nextModuleIndex = 0;
       }
@@ -91,22 +87,15 @@ export default function CoursePlaylist() {
     };
 
     loadData();
-  }, [
-    user,
-    userRole,
-    authLoading,
-    courseId,
-    courses,
-    completedLessons,
-    updateCourseData,
-    navigate,
-  ]);
+  }, [user, userRole, authLoading, courseId, courses, navigate]); // Убраны completedLessons и updateCourseData
 
   const handleLessonClick = (videoUrl) => {
     setVideoUrl(videoUrl);
   };
 
   const toggleModule = (moduleIndex) => {
+    // Если кликнули на уже открытый модуль, закрываем его (null),
+    // иначе открываем новый модуль
     setExpandedModule(expandedModule === moduleIndex ? null : moduleIndex);
   };
 

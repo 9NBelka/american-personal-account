@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import AccountLoadingIndicator from '../AccountLoadingIndicator/AccountLoadingIndicator';
 
 /*
 Что это даёт?
@@ -12,7 +13,7 @@ export default function PrivateRoute({ children, allowedRoles }) {
   const { userRole, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Загрузка...</div>;
+    return <AccountLoadingIndicator />;
   }
 
   if (!userRole) {

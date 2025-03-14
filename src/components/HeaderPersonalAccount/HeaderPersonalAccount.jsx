@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import scss from './HeaderPersonalAccount.module.scss';
 import { useAuth } from '../../context/AuthContext';
 import { BsBellFill, BsBoxArrowInRight, BsFillGearFill } from 'react-icons/bs';
+import AccountLoadingIndicator from '../AccountLoadingIndicator/AccountLoadingIndicator';
 
 export default function HeaderPersonalAccount({ handleLogout }) {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function HeaderPersonalAccount({ handleLogout }) {
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <AccountLoadingIndicator />;
 
   return (
     <header className={scss.header}>

@@ -1,7 +1,12 @@
 import { createContext, useContext, useEffect, useCallback, useState } from 'react';
 import { auth, db } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc, getDocs, collection } from 'firebase/firestore';
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from 'firebase/auth';
+import { doc, getDoc, updateDoc, setDoc, getDocs, collection } from 'firebase/firestore';
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 'firebase/auth';
 
 const AuthContext = createContext();
@@ -9,8 +14,8 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
-  const [userName, setUserName] = useState(''); // Добавляем имя пользователя
-  const [registrationDate, setRegistrationDate] = useState(''); // Добавляем дату регистрации
+  const [userName, setUserName] = useState('');
+  const [registrationDate, setRegistrationDate] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState({});
   const [completedLessons, setCompletedLessons] = useState({});
@@ -18,9 +23,8 @@ export function AuthProvider({ children }) {
   const [lastCourseId, setLastCourseId] = useState(() => {
     return localStorage.getItem('lastCourseId') || null;
   });
-  const [courses, setCourses] = useState([]); // Добавляем курсы
+  const [courses, setCourses] = useState([]);
 
-  // Получение данных пользователя
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
@@ -34,7 +38,6 @@ export function AuthProvider({ children }) {
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
-  // Загрузка курсов
   const fetchCourses = useCallback(async (purchasedCourses) => {
     const courseDocs = await getDocs(collection(db, 'courses'));
     if (courseDocs.empty) return [];
@@ -93,7 +96,39 @@ export function AuthProvider({ children }) {
     return courseList;
   }, []);
 
-  // Обновление данных курса
+  // Функция для входа
+  const login = useCallback(async (email, password) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // Данные пользователя загрузятся через useEffect ниже
+    } catch (error) {
+      throw error; // Пробрасываем ошибку для обработки в компоненте
+    }
+  }, []);
+
+  // Функция для регистрации
+  const signUp = useCallback(async (name, lastName, email, password) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const registrationDate = new Date().toISOString();
+      const user = userCredential.user;
+
+      await setDoc(doc(db, 'users', user.uid), {
+        name,
+        lastName: lastName || '',
+        email,
+        role: 'guest',
+        registrationDate,
+      });
+
+      await updateProfile(user, {
+        displayName: `${name} ${lastName || ''}`.trim(),
+      });
+    } catch (error) {
+      throw error; // Пробрасываем ошибку для обработки в компоненте
+    }
+  }, []);
+
   const updateCourseData = useCallback(
     async (courseId) => {
       if (!user || !user.uid || !courseId) return;
@@ -120,7 +155,6 @@ export function AuthProvider({ children }) {
     [user],
   );
 
-  // Обновление имени
   const updateUserName = useCallback(
     async (newName) => {
       if (!user || !user.uid) return;
@@ -131,7 +165,6 @@ export function AuthProvider({ children }) {
     [user],
   );
 
-  // Обновление пароля
   const updateUserPassword = useCallback(
     async (currentPassword, newPassword) => {
       if (!user || !user.email) return;
@@ -142,7 +175,6 @@ export function AuthProvider({ children }) {
     [user],
   );
 
-  // Обновление прогресса курса
   const toggleLessonCompletion = useCallback(
     async (courseId, moduleId, lessonIndex, totalLessons) => {
       if (!user || !user.uid) return;
@@ -185,7 +217,6 @@ export function AuthProvider({ children }) {
     [user, completedLessons],
   );
 
-  // Инициализация при изменении авторизации
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -257,6 +288,8 @@ export function AuthProvider({ children }) {
     updateUserName,
     updateUserPassword,
     toggleLessonCompletion,
+    login, // Добавляем функцию login
+    signUp, // Добавляем функцию signUp
     error,
     lastCourseId,
     setLastCourseId,

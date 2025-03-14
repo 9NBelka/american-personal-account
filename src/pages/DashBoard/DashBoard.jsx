@@ -4,6 +4,7 @@ import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator.jsx';
 
 export default function DashBoard() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function DashBoard() {
   }, [userRole, isLoading, navigate]);
 
   if (isLoading) {
-    return <div>Загрузка...</div>;
+    return <AccountLoadingIndicator />;
   }
 
   const initialValues = {
