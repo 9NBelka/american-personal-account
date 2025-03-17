@@ -4,9 +4,27 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import scss from './CoursePlaylist.module.scss';
+import clsx from 'clsx'; // Импорт clsx
 import PlayListLoadingIndicator from '../../components/PlayListLoadingIndicator/PlayListLoadingIndicator.jsx';
 import PlayListVideoSection from '../../components/PlayListVideoSection/PlayListVideoSection.jsx';
 import PlayListModuleBlock from '../../components/PlayListModuleBlock/PlayListModuleBlock.jsx';
+import VideoSectionMenuOverview from '../../components/VideoSectionMenuOverview/VideoSectionMenuOverview.jsx';
+
+const FAQ = () => (
+  <div>
+    <h2>FAQ</h2>
+    <p>1. Q: How long is the course? A: 48h 30min.</p>
+    <p>2. Q: Do I need prior experience? A: Basic C# knowledge is required.</p>
+  </div>
+);
+
+const Reviews = () => (
+  <div>
+    <h2>Reviews</h2>
+    <p>Review 1: Great course for beginners!</p>
+    <p>Review 2: Very informative.</p>
+  </div>
+);
 
 export default function CoursePlaylist() {
   const { courseId } = useParams();
@@ -22,8 +40,9 @@ export default function CoursePlaylist() {
   } = useAuth();
   const navigate = useNavigate();
   const [videoUrl, setVideoUrl] = useState('');
-  const [expandedModule, setExpandedModule] = useState(null); // Может быть null или индекс модуля
+  const [expandedModule, setExpandedModule] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Overview');
 
   useEffect(() => {
     const loadData = async () => {
@@ -87,15 +106,13 @@ export default function CoursePlaylist() {
     };
 
     loadData();
-  }, [user, userRole, authLoading, courseId, courses, navigate]); // Убраны completedLessons и updateCourseData
+  }, [user, userRole, authLoading, courseId, courses, navigate]);
 
   const handleLessonClick = (videoUrl) => {
     setVideoUrl(videoUrl);
   };
 
   const toggleModule = (moduleIndex) => {
-    // Если кликнули на уже открытый модуль, закрываем его (null),
-    // иначе открываем новый модуль
     setExpandedModule(expandedModule === moduleIndex ? null : moduleIndex);
   };
 
@@ -119,6 +136,38 @@ export default function CoursePlaylist() {
         <div className={scss.playlistContainer}>
           <div className={scss.videoSection}>
             <PlayListVideoSection videoUrl={videoUrl} />
+            {/* Меню для переключения */}
+            <div className={scss.videoSectionMenu}>
+              <button
+                className={clsx(scss.tabButton, activeTab === 'Overview' && scss.active)}
+                onClick={() => setActiveTab('Overview')}>
+                Overview
+              </button>
+              <button
+                className={clsx(scss.tabButton, activeTab === 'FAQ' && scss.active)}
+                onClick={() => setActiveTab('FAQ')}>
+                FAQ
+              </button>
+              <button
+                className={clsx(scss.tabButton, activeTab === 'Reviews' && scss.active)}
+                onClick={() => setActiveTab('Reviews')}>
+                Reviews
+              </button>
+            </div>
+            <div className={scss.videoSectionMenuResults}>
+              {/* Компонент в зависимости от выбранного пункта */}
+              {activeTab === 'Overview' && (
+                <VideoSectionMenuOverview
+                  courseTitle={course.title}
+                  totalLessons={course.totalLessons}
+                  description={course.description}
+                  courseGitHubRepLink={course.gitHubRepLink}
+                  totalDuration={course.totalDuration}
+                />
+              )}
+              {activeTab === 'FAQ' && <FAQ />}
+              {activeTab === 'Reviews' && <Reviews />}
+            </div>
           </div>
           <div className={scss.modulesSection}>
             <PlayListModuleBlock

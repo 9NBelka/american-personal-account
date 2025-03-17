@@ -42,6 +42,8 @@ export default function PersonalAccount() {
 
   const activeCourse = courses.find((course) => course.id === lastCourseId && course.available);
 
+  console.log(activeCourse.totalDuration);
+
   return (
     <div className={scss.personalAccountBackground}>
       <div className={scss.container}>

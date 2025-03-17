@@ -1,0 +1,85 @@
+.overviewBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.courseTitle {
+  font-size: 1.8vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-weight: var(--font-weight-small);
+  line-height: var(--font-lineh-center);
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.overviewIconAndTextBlocks {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 0.75vw;
+  gap: 1vw;
+
+  & .overviewIconAndTextBlock {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.3vw;
+
+    & .iconClock {
+      display: flex;
+      height: 0.8vw;
+      width: 0.8vw;
+      fill: var(--color-lightGrey);
+    }
+
+    & p {
+      display: flex;
+      font-size: 0.8vw;
+      color: var(--color-lightGrey);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      margin: 0;
+    }
+  }
+}
+
+.overviewDescription {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.5vw;
+
+  & p {
+    display: flex;
+    font-size: 0.8vw;
+    color: var(--color-white);
+    font-family: var(--font-albertSans);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-normal);
+    margin: 0;
+  }
+
+  & .gitHubLinkBlock {
+    display: flex;
+    flex-direction: row;
+    margin-top: 1vw;
+
+    & a {
+      display: flex;
+      font-size: 0.8vw;
+      color: var(--color-lightGreen);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      text-decoration: underline;
+      gap: 0.5vw;
+
+      & .gitHubLinkIcon {
+        width: 0.85vw;
+        height: 0.85vw;
+        fill: var(--color-lightGreen);
+      }
+    }
+  }
+}

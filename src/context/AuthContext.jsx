@@ -84,6 +84,7 @@ export function AuthProvider({ children }) {
             courseData.title || doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
           category: courseData.category || 'Uncategorized',
           gitHubRepLink: courseData.gitHubRepLink,
+          description: courseData.description || ' ',
           available: isAccessible,
           access: courseAccess,
           modules: modulesArray,
@@ -97,18 +98,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Функция для входа
-  const login = useCallback(async (email, password) => {
-    try {
+  const login = useCallback(
+    async (email, password) => {
       await signInWithEmailAndPassword(auth, email, password);
-      // Данные пользователя загрузятся через useEffect ниже
-    } catch (error) {
-      throw error; // Пробрасываем ошибку для обработки в компоненте
-    }
-  }, []);
+    },
+    [auth],
+  );
 
-  // Функция для регистрации
-  const signUp = useCallback(async (name, lastName, email, password) => {
-    try {
+  const signUp = useCallback(
+    async (name, lastName, email, password) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const registrationDate = new Date().toISOString();
       const user = userCredential.user;
@@ -124,10 +122,9 @@ export function AuthProvider({ children }) {
       await updateProfile(user, {
         displayName: `${name} ${lastName || ''}`.trim(),
       });
-    } catch (error) {
-      throw error; // Пробрасываем ошибку для обработки в компоненте
-    }
-  }, []);
+    },
+    [auth, db],
+  );
 
   const updateCourseData = useCallback(
     async (courseId) => {

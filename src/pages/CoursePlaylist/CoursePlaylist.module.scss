@@ -17,12 +17,71 @@
 
 .videoSection {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100%;
   width: 65%;
-
   min-width: 0; /* Предотвращает переполнение */
+}
+
+.videoSectionMenu {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: start;
+  margin-top: 0.75vw;
+  border-bottom: 0.1vw solid var(--color-darkGrey);
+
+  & .tabButton {
+    background: none;
+    border: none;
+    display: flex;
+    justify-content: center;
+    font-size: 0.8vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    padding: 0.75vw 0vw;
+    width: 6.5vw;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+    position: relative;
+
+    &:hover {
+      color: var(--color-blue);
+    }
+
+    &.active {
+      display: flex;
+      color: var(--color-blue);
+
+      &::after {
+        display: flex;
+        content: '';
+        position: absolute;
+        bottom: -0.05vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+        left: 0;
+        width: 100%;
+        height: 0.1vw;
+        background-color: var(--color-blue);
+        z-index: 1;
+        transition: all 0.3s ease; // Плавное появление линии
+      }
+    }
+  }
+}
+
+.videoSectionMenuResults {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  width: 100%;
+  border: 0.1vw solid var(--color-darkGrey);
+  border-radius: 0.5vw;
+  padding: 1.25vw;
+  margin-top: 2vw;
 }
 
 .modulesSection {
