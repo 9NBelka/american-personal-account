@@ -1,33 +1,34 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const cors = require('cors')({ origin: 'https://lms-jet-one.vercel.app' }); // Укажи свой домен
+
 admin.initializeApp();
 
-exports.getCourseUserCount = functions.https.onCall(async (data, context) => {
-  // Проверяем, что запрос авторизован (опционально, для безопасности)
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated',
-      'Требуется авторизация для доступа к этой функции.',
-    );
-  }
+exports.getCourseUserCount = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    if (req.method !== 'GET' && req.method !== 'POST') {
+      return res.status(405).send('Method Not Allowed');
+    }
 
-  // Получаем название курса из запроса
-  const courseId = data.courseId || 'architecture'; // По умолчанию "architecture"
+    // Проверяем авторизацию (опционально)
+    if (!req.headers.authorization) {
+      return res.status(401).send('Unauthorized');
+    }
 
-  try {
-    // Запрашиваем все документы из коллекции users
-    const snapshot = await admin.firestore().collection('users').get();
+    const courseId = req.query.courseId || 'architecture';
 
-    // Фильтруем и подсчитываем пользователей с доступом к курсу
-    const count = snapshot.docs.reduce((acc, doc) => {
-      const purchasedCourses = doc.data().purchasedCourses || {};
-      const courseData = purchasedCourses[courseId] || {};
-      const hasAccess = courseData.access && courseData.access !== 'denied';
-      return acc + (hasAccess ? 1 : 0);
-    }, 0);
+    try {
+      const snapshot = await admin.firestore().collection('users').get();
+      const count = snapshot.docs.reduce((acc, doc) => {
+        const purchasedCourses = doc.data().purchasedCourses || {};
+        const courseData = purchasedCourses[courseId] || {};
+        const hasAccess = courseData.access && courseData.access !== 'denied';
+        return acc + (hasAccess ? 1 : 0);
+      }, 0);
 
-    return { count };
-  } catch (error) {
-    throw new functions.https.HttpsError('internal', `Ошибка при подсчёте: ${error.message}`);
-  }
+      res.status(200).json({ count });
+    } catch (error) {
+      res.status(500).send(`Ошибка при подсчёте: ${error.message}`);
+    }
+  });
 });

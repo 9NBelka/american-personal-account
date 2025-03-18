@@ -101,15 +101,27 @@ export function AuthProvider({ children }) {
     return courseList;
   }, []);
 
-  const fetchCourseUserCount = useCallback(async (courseId) => {
-    try {
-      const result = await getCourseUserCount({ courseId });
-      return result.data.count;
-    } catch (error) {
-      console.error('Ошибка при получении количества пользователей:', error);
-      return 0;
-    }
-  }, []);
+  const fetchCourseUserCount = useCallback(
+    async (courseId) => {
+      try {
+        const response = await fetch(
+          `https://us-central1-k-syndicate.cloudfunctions.net/getCourseUserCount?courseId=${courseId}`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${await auth.currentUser.getIdToken()}`, // Если требуется авторизация
+            },
+          },
+        );
+        const data = await response.json();
+        return data.count;
+      } catch (error) {
+        console.error('Ошибка при получении количества пользователей:', error);
+        return 0;
+      }
+    },
+    [auth],
+  );
 
   // Функция для входа
   const login = useCallback(
