@@ -109,10 +109,13 @@ export function AuthProvider({ children }) {
           {
             method: 'GET',
             headers: {
-              Authorization: `Bearer ${await auth.currentUser.getIdToken()}`, // Если требуется авторизация
+              Authorization: `Bearer ${await auth.currentUser.getIdToken()}`,
             },
           },
         );
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
         const data = await response.json();
         return data.count;
       } catch (error) {
