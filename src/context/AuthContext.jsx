@@ -8,8 +8,12 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc, setDoc, getDocs, collection } from 'firebase/firestore';
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
+import { getFunctions } from 'firebase/functions';
 
 const AuthContext = createContext();
+const functions = getFunctions();
+const getCourseUserCount = httpsCallable(functions, 'getCourseUserCount');
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -95,6 +99,16 @@ export function AuthProvider({ children }) {
       }),
     );
     return courseList;
+  }, []);
+
+  const fetchCourseUserCount = useCallback(async (courseId) => {
+    try {
+      const result = await getCourseUserCount({ courseId });
+      return result.data.count;
+    } catch (error) {
+      console.error('Ошибка при получении количества пользователей:', error);
+      return 0;
+    }
   }, []);
 
   // Функция для входа
@@ -290,6 +304,7 @@ export function AuthProvider({ children }) {
     error,
     lastCourseId,
     setLastCourseId,
+    fetchCourseUserCount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

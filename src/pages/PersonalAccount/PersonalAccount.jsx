@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +24,15 @@ export default function PersonalAccount() {
     courses,
     toggleLessonCompletion,
     lastCourseId,
+    fetchCourseUserCount,
   } = useAuth();
+
+  const [userCount, setUserCount] = useState(0);
+  useEffect(() => {
+    if (lastCourseId) {
+      fetchCourseUserCount(lastCourseId).then(setUserCount);
+    }
+  }, [lastCourseId, fetchCourseUserCount]);
 
   if (authLoading) {
     return <AccountLoadingIndicator />;
@@ -93,6 +101,7 @@ export default function PersonalAccount() {
                       : `${totalMinutes}m`;
                   }}
                 />
+                <p className={scss.userCount}>Users enrolled: {userCount}</p> {/* Новый элемент */}
               </div>
             )}
             <div className={scss.courseRightContainer}>
