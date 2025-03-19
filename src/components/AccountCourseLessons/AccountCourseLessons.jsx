@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import scss from './AccountCourseLessons.module.scss';
 import PlayListProgressBar from '../PlayListProgressBar/PlayListProgressBar';
 import CourseLessonsList from '../CourseLessonsList/CourseLessonsList';
-import { BsFillStopwatchFill, BsGithub } from 'react-icons/bs';
+import { BsFillStopwatchFill, BsGithub, BsPeopleFill } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 
 export default function AccountCourseLessons({
@@ -19,6 +19,7 @@ export default function AccountCourseLessons({
   courses,
   progress,
   courseTitle,
+  userCount,
 }) {
   const [expandedModule, setExpandedModule] = useState(null);
 
@@ -42,9 +43,15 @@ export default function AccountCourseLessons({
               ) : null;
             })()}
           </div>
-          <div className={scss.iconAndTimeBlock}>
-            <BsFillStopwatchFill className={scss.iconClock} />
-            <p className={scss.courseHeaderTime}>{totalDuration}</p>
+          <div className={scss.iconAndTimeBlocks}>
+            <div className={scss.iconAndTimeBlock}>
+              <BsFillStopwatchFill className={scss.iconClock} />
+              <p className={scss.courseHeaderTime}>{totalDuration}</p>
+            </div>
+            <div className={scss.iconAndTimeBlock}>
+              <BsPeopleFill className={scss.iconClock} />
+              <p className={scss.courseHeaderTime}> {userCount}</p> {/* Новый элемент */}
+            </div>
           </div>
         </div>
         <div className={scss.courseNameAndProgressBar}>

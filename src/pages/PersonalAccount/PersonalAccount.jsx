@@ -70,6 +70,7 @@ export default function PersonalAccount() {
                   progress={progress}
                   courseTitle={activeCourse.title}
                   modules={activeCourse.modules}
+                  userCount={userCount}
                   completedLessons={completedLessons[activeCourse.id] || {}}
                   completedLessonsCount={activeCourse.completedLessonsCount}
                   totalLessons={activeCourse.totalLessons}
@@ -101,7 +102,6 @@ export default function PersonalAccount() {
                       : `${totalMinutes}m`;
                   }}
                 />
-                <p className={scss.userCount}>Users enrolled: {userCount}</p> {/* Новый элемент */}
               </div>
             )}
             <div className={scss.courseRightContainer}>

@@ -119,7 +119,7 @@ export function AuthProvider({ children }) {
         const data = await response.json();
         return data.count;
       } catch (error) {
-        console.error('Ошибка при получении количества пользователей:', error);
+        console.error('Error getting number of users:', error);
         return 0;
       }
     },
