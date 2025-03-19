@@ -15,6 +15,7 @@
     "clsx": "^2.1.1",
     "firebase": "^11.4.0",
     "formik": "^2.4.6",
+    "lodash": "^4.17.21",
     "react": "^19.0.0",
     "react-circular-progressbar": "^2.2.0",
     "react-dom": "^19.0.0",

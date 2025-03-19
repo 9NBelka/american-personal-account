@@ -17,3 +17,10 @@
 Устанавливает videoUrl и expandedModule на основе этой логики.
 Используем данные из courses и completedLessons, которые уже доступны в AuthContext.
 
+AuthContext:
+Данные пользователя (user, userRole, userName, registrationDate, avatarUrl).
+Данные, связанные с курсами пользователя (progress, completedLessons, courses, lastCourseId).
+Функции для управления пользовательскими данными (updateUserName, updateUserPassword, updateUserAvatar).
+Функции для управления прогрессом курсов (toggleLessonCompletion, updateCourseData).
+Функции для авторизации (login, signUp).
+Состояние загрузки (isLoading) и ошибки (error).

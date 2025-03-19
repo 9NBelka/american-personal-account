@@ -1,0 +1,14 @@
+.personalDashboardBackground {
+  background-color: #1e1e1e;
+}
+
+.dashboard {
+  display: flex;
+}
+
+.content {
+  margin-left: 250px; // Учитываем ширину бокового меню
+  padding: 20px;
+  width: calc(100% - 250px);
+  min-height: 100vh;
+}

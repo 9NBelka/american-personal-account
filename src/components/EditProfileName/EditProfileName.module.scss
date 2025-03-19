@@ -1,0 +1,78 @@
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  & label {
+    font-size: 0.75vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+
+    & span {
+      color: var(--color-blue);
+    }
+  }
+
+  & input {
+    display: flex;
+    width: 100%;
+    padding: 0.9vw 1.1vw;
+    border-radius: 0.3vw;
+    font-size: 0.75vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    background-color: var(--color-darkGrey);
+    border: 0.1vw solid var(--color-darkGrey);
+    outline: var(--color-orange);
+    margin-top: 0.5vw;
+
+    &::placeholder {
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+    }
+
+    &:focus {
+      background-color: var(--color-orange-opacity20);
+      border: 0.1vw solid var(--color-orange);
+    }
+  }
+
+  & .submitButton {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 0.9vw 0;
+    border: 0;
+    border-radius: 0.3vw;
+    background-color: var(--color-orange);
+    font-size: 0.8vw;
+    color: var(--color-white);
+    font-family: var(--font-albertSans);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-small);
+    margin-top: 1.75vw;
+    cursor: pointer;
+
+    &:disabled {
+      background-color: var(--color-darkGrey);
+      cursor: not-allowed;
+    }
+  }
+
+  & .error {
+    display: flex;
+    color: var(--color-red);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    font-size: 0.8vw;
+    margin: 0;
+    margin-top: 0.5vw;
+  }
+}

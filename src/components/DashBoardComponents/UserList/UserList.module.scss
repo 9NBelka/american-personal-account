@@ -1,0 +1,45 @@
+.listMainBlock {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.listUsers {
+  display: flex;
+  flex-direction: column;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+
+  & .user {
+    display: flex;
+    flex-direction: row;
+    gap: 1vw;
+
+    & .avatarPreview {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 2vw;
+
+      & .avatar {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover; // Изображение заполняет контейнер, обрезая лишнее
+        object-position: center; // Центрируем изображение
+        background-color: var(--color-lightGrey);
+      }
+    }
+
+    & p {
+      display: flex;
+      font-size: 0.8vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      margin: 0;
+    }
+  }
+}

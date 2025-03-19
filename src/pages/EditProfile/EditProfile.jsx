@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Добавляем useRef
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import scss from './EditProfile.module.scss';
-import { BsEye, BsEyeSlash } from 'react-icons/bs';
+import EditProfilePassword from '../../components/EditProfilePassword/EditProfilePassword';
+import EditProfileName from '../../components/EditProfileName/EditProfileName';
+import EditProfileAvatar from '../../components/EditProfileAvatar/EditProfileAvatar';
 
 export default function EditProfile() {
-  const { user, userName, updateUserName, updateUserPassword } = useAuth();
+  const { user, userName, updateUserName, updateUserPassword, avatarUrl, updateUserAvatar } =
+    useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -18,6 +21,10 @@ export default function EditProfile() {
   const [passwordError, setPasswordError] = useState(null);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarError, setAvatarError] = useState(null);
+  const fileInputRef = useRef(null); // Создаем реф для инпута
 
   const MAX_NAME_LENGTH = 15;
 
@@ -77,74 +84,115 @@ export default function EditProfile() {
     }
   };
 
+  const cropImageToSquare = (file) =>
+    new Promise((resolve) => {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const size = Math.min(img.width, img.height);
+        canvas.width = size;
+        canvas.height = size;
+
+        const offsetX = (img.width - size) / 2;
+        const offsetY = (img.height - size) / 2;
+
+        ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size);
+
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], file.name, { type: file.type }));
+        }, file.type);
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setAvatarError('Image size should not exceed 5MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        setAvatarError('Please select an image file');
+        return;
+      }
+
+      const croppedFile = await cropImageToSquare(file);
+      setAvatarFile(croppedFile);
+      setAvatarError(null);
+    }
+  };
+
+  const handleAvatarUpdate = async () => {
+    if (!avatarFile) return;
+
+    setAvatarLoading(true);
+    setAvatarError(null);
+
+    try {
+      await updateUserAvatar(avatarFile);
+      toast.success('Avatar updated successfully!');
+      setAvatarFile(null);
+    } catch (error) {
+      setAvatarError('Failed to update avatar. Try again.');
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  // Функция для вызова клика по скрытому инпуту
+  const handleCustomButtonClick = () => {
+    if (!avatarLoading) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className={scss.editProfileBackground}>
       <div className={scss.container}>
         <div className={scss.editProfile}>
-          <h2>Edit Profile</h2>
+          <h1>Editing your profile</h1>
           <div className={scss.form}>
-            <div className={scss.formGroup}>
-              <label htmlFor='name'>Name (max {MAX_NAME_LENGTH} characters)</label>
-              <input
-                type='text'
-                id='name'
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder='Enter your name'
-                maxLength={MAX_NAME_LENGTH}
-                disabled={loadingName}
-              />
-              {nameError && <p className={scss.error}>{nameError}</p>}
-              <button
-                type='button'
-                className={scss.submitButton}
-                onClick={handleNameUpdate}
-                disabled={loadingName}>
-                {loadingName ? 'Saving...' : 'Update Name'}
-              </button>
-            </div>
-            <div className={scss.formGroup}>
-              <label htmlFor='currentPassword'>Current Password</label>
-              <div className={scss.passwordWrapper}>
-                <input
-                  type={showCurrentPassword ? 'text' : 'password'}
-                  id='currentPassword'
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder='Enter current password'
-                  disabled={loadingPassword}
-                />
-                <span
-                  className={scss.eyeIcon}
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}>
-                  {showCurrentPassword ? <BsEyeSlash /> : <BsEye />}
-                </span>
-              </div>
-            </div>
-            <div className={scss.formGroup}>
-              <label htmlFor='newPassword'>New Password (min 6 characters)</label>
-              <div className={scss.passwordWrapper}>
-                <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  id='newPassword'
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder='Enter new password'
-                  disabled={loadingPassword}
-                />
-                <span className={scss.eyeIcon} onClick={() => setShowNewPassword(!showNewPassword)}>
-                  {showNewPassword ? <BsEyeSlash /> : <BsEye />}
-                </span>
-              </div>
-              {passwordError && <p className={scss.error}>{passwordError}</p>}
-              <button
-                type='button'
-                className={scss.submitButton}
-                onClick={handlePasswordUpdate}
-                disabled={loadingPassword}>
-                {loadingPassword ? 'Saving...' : 'Update Password'}
-              </button>
-            </div>
+            <EditProfileAvatar
+              avatarUrl={avatarUrl}
+              handleAvatarChange={handleAvatarChange}
+              avatarLoading={avatarLoading}
+              fileInputRef={fileInputRef}
+              avatarFile={avatarFile}
+              handleAvatarUpdate={handleAvatarUpdate}
+              handleCustomButtonClick={handleCustomButtonClick}
+              avatarError={avatarError}
+            />
+
+            <EditProfileName
+              MAX_NAME_LENGTH={MAX_NAME_LENGTH}
+              name={name}
+              setName={setName}
+              loadingName={loadingName}
+              handleNameUpdate={handleNameUpdate}
+              nameError={nameError}
+            />
+            <EditProfilePassword
+              loadingPassword={loadingPassword}
+              passwordError={passwordError}
+              showCurrentPassword={showCurrentPassword}
+              setShowCurrentPassword={setShowCurrentPassword}
+              showNewPassword={showNewPassword}
+              setShowNewPassword={setShowNewPassword}
+              handlePasswordUpdate={handlePasswordUpdate}
+              currentPassword={currentPassword}
+              setCurrentPassword={setCurrentPassword}
+              newPassword={newPassword}
+              setNewPassword={setNewPassword}
+            />
           </div>
         </div>
       </div>

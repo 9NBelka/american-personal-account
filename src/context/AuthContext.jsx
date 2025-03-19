@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useCallback, useState } from 'react';
-import { auth, db } from '../firebase';
+import { auth, db, storage } from '../firebase'; // Добавляем storage
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -8,8 +8,8 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc, setDoc, getDocs, collection } from 'firebase/firestore';
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 'firebase/auth';
-import { httpsCallable } from 'firebase/functions';
-import { getFunctions } from 'firebase/functions';
+import { httpsCallable, getFunctions } from 'firebase/functions';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Добавляем функции Storage
 
 const AuthContext = createContext();
 const functions = getFunctions();
@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
     return localStorage.getItem('lastCourseId') || null;
   });
   const [courses, setCourses] = useState([]);
+  const [avatarUrl, setAvatarUrl] = useState(null); // Добавляем состояние для аватара
 
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
@@ -36,9 +37,11 @@ export function AuthProvider({ children }) {
       setUserName(data.name || '');
       setUserRole(data.role || 'guest');
       setRegistrationDate(data.registrationDate || '');
+      setAvatarUrl(data.avatarUrl || null); // Устанавливаем URL аватара
       const purchasedCourses = data.purchasedCourses || {};
       return { purchasedCourses, role: data.role };
     }
+    setAvatarUrl(null); // Сбрасываем аватар, если данных нет
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
@@ -126,7 +129,6 @@ export function AuthProvider({ children }) {
     [auth],
   );
 
-  // Функция для входа
   const login = useCallback(
     async (email, password) => {
       await signInWithEmailAndPassword(auth, email, password);
@@ -146,6 +148,7 @@ export function AuthProvider({ children }) {
         email,
         role: 'guest',
         registrationDate,
+        avatarUrl: null, // Добавляем поле для аватара при регистрации
       });
 
       await updateProfile(user, {
@@ -199,6 +202,29 @@ export function AuthProvider({ children }) {
       await updatePassword(auth.currentUser, newPassword);
     },
     [user],
+  );
+
+  // Добавляем функцию для обновления аватара
+  const updateUserAvatar = useCallback(
+    async (file) => {
+      if (!user || !user.uid || !file) return;
+
+      try {
+        const storageRef = ref(storage, `avatars/${user.uid}`);
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, { avatarUrl: downloadURL });
+
+        setAvatarUrl(downloadURL);
+        return downloadURL;
+      } catch (error) {
+        console.error('Error updating avatar:', error);
+        throw error;
+      }
+    },
+    [user, storage],
   );
 
   const toggleLessonCompletion = useCallback(
@@ -291,6 +317,7 @@ export function AuthProvider({ children }) {
         setProgress({});
         setCourses([]);
         setLastCourseId(null);
+        setAvatarUrl(null); // Сбрасываем аватар
         localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
@@ -314,12 +341,14 @@ export function AuthProvider({ children }) {
     updateUserName,
     updateUserPassword,
     toggleLessonCompletion,
-    login, // Добавляем функцию login
-    signUp, // Добавляем функцию signUp
+    login,
+    signUp,
     error,
     lastCourseId,
     setLastCourseId,
     fetchCourseUserCount,
+    avatarUrl, // Добавляем в контекст
+    updateUserAvatar, // Добавляем в контекст
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

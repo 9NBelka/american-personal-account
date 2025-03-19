@@ -10,7 +10,7 @@ import AccountLoadingIndicator from '../AccountLoadingIndicator/AccountLoadingIn
 export default function HeaderPersonalAccount({ handleLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { lastCourseId, progress, user, isLoading, userName } = useAuth();
+  const { lastCourseId, progress, user, isLoading, userName, avatarUrl } = useAuth();
 
   const handleCourseSelect = () => {
     if (lastCourseId) {
@@ -54,7 +54,19 @@ export default function HeaderPersonalAccount({ handleLogout }) {
             </li>
           </ul>
           <div className={scss.profileAndIcons}>
-            <p className={scss.studentName}>{userName}</p>
+            <div className={scss.avatarNameContainer} onClick={() => navigate('/edit')}>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt='User avatar'
+                  className={scss.avatar}
+                  onError={(e) => (e.target.src = '/img/defaultAvatar.webp')} // Запасной вариант
+                />
+              ) : (
+                <img src='/img/defaultAvatar.webp' alt='Default avatar' className={scss.avatar} />
+              )}
+              <p className={scss.studentName}>{userName}</p>
+            </div>
             <div className={scss.profileIcons}>
               <BsBellFill className={scss.profileIcon} />
               <BsFillGearFill className={scss.profileIcon} />
