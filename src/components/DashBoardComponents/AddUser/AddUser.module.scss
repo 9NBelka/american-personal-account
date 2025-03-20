@@ -1,5 +1,5 @@
-// components/admin/EditUser.module.scss
-.editUser {
+// components/admin/AddUser.module.scss
+.addUser {
   padding: 20px;
 }
 
@@ -34,63 +34,10 @@ label {
   }
 }
 
-.changed {
-  background-color: #fff3cd; // Светло-желтый фон для измененных полей
-  border-color: #ffecb5;
-}
-
 .error {
   color: red;
   font-size: 14px;
   margin-top: 5px;
-}
-
-.courseList {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0;
-}
-
-.courseItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 0;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 5px;
-}
-
-.courseActions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.packageSelect {
-  padding: 5px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  outline: none;
-
-  &:focus {
-    border-color: #007bff;
-  }
-}
-
-.removeCourseButton {
-  padding: 5px 10px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #c82333;
-  }
 }
 
 .addCourseContainer {
@@ -127,7 +74,7 @@ label {
   justify-content: center;
 }
 
-.saveButton,
+.submitButton,
 .backButton {
   padding: 10px 20px;
   font-size: 16px;
@@ -137,7 +84,7 @@ label {
   transition: background-color 0.3s;
 }
 
-.saveButton {
+.submitButton {
   background-color: #28a745;
   color: white;
 

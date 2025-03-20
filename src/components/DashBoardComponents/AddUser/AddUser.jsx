@@ -1,116 +1,105 @@
 // components/admin/AddUser.jsx
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import scss from './AddUser.module.scss';
+import { useEffect, useState } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
-import { useState } from 'react';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import { toast } from 'react-toastify';
+import UserInfoForm from '../EditUser/UserInfoForm/UserInfoForm';
+import AddCourseForm from '../EditUser/AddCourseForm/AddCourseForm';
+import FormActions from '../EditUser/FormActions/FormActions';
 
-export default function AddUser() {
-  const { addUser, error: adminError } = useAdmin();
-  const [errorMessage, setErrorMessage] = useState('');
+export default function AddUser({ onBack }) {
+  const { addUser, users, courses, fetchAllCourses } = useAdmin();
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [selectedPackage, setSelectedPackage] = useState('');
 
+  useEffect(() => {
+    fetchAllCourses();
+  }, [fetchAllCourses]);
+
+  // Схема валидации с Yup
+  const validationSchema = Yup.object({
+    name: Yup.string().required('Имя обязательно'),
+    email: Yup.string().email('Неверный формат email').required('Email обязателен'),
+    role: Yup.string()
+      .oneOf(['admin', 'guest', 'student'], 'Неверная роль')
+      .required('Роль обязательна'),
+  });
+
+  // Начальные значения формы
   const initialValues = {
     name: '',
     email: '',
-    courseName: '',
-    coursePackage: '',
     role: '',
+    registrationDate: new Date().toISOString(),
+    purchasedCourses: {},
   };
 
+  // Обработчик отправки формы
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    const existingUser = users.find((u) => u.email === values.email);
+    if (existingUser) {
+      toast.error('Пользователь с таким email уже существует.');
+      setSubmitting(false);
+      return;
+    }
+
+    if (!window.confirm('Вы уверены, что хотите зарегистрировать пользователя?')) {
+      setSubmitting(false);
+      return;
+    }
+
     try {
-      const registrationDate = new Date().toISOString();
-
-      const userData = {
-        name: values.name,
-        email: values.email,
-        registrationDate: registrationDate,
-        courseName: values.courseName,
-        coursePackage: values.coursePackage,
-        role: values.role,
-      };
-
-      await addUser(userData);
-      setErrorMessage('');
+      await addUser(values);
+      toast.success('Пользователь успешно зарегистрирован!');
       resetForm();
+      // Проверяем, что onBack — это функция, перед вызовом
+      if (typeof onBack === 'function') {
+        onBack();
+      } else {
+        console.warn('onBack is not a function');
+      }
     } catch (error) {
-      setErrorMessage(error.message);
+      toast.error('Ошибка при регистрации: ' + error.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const validate = (values) => {
-    const errors = {};
-    if (!values.name) errors.name = 'Имя обязательно';
-    if (!values.email) {
-      errors.email = 'Почта обязательна';
-    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-      errors.email = 'Неверный формат почты';
-    }
-    if (!values.courseName) errors.courseName = 'Курс обязателен';
-    if (!values.coursePackage) errors.coursePackage = 'Пакет курса обязателен';
-    if (!values.role) errors.role = 'Роль обязательна';
-    return errors;
+  // Функция для получения названия курса по ID
+  const getCourseTitle = (courseId) => {
+    const course = courses.find((c) => c.id === courseId);
+    return course ? course.title : courseId;
   };
 
   return (
-    <div>
+    <div className={scss.addUser}>
       <h2>Регистрация пользователя</h2>
-      <Formik initialValues={initialValues} validate={validate} onSubmit={handleSubmit}>
-        {({ isSubmitting }) => (
-          <Form>
-            <div>
-              <label htmlFor='name'>Имя:</label>
-              <br />
-              <Field type='text' name='name' id='name' />
-              <ErrorMessage name='name' component='div' style={{ color: 'red' }} />
-            </div>
-            <div>
-              <label htmlFor='email'>Почта:</label>
-              <br />
-              <Field type='email' name='email' id='email' />
-              <ErrorMessage name='email' component='div' style={{ color: 'red' }} />
-            </div>
-            <div>
-              <label htmlFor='courseName'>Курс:</label>
-              <br />
-              <Field as='select' name='courseName' id='courseName'>
-                <option value=''>Выберите курс</option>
-                <option value='Architecture'>Architecture</option>
-                <option value='TeamLead'>TeamLead</option>
-                <option value='UnitTesting'>UnitTesting</option>
-                <option value='UtilityAI'>UtilityAI</option>
-                <option value='Adressabless'>Adressabless</option>
-                <option value='ECS'>ECS</option>
-              </Field>
-              <ErrorMessage name='courseName' component='div' style={{ color: 'red' }} />
-            </div>
-            <div>
-              <label htmlFor='coursePackage'>Пакет курса:</label>
-              <br />
-              <Field as='select' name='coursePackage' id='coursePackage'>
-                <option value=''>Выберите пакет</option>
-                <option value='Ванила'>Ванила</option>
-                <option value='Стандарт'>Стандарт</option>
-              </Field>
-              <ErrorMessage name='coursePackage' component='div' style={{ color: 'red' }} />
-            </div>
-            <div>
-              <label htmlFor='role'>Роль:</label>
-              <br />
-              <Field as='select' name='role' id='role'>
-                <option value=''>Выберите роль</option>
-                <option value='guest'>guest</option>
-                <option value='student'>student</option>
-                <option value='admin'>admin</option>
-              </Field>
-              <ErrorMessage name='role' component='div' style={{ color: 'red' }} />
-            </div>
-            {(errorMessage || adminError) && (
-              <div style={{ color: 'red' }}>{errorMessage || adminError}</div>
-            )}
-            <button type='submit' disabled={isSubmitting}>
-              {isSubmitting ? 'Отправка...' : 'Зарегистрировать'}
-            </button>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}>
+        {({ values, setFieldValue, isSubmitting, initialValues }) => (
+          <Form className={scss.form}>
+            <UserInfoForm values={values} initialValues={initialValues} />
+            <AddCourseForm
+              courses={courses}
+              values={values}
+              setFieldValue={setFieldValue}
+              selectedCourse={selectedCourse}
+              setSelectedCourse={setSelectedCourse}
+              selectedPackage={selectedPackage}
+              setSelectedPackage={setSelectedPackage}
+              getCourseTitle={getCourseTitle}
+            />
+            <FormActions
+              isSubmitting={isSubmitting}
+              onBack={onBack}
+              submitButtonText={isSubmitting ? 'Регистрация...' : 'Зарегистрировать'}
+              submitButtonClass={scss.submitButton}
+              backButtonClass={scss.backButton}
+            />
           </Form>
         )}
       </Formik>

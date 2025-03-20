@@ -1,0 +1,121 @@
+.amountBlocks {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1vw;
+
+  & .amountBlock {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    height: auto;
+    padding: 0.75vw;
+    border-radius: 0.4vw;
+    width: 25%;
+    box-shadow: 0.2vw 0.2vw 0.1vw 0.1vw rgba(0, 0, 0, 0.5);
+
+    &.blueGradient {
+      background: linear-gradient(45deg, #232742 0%, #1c1f30 100%);
+
+      & .iconBlock {
+        display: flex;
+        height: 100%;
+        background-color: #262c44;
+        padding: 0.4vw;
+        border-radius: 50%;
+
+        & .amountIcon {
+          height: 0.8vw;
+          width: 0.8vw;
+          fill: #484eac;
+        }
+      }
+    }
+    &.greenGradient {
+      background: linear-gradient(45deg, #263e28 0%, #202c20 100%);
+
+      & .iconBlock {
+        display: flex;
+        height: 100%;
+        background-color: #294829;
+        padding: 0.4vw;
+        border-radius: 50%;
+
+        & .amountIcon {
+          height: 0.8vw;
+          width: 0.8vw;
+          fill: #5fac66;
+        }
+      }
+    }
+    &.orangeGradient {
+      background: linear-gradient(45deg, #563917 0%, #372a19 100%);
+
+      & .iconBlock {
+        display: flex;
+        height: 100%;
+        background-color: #63420f;
+        padding: 0.4vw;
+        border-radius: 50%;
+
+        & .amountIcon {
+          height: 0.8vw;
+          width: 0.8vw;
+          fill: #ff9c14;
+        }
+      }
+    }
+    &.lightBlueGradient {
+      background: linear-gradient(45deg, #1b3e52 0%, #1a2c36 100%);
+
+      & .iconBlock {
+        display: flex;
+        height: 100%;
+        background-color: #234374;
+        padding: 0.4vw;
+        border-radius: 50%;
+
+        & .amountIcon {
+          height: 0.8vw;
+          width: 0.8vw;
+          fill: #2caedf;
+        }
+      }
+    }
+
+    & .amountBlockText {
+      display: flex;
+      flex-direction: column;
+
+      & .amountTitle {
+        font-size: 0.85vw;
+        color: var(--color-white);
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-normal);
+        line-height: var(--font-lineh-normal);
+      }
+
+      & .amountNumb {
+        font-size: 1.4vw;
+        color: var(--color-white);
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-normal);
+        line-height: var(--font-lineh-normal);
+        margin: 0;
+        margin-top: 0.3vw;
+      }
+
+      & .amountProcent {
+        font-size: 0.6vw;
+        color: var(--color-white);
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-normal);
+        margin: 0;
+        margin-top: 0.3vw;
+      }
+    }
+  }
+}
