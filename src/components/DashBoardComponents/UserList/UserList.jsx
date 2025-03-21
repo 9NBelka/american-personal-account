@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import EditUser from '../EditUser/EditUser';
 import clsx from 'clsx';
 import AmountUsers from './AmountUsers/AmountUsers';
+import FilterUsers from './FilterUsers/FilterUsers';
 
 export default function UserList() {
   const { users, fetchAllUsers, deleteUser } = useAdmin();
@@ -14,7 +15,7 @@ export default function UserList() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [sortOption, setSortOption] = useState('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(6);
+  const [usersPerPage] = useState(2);
   const [editingUserId, setEditingUserId] = useState(null); // Состояние для редактирования
 
   useEffect(() => {
@@ -108,72 +109,16 @@ export default function UserList() {
       <AmountUsers roleCounts={roleCounts} />
       <div className={scss.listMainBlock}>
         <h2 className={scss.listTitle}>Список пользователей</h2>
-
-        {/* Поиск */}
-        <div className={scss.searchContainer}>
-          <input
-            type='text'
-            placeholder='Поиск по имени или email...'
-            onChange={(e) => debouncedSetSearchQuery(e.target.value)}
-            className={scss.searchInput}
-          />
-        </div>
-
-        {/* Фильтры и сортировка */}
-        <div className={scss.controlsContainer}>
-          <div className={scss.filterContainer}>
-            <button
-              className={`${scss.filterButton} ${roleFilter === 'all' ? scss.active : ''}`}
-              onClick={() => {
-                setRoleFilter('all');
-                setCurrentPage(1);
-              }}>
-              Все ({roleCounts.all})
-            </button>
-            <button
-              className={`${scss.filterButton} ${roleFilter === 'admin' ? scss.active : ''}`}
-              onClick={() => {
-                setRoleFilter('admin');
-                setCurrentPage(1);
-              }}>
-              Администраторы ({roleCounts.admin})
-            </button>
-            <button
-              className={`${scss.filterButton} ${roleFilter === 'guest' ? scss.active : ''}`}
-              onClick={() => {
-                setRoleFilter('guest');
-                setCurrentPage(1);
-              }}>
-              Гости ({roleCounts.guest})
-            </button>
-            <button
-              className={`${scss.filterButton} ${roleFilter === 'student' ? scss.active : ''}`}
-              onClick={() => {
-                setRoleFilter('student');
-                setCurrentPage(1);
-              }}>
-              Студенты ({roleCounts.student})
-            </button>
-          </div>
-
-          <div className={scss.sortContainer}>
-            <label htmlFor='sort'>Сортировать по: </label>
-            <select
-              id='sort'
-              value={sortOption}
-              onChange={(e) => {
-                setSortOption(e.target.value);
-                setCurrentPage(1);
-              }}
-              className={scss.sortSelect}>
-              <option value='name-asc'>Имени (А-Я)</option>
-              <option value='name-desc'>Имени (Я-А)</option>
-              <option value='courses-asc'>Курсам (возр.)</option>
-              <option value='courses-desc'>Курсам (убыв.)</option>
-            </select>
-          </div>
-        </div>
-
+        {/* Фильтры и сортировка и Поиск */}
+        <FilterUsers
+          roleFilter={roleFilter}
+          setRoleFilter={setRoleFilter}
+          setCurrentPage={setCurrentPage}
+          roleCounts={roleCounts}
+          sortOption={sortOption}
+          setSortOption={setSortOption}
+          debouncedSetSearchQuery={debouncedSetSearchQuery}
+        />
         {/* Список пользователей */}
         {paginatedUsers.length > 0 ? (
           <ul className={scss.listUsers}>
@@ -212,7 +157,6 @@ export default function UserList() {
         ) : (
           <p>Пользователи не найдены.</p>
         )}
-
         {/* Пагинация */}
         {totalPages > 1 && (
           <div className={scss.pagination}>

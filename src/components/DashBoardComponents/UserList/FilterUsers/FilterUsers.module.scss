@@ -1,0 +1,27 @@
+.filterBlockMain {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.filterOnRoleBlock {
+  display: flex;
+  flex-direction: row;
+  gap: 1vw;
+
+  & .filterButton {
+    display: flex;
+    border: 0;
+    background: none;
+    font-size: 0.85vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    cursor: pointer;
+
+    &.active {
+      color: var(--color-lightGreen);
+    }
+  }
+}
