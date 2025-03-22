@@ -1,0 +1,49 @@
+.titleListUsersFullWidth {
+  display: flex;
+  flex-direction: column;
+  background-color: #111111;
+  padding: 0.5vw 1.25vw;
+  border-radius: 0.25vw;
+  margin-top: 1vw;
+
+  & .titleListUsers {
+    display: flex;
+    flex-direction: row;
+    width: 80%;
+
+    & .nameAndImage {
+      display: flex;
+      flex-direction: row;
+      width: 15%;
+      gap: 0.75vw;
+
+      & p {
+        display: flex;
+        font-size: 0.75vw;
+        color: var(--color-white);
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        margin: 0;
+      }
+    }
+
+    & .titlesForEmailRoleAndPurchasedCourses {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      width: 75%;
+
+      & p {
+        display: flex;
+        width: 33.33%;
+        font-size: 0.75vw;
+        color: var(--color-white);
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        margin: 0;
+      }
+    }
+  }
+}

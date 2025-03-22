@@ -8,6 +8,8 @@ import EditUser from '../EditUser/EditUser';
 import clsx from 'clsx';
 import AmountUsers from './AmountUsers/AmountUsers';
 import FilterUsers from './FilterUsers/FilterUsers';
+import PaginationOnUsers from './PaginationOnUsers/PaginationOnUsers';
+import TitleListUsers from './TitleListUsers/TitleListUsers';
 
 export default function UserList() {
   const { users, fetchAllUsers, deleteUser } = useAdmin();
@@ -119,30 +121,40 @@ export default function UserList() {
           setSortOption={setSortOption}
           debouncedSetSearchQuery={debouncedSetSearchQuery}
         />
-        {/* Список пользователей */}
+
+        <TitleListUsers />
+
         {paginatedUsers.length > 0 ? (
           <ul className={scss.listUsers}>
-            {paginatedUsers.map((user) => (
+            {paginatedUsers.map((user, index) => (
               <li key={user.id} className={scss.user}>
-                <div className={scss.avatarPreview}>
-                  {user.avatarUrl ? (
-                    <img
-                      className={scss.avatar}
-                      src={user.avatarUrl}
-                      alt='userImage'
-                      onError={(e) => (e.target.src = '/img/defaultAvatar.webp')}
-                    />
-                  ) : (
-                    <img className={scss.avatar} src='/img/defaultAvatar.webp' alt='userImage' />
-                  )}
+                <div className={scss.titlesBlockMain}>
+                  <div className={scss.avatarAndName}>
+                    <p>{index + 1}</p>
+                    <div className={scss.avatarPreview}>
+                      {user.avatarUrl ? (
+                        <img
+                          className={scss.avatar}
+                          src={user.avatarUrl}
+                          alt='userImage'
+                          onError={(e) => (e.target.src = '/img/defaultAvatar.webp')}
+                        />
+                      ) : (
+                        <img
+                          className={scss.avatar}
+                          src='/img/defaultAvatar.webp'
+                          alt='userImage'
+                        />
+                      )}
+                    </div>
+                    <p>{user.name}</p>
+                  </div>
+                  <div className={scss.emailRoleAndPurchasedCourses}>
+                    <p>{user.email}</p>
+                    <p>{user.role}</p>
+                    <p>{user.purchasedCourses ? Object.keys(user.purchasedCourses).length : 0}</p>
+                  </div>
                 </div>
-                <p>Имя: {user.name}</p>
-                <p>Email: {user.email}</p>
-                <p>Роль: {user.role}</p>
-                <p>
-                  Количество курсов:{' '}
-                  {user.purchasedCourses ? Object.keys(user.purchasedCourses).length : 0}
-                </p>
                 <div className={scss.actions}>
                   <button className={scss.editButton} onClick={() => handleEdit(user.id)}>
                     Редактировать
@@ -159,16 +171,11 @@ export default function UserList() {
         )}
         {/* Пагинация */}
         {totalPages > 1 && (
-          <div className={scss.pagination}>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-              <button
-                key={page}
-                className={`${scss.pageButton} ${currentPage === page ? scss.active : ''}`}
-                onClick={() => handlePageChange(page)}>
-                {page}
-              </button>
-            ))}
-          </div>
+          <PaginationOnUsers
+            totalPages={totalPages}
+            currentPage={currentPage}
+            handlePageChange={handlePageChange}
+          />
         )}
       </div>
     </>
