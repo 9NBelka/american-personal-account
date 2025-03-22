@@ -96,14 +96,14 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: background-color 0.15s;
 
         &:before {
           content: '✔'; // Символ галочки
           color: black;
           font-size: 0.75vw;
           opacity: 0;
-          transition: opacity 0.3s;
+          transition: opacity 0.15s;
         }
       }
     }

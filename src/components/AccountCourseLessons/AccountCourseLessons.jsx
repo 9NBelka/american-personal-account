@@ -50,7 +50,7 @@ export default function AccountCourseLessons({
             </div>
             <div className={scss.iconAndTimeBlock}>
               <BsPeopleFill className={scss.iconClock} />
-              <p className={scss.courseHeaderTime}> {userCount}</p> {/* Новый элемент */}
+              <p className={scss.courseHeaderTime}> {userCount}</p>
             </div>
           </div>
         </div>

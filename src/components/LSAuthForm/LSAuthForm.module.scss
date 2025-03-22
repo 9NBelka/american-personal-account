@@ -72,6 +72,11 @@
   line-height: var(--font-lineh-small);
   margin-top: 3vw;
   cursor: pointer;
+  transition: 0.3s ease-in-out;
+
+  &:hover {
+    opacity: 0.7;
+  }
 }
 
 // Стили для разделителя
