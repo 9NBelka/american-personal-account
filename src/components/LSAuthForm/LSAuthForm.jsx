@@ -1,3 +1,4 @@
+// LSAuthForm.js
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
 import LSInputField from '../LSInputField/LSInputField';
@@ -20,7 +21,8 @@ export default function LSAuthForm({
   isSubmitting,
   halfInput,
   otherPointsText,
-  children, // Добавляем поддержку дочерних элементов
+  onForgotPassword, // Новый пропс
+  children,
 }) {
   return (
     <div className={scss.mainLSBlock}>
@@ -31,7 +33,6 @@ export default function LSAuthForm({
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={onSubmit}>
         {({ errors, isSubmitting: formikSubmitting }) => (
           <Form>
-            {/* Группируем name и lastName в одном контейнере */}
             <div className={clsx(scss.nameContainer, halfInput && scss.nameContainerHalf)}>
               {fields
                 .slice(0, 2)
@@ -52,7 +53,6 @@ export default function LSAuthForm({
                   ),
                 )}
             </div>
-            {/* Оставшиеся поля рендерим как обычно */}
             {fields
               .slice(2)
               .map((field, index) =>
@@ -68,8 +68,20 @@ export default function LSAuthForm({
                 ),
               )}
             <LSFormError error={errors.general} />
-            {/* Размещаем чекбокс над кнопкой */}
             {children}
+            {/* Добавляем ссылку "Забыл пароль?" */}
+            {onForgotPassword && (
+              <div className={scss.forgotPassword}>
+                <Link
+                  to='#'
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onForgotPassword();
+                  }}>
+                  Forgot password?
+                </Link>
+              </div>
+            )}
             <button
               type='submit'
               disabled={formikSubmitting || isSubmitting}

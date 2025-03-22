@@ -1,16 +1,19 @@
+// Login.js
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import scss from './Login.module.scss';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import { BsBoxArrowInRight } from 'react-icons/bs';
 import LSPrivacyCheckbox from '../../components/LSPrivacyCheckbox/LSPrivacyCheckbox';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
+import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetPasswordModal';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { userRole, isLoading, login } = useAuth();
+  const { userRole, isLoading, login, resetPassword } = useAuth();
+  const [showResetModal, setShowResetModal] = useState(false);
 
   useEffect(() => {
     if (userRole) {
@@ -33,7 +36,6 @@ export default function Login() {
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
       await login(values.email, values.password);
-      // Редирект произойдёт через useEffect после обновления userRole в AuthContext
     } catch (error) {
       if (
         error.code === 'auth/user-not-found' ||
@@ -46,6 +48,10 @@ export default function Login() {
       }
     }
     setSubmitting(false);
+  };
+
+  const handleForgotPassword = () => {
+    setShowResetModal(true);
   };
 
   if (isLoading) {
@@ -79,9 +85,17 @@ export default function Login() {
               linkToText='Sign In'
               linkTo='/signUp'
               isSubmitting={isLoading}
-              otherPointsText='Log in'>
+              otherPointsText='Log in'
+              onForgotPassword={handleForgotPassword} // Передаем обработчик
+            >
               <LSPrivacyCheckbox />
             </LSAuthForm>
+            <LSResetPasswordModal
+              isOpen={showResetModal}
+              onClose={() => setShowResetModal(false)}
+              resetPassword={resetPassword}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </div>

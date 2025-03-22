@@ -1,15 +1,17 @@
+// AuthContext.js
 import { createContext, useContext, useEffect, useCallback, useState } from 'react';
-import { auth, db, storage } from '../firebase'; // Добавляем storage
+import { auth, db, storage } from '../firebase';
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
+  sendPasswordResetEmail, // Добавляем для сброса пароля
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc, setDoc, getDocs, collection } from 'firebase/firestore';
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 'firebase/auth';
 import { httpsCallable, getFunctions } from 'firebase/functions';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Добавляем функции Storage
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AuthContext = createContext();
 const functions = getFunctions();
@@ -28,7 +30,7 @@ export function AuthProvider({ children }) {
     return localStorage.getItem('lastCourseId') || null;
   });
   const [courses, setCourses] = useState([]);
-  const [avatarUrl, setAvatarUrl] = useState(null); // Добавляем состояние для аватара
+  const [avatarUrl, setAvatarUrl] = useState(null);
 
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
@@ -37,11 +39,11 @@ export function AuthProvider({ children }) {
       setUserName(data.name || '');
       setUserRole(data.role || 'guest');
       setRegistrationDate(data.registrationDate || '');
-      setAvatarUrl(data.avatarUrl || null); // Устанавливаем URL аватара
+      setAvatarUrl(data.avatarUrl || null);
       const purchasedCourses = data.purchasedCourses || {};
       return { purchasedCourses, role: data.role };
     }
-    setAvatarUrl(null); // Сбрасываем аватар, если данных нет
+    setAvatarUrl(null);
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
@@ -148,7 +150,7 @@ export function AuthProvider({ children }) {
         email,
         role: 'guest',
         registrationDate,
-        avatarUrl: null, // Добавляем поле для аватара при регистрации
+        avatarUrl: null,
       });
 
       await updateProfile(user, {
@@ -204,7 +206,6 @@ export function AuthProvider({ children }) {
     [user],
   );
 
-  // Добавляем функцию для обновления аватара
   const updateUserAvatar = useCallback(
     async (file) => {
       if (!user || !user.uid || !file) return;
@@ -269,6 +270,38 @@ export function AuthProvider({ children }) {
     [user, completedLessons],
   );
 
+  // Добавляем функцию resetPassword
+  const resetPassword = useCallback(
+    async (email) => {
+      try {
+        setIsLoading(true);
+        await sendPasswordResetEmail(auth, email, {
+          url: `${window.location.origin}/login`, // Ссылка для возврата после сброса
+        });
+        return { success: true, message: 'Password reset email sent! Check your inbox.' };
+      } catch (error) {
+        let message;
+        switch (error.code) {
+          case 'auth/invalid-email':
+            message = 'Invalid email format.';
+            break;
+          case 'auth/user-not-found':
+            message = 'No user found with this email.';
+            break;
+          case 'auth/too-many-requests':
+            message = 'Too many requests. Please try again later.';
+            break;
+          default:
+            message = `Error: ${error.message}`;
+        }
+        return { success: false, message };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [auth],
+  );
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -317,7 +350,7 @@ export function AuthProvider({ children }) {
         setProgress({});
         setCourses([]);
         setLastCourseId(null);
-        setAvatarUrl(null); // Сбрасываем аватар
+        setAvatarUrl(null);
         localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
@@ -347,8 +380,9 @@ export function AuthProvider({ children }) {
     lastCourseId,
     setLastCourseId,
     fetchCourseUserCount,
-    avatarUrl, // Добавляем в контекст
-    updateUserAvatar, // Добавляем в контекст
+    avatarUrl,
+    updateUserAvatar,
+    resetPassword, // Добавляем в контекст
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

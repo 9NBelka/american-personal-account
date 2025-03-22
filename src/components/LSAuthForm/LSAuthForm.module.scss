@@ -144,3 +144,23 @@
     fill: var(--color-orange);
   }
 }
+
+.forgotPassword {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: 1vw;
+
+  & a {
+    font-size: 0.75vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    transition: 0.3s ease-in-out;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+}
