@@ -8,11 +8,14 @@ import AddUser from '../../components/DashBoardComponents/AddUser/AddUser';
 import UserList from '../../components/DashBoardComponents/UserList/UserList';
 import CourseList from '../../components/DashBoardComponents/CourseList/CourseList';
 import scss from './DashBoard.module.scss';
+import MainStatistics from '../../components/DashBoardComponents/MainStatistics/MainStatistics.jsx';
+import clsx from 'clsx';
 
 export default function DashBoard() {
   const navigate = useNavigate();
   const { userRole, isLoading } = useAuth();
-  const [activeSection, setActiveSection] = useState('addUser');
+  const [activeSection, setActiveSection] = useState('mainStatistics');
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (!userRole || userRole !== 'admin')) {
@@ -26,6 +29,8 @@ export default function DashBoard() {
 
   const renderActiveSection = () => {
     switch (activeSection) {
+      case 'mainStatistics':
+        return <MainStatistics />;
       case 'addUser':
         return <AddUser />;
       case 'userList':
@@ -40,8 +45,15 @@ export default function DashBoard() {
   return (
     <div className={scss.personalDashboardBackground}>
       <div className={scss.dashboard}>
-        <Sidebar setActiveSection={setActiveSection} activeSection={activeSection} />
-        <div className={scss.content}>{renderActiveSection()}</div>
+        <Sidebar
+          setActiveSection={setActiveSection}
+          activeSection={activeSection}
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+        />
+        <div className={clsx(scss.content, isCollapsed && scss.contentCollapsed)}>
+          {renderActiveSection()}
+        </div>
       </div>
     </div>
   );
