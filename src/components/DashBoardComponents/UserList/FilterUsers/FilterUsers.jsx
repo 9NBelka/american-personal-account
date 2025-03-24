@@ -1,5 +1,8 @@
+// components/FilterUsers.jsx
 import clsx from 'clsx';
 import scss from './FilterUsers.module.scss';
+import { useState } from 'react';
+import { BsChevronDown } from 'react-icons/bs';
 
 export default function FilterUsers({
   roleFilter,
@@ -10,6 +13,21 @@ export default function FilterUsers({
   setSortOption,
   debouncedSetSearchQuery,
 }) {
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
+  const sortOptions = [
+    { value: 'name-asc', label: 'Имени (А-Я)' },
+    { value: 'name-desc', label: 'Имени (Я-А)' },
+    { value: 'courses-asc', label: 'Курсам (возр.)' },
+    { value: 'courses-desc', label: 'Курсам (убыв.)' },
+  ];
+
+  const handleSortSelect = (value) => {
+    setSortOption(value);
+    setCurrentPage(1);
+    setIsSortOpen(false);
+  };
+
   return (
     <div className={scss.filterBlockMain}>
       <div className={scss.filterOnRoleBlock}>
@@ -29,7 +47,6 @@ export default function FilterUsers({
           }}>
           Студенты ({roleCounts.student})
         </button>
-
         <button
           className={clsx(scss.filterButton, roleFilter === 'guest' && scss.active)}
           onClick={() => {
@@ -48,19 +65,22 @@ export default function FilterUsers({
         </button>
 
         <div className={scss.sortContainer}>
-          <select
-            id='sort'
-            value={sortOption}
-            onChange={(e) => {
-              setSortOption(e.target.value);
-              setCurrentPage(1);
-            }}
-            className={scss.sortSelect}>
-            <option value='name-asc'>Имени (А-Я)</option>
-            <option value='name-desc'>Имени (Я-А)</option>
-            <option value='courses-asc'>Курсам (возр.)</option>
-            <option value='courses-desc'>Курсам (убыв.)</option>
-          </select>
+          <div className={scss.sortButton} onClick={() => setIsSortOpen(!isSortOpen)}>
+            {sortOptions.find((option) => option.value === sortOption)?.label || 'Сортировка'}
+            <BsChevronDown className={clsx(scss.chevron, isSortOpen && scss.chevronOpen)} />
+          </div>
+          {isSortOpen && (
+            <ul className={scss.sortDropdown}>
+              {sortOptions.map((option) => (
+                <li
+                  key={option.value}
+                  className={clsx(scss.sortOption, sortOption === option.value && scss.active)}
+                  onClick={() => handleSortSelect(option.value)}>
+                  {option.label}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
       <div className={scss.searchContainer}>

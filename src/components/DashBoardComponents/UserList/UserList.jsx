@@ -10,6 +10,7 @@ import AmountUsers from './AmountUsers/AmountUsers';
 import FilterUsers from './FilterUsers/FilterUsers';
 import PaginationOnUsers from './PaginationOnUsers/PaginationOnUsers';
 import TitleListUsers from './TitleListUsers/TitleListUsers';
+import TextListUsers from './TextListUsers/TextListUsers';
 
 export default function UserList() {
   const { users, fetchAllUsers, deleteUser } = useAdmin();
@@ -121,54 +122,20 @@ export default function UserList() {
           setSortOption={setSortOption}
           debouncedSetSearchQuery={debouncedSetSearchQuery}
         />
-
-        <TitleListUsers />
-
-        {paginatedUsers.length > 0 ? (
-          <ul className={scss.listUsers}>
-            {paginatedUsers.map((user, index) => (
-              <li key={user.id} className={scss.user}>
-                <div className={scss.titlesBlockMain}>
-                  <div className={scss.avatarAndName}>
-                    <p>{index + 1}</p>
-                    <div className={scss.avatarPreview}>
-                      {user.avatarUrl ? (
-                        <img
-                          className={scss.avatar}
-                          src={user.avatarUrl}
-                          alt='userImage'
-                          onError={(e) => (e.target.src = '/img/defaultAvatar.webp')}
-                        />
-                      ) : (
-                        <img
-                          className={scss.avatar}
-                          src='/img/defaultAvatar.webp'
-                          alt='userImage'
-                        />
-                      )}
-                    </div>
-                    <p>{user.name}</p>
-                  </div>
-                  <div className={scss.emailRoleAndPurchasedCourses}>
-                    <p>{user.email}</p>
-                    <p>{user.role}</p>
-                    <p>{user.purchasedCourses ? Object.keys(user.purchasedCourses).length : 0}</p>
-                  </div>
-                </div>
-                <div className={scss.actions}>
-                  <button className={scss.editButton} onClick={() => handleEdit(user.id)}>
-                    Редактировать
-                  </button>
-                  <button className={scss.deleteButton} onClick={() => handleDelete(user.id)}>
-                    Удалить
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>Пользователи не найдены.</p>
-        )}
+        <div className={scss.tableWrapper}>
+          <table className={scss.table}>
+            <TitleListUsers />
+            {paginatedUsers.length > 0 ? (
+              <TextListUsers
+                paginatedUsers={paginatedUsers}
+                handleEdit={handleEdit}
+                handleDelete={handleDelete}
+              />
+            ) : (
+              <p>Пользователи не найдены.</p>
+            )}
+          </table>
+        </div>
         {/* Пагинация */}
         {totalPages > 1 && (
           <PaginationOnUsers

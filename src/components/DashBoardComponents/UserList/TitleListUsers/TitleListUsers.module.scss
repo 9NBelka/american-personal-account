@@ -1,49 +1,38 @@
-.titleListUsersFullWidth {
-  display: flex;
-  flex-direction: column;
-  background-color: #111111;
-  padding: 0.5vw 1.25vw;
-  border-radius: 0.25vw;
-  margin-top: 1vw;
+// components/TitleListUsers.module.scss
+.titleListUsers {
+  background-color: #1e1e1e;
+  border-bottom: 0.1vw solid #333;
 
-  & .titleListUsers {
-    display: flex;
-    flex-direction: row;
-    width: 80%;
+  th {
+    padding: 0.75vw 1vw;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-small);
+    text-align: left;
+    text-transform: uppercase;
 
-    & .nameAndImage {
-      display: flex;
-      flex-direction: row;
-      width: 15%;
-      gap: 0.75vw;
-
-      & p {
-        display: flex;
-        font-size: 0.75vw;
-        color: var(--color-white);
-        font-family: var(--font-main-for-account);
-        font-weight: var(--font-weight-small);
-        line-height: var(--font-lineh-small);
-        margin: 0;
-      }
+    &:nth-child(1) {
+      width: 5%; // №
     }
-
-    & .titlesForEmailRoleAndPurchasedCourses {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      width: 75%;
-
-      & p {
-        display: flex;
-        width: 33.33%;
-        font-size: 0.75vw;
-        color: var(--color-white);
-        font-family: var(--font-main-for-account);
-        font-weight: var(--font-weight-small);
-        line-height: var(--font-lineh-small);
-        margin: 0;
-      }
+    &:nth-child(2) {
+      width: 5%; // Ава
+    }
+    &:nth-child(3) {
+      width: 15%; // Имя
+    }
+    &:nth-child(4) {
+      width: 25%; // Почта
+    }
+    &:nth-child(5) {
+      width: 15%; // Роль
+    }
+    &:nth-child(6) {
+      width: 10%; // Курсы
+    }
+    &:nth-child(7) {
+      width: 25%; // Действия
     }
   }
 }
