@@ -11,6 +11,7 @@ export default function TitleListUsers() {
         <th>Почта</th>
         <th>Роль</th>
         <th>Курсы</th>
+        <th>Дата регистрации</th>
         <th>Действия</th>
       </tr>
     </thead>

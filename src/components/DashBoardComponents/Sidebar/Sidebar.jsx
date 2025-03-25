@@ -8,12 +8,9 @@ import {
   BsArrowBarLeft,
   BsChevronDown,
   BsChevronRight,
-  BsDoorOpenFill,
   BsFillHouseFill,
   BsFillMortarboardFill,
   BsFillPeopleFill,
-  BsHousesFill,
-  BsJournalMedical,
   BsPower,
 } from 'react-icons/bs';
 
@@ -29,11 +26,15 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
-    // Закрываем все подменю при сворачивании
     if (!isCollapsed) {
       setIsUsersOpen(false);
       setIsCoursesOpen(false);
     }
+  };
+
+  const handleSectionClick = (section, path) => {
+    setActiveSection(section);
+    navigate(path);
   };
 
   return (
@@ -45,13 +46,17 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
       <ul className={scss.menu}>
         <li
           className={clsx(scss.menuItem, activeSection === 'mainStatistics' && scss.active)}
-          onClick={() => setActiveSection('mainStatistics')}>
+          onClick={() => handleSectionClick('mainStatistics', '/dashboard')}>
           <div className={scss.iconAndTextMenuMainBlock}>
             <BsFillHouseFill className={scss.menuIcon} />
             <span className={scss.menuText}>Главная</span>
           </div>
         </li>
-        <li className={clsx(scss.menuItem, activeSection === 'userList' && scss.active)}>
+        <li
+          className={clsx(
+            scss.menuItem,
+            (activeSection === 'userList' || activeSection === 'addUser') && scss.active,
+          )}>
           <div
             className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
             onClick={() => {
@@ -69,16 +74,23 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
           </div>
           {isUsersOpen && !isCollapsed && (
             <ul className={scss.submenu}>
-              <li className={scss.submenuItem} onClick={() => setActiveSection('userList')}>
+              <li className={scss.submenuItem} onClick={() => handleSectionClick('userList')}>
                 Все пользователи
               </li>
-              <li className={scss.submenuItem} onClick={() => setActiveSection('addUser')}>
+              <li className={scss.submenuItem} onClick={() => handleSectionClick('addUser')}>
                 Добавить пользователя
               </li>
             </ul>
           )}
         </li>
-        <li className={clsx(scss.menuItem, activeSection === 'courseList' && scss.active)}>
+        <li
+          className={clsx(
+            scss.menuItem,
+            (activeSection === 'courseList' ||
+              activeSection === 'addCourse' ||
+              activeSection === 'editCourse') &&
+              scss.active,
+          )}>
           <div
             className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
             onClick={() => {
@@ -96,10 +108,10 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
           </div>
           {isCoursesOpen && !isCollapsed && (
             <ul className={scss.submenu}>
-              <li className={scss.submenuItem} onClick={() => setActiveSection('courseList')}>
+              <li className={scss.submenuItem} onClick={() => handleSectionClick('courseList')}>
                 Все курсы
               </li>
-              <li className={scss.submenuItem} onClick={() => setActiveSection('addCourse')}>
+              <li className={scss.submenuItem} onClick={() => handleSectionClick('addCourse')}>
                 Добавить курс
               </li>
             </ul>

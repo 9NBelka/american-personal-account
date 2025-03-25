@@ -7,6 +7,7 @@ import Sidebar from '../../components/DashBoardComponents/Sidebar/Sidebar';
 import AddUser from '../../components/DashBoardComponents/AddUser/AddUser';
 import UserList from '../../components/DashBoardComponents/UserList/UserList';
 import CourseList from '../../components/DashBoardComponents/CourseList/CourseList';
+import AddCourse from '../../components/DashBoardComponents/AddCourse/AddCourse';
 import scss from './DashBoard.module.scss';
 import MainStatistics from '../../components/DashBoardComponents/MainStatistics/MainStatistics.jsx';
 import clsx from 'clsx';
@@ -31,14 +32,18 @@ export default function DashBoard() {
     switch (activeSection) {
       case 'mainStatistics':
         return <MainStatistics />;
-      case 'addUser':
-        return <AddUser />;
       case 'userList':
         return <UserList />;
+      case 'addUser':
+        return <AddUser />;
       case 'courseList':
         return <CourseList />;
+      case 'addCourse':
+        return <AddCourse />;
+      case 'editCourse':
+        return <CourseList />; // CourseList сам решает, показывать EditCourse или список
       default:
-        return <AddUser />;
+        return <MainStatistics />;
     }
   };
 

@@ -1,6 +1,6 @@
-// components/admin/AmountUsers/AmountUsers.jsx
+// components/admin/AmountCourses/AmountCourses.jsx
 import clsx from 'clsx';
-import scss from './AmountUsers.module.scss';
+import scss from './AmountCourses.module.scss';
 import {
   BsAirplaneFill,
   BsBriefcaseFill,
@@ -8,23 +8,13 @@ import {
   BsFillPeopleFill,
 } from 'react-icons/bs';
 
-export default function AmountUsers({ roleCounts, lastUser }) {
-  // Функция для форматирования даты в формат DD.MM.YYYY
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Нет даты';
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
-  };
-
+export default function AmountCourses({ categoryCounts, lastCourse }) {
   return (
     <div className={scss.amountBlocks}>
       <div className={clsx(scss.amountBlock, scss.blueGradient)}>
         <div className={scss.amountBlockText}>
-          <h5 className={scss.amountTitle}>Всего пользователей</h5>
-          <p className={scss.amountNumb}>{roleCounts.all}</p>
+          <h5 className={scss.amountTitle}>Всего</h5>
+          <p className={scss.amountNumb}>{categoryCounts.all}</p>
           <p className={scss.amountProcent}>общее количество</p>
         </div>
         <div className={scss.iconBlock}>
@@ -33,11 +23,11 @@ export default function AmountUsers({ roleCounts, lastUser }) {
       </div>
       <div className={clsx(scss.amountBlock, scss.greenGradient)}>
         <div className={scss.amountBlockText}>
-          <h5 className={scss.amountTitle}>Всего студентов</h5>
-          <p className={scss.amountNumb}>{roleCounts.student}</p>
+          <h5 className={scss.amountTitle}>Всего курсов</h5>
+          <p className={scss.amountNumb}>{categoryCounts.Course}</p>
           <p className={scss.amountProcent}>
-            {roleCounts.all > 0
-              ? `${Math.round((roleCounts.student / roleCounts.all) * 100)}%`
+            {categoryCounts.all > 0
+              ? `${Math.round((categoryCounts.Course / categoryCounts.all) * 100)}%`
               : '0%'}{' '}
             от общего числа
           </p>
@@ -48,11 +38,11 @@ export default function AmountUsers({ roleCounts, lastUser }) {
       </div>
       <div className={clsx(scss.amountBlock, scss.orangeGradient)}>
         <div className={scss.amountBlockText}>
-          <h5 className={scss.amountTitle}>Всего гостей</h5>
-          <p className={scss.amountNumb}>{roleCounts.guest}</p>
+          <h5 className={scss.amountTitle}>Всего мастер-классов</h5>
+          <p className={scss.amountNumb}>{categoryCounts['Master class']}</p>
           <p className={scss.amountProcent}>
-            {roleCounts.all > 0
-              ? `${Math.round((roleCounts.guest / roleCounts.all) * 100)}%`
+            {categoryCounts.all > 0
+              ? `${Math.round((categoryCounts['Master class'] / categoryCounts.all) * 100)}%`
               : '0%'}{' '}
             от общего числа
           </p>
@@ -63,17 +53,12 @@ export default function AmountUsers({ roleCounts, lastUser }) {
       </div>
       <div className={clsx(scss.amountBlock, scss.lightBlueGradient)}>
         <div className={scss.amountBlockText}>
-          <h5 className={scss.amountTitle}>Последняя регистрация</h5>
-          {lastUser ? (
+          <h5 className={scss.amountTitle}>Последний</h5>
+          {lastCourse ? (
             <>
-              <p className={clsx(scss.amountNumb, scss.amountNumbBig)}>{lastUser.email}</p>
+              <p className={clsx(scss.amountNumb, scss.amountNumbBig)}>{lastCourse.title}</p>
               <p className={scss.amountProcent}>
-                {lastUser.role === 'admin'
-                  ? 'Администратор'
-                  : lastUser.role === 'student'
-                  ? 'Студент'
-                  : 'Гость'}{' '}
-                | {formatDate(lastUser.registrationDate)}
+                {lastCourse.category === 'Course' ? 'Курс' : 'Мастер-класс'}
               </p>
             </>
           ) : (

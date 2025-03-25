@@ -1,0 +1,71 @@
+// components/PaginationOnUsers.module.scss
+.pagination {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  background-color: #111111;
+  padding: 0.5vw;
+  border-radius: 0.25vw;
+  gap: 0.5vw;
+  margin-top: 0vw;
+
+  & .pageButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1.5vw;
+    height: 1.5vw;
+    border: none;
+    background-color: #1e1e1e;
+    font-size: 0.75vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    cursor: pointer;
+    border-radius: 0.2vw;
+    transition: background-color 0.3s ease-in-out;
+
+    &:hover {
+      background-color: #252525;
+    }
+
+    &.active {
+      background-color: var(--color-green-opacity20);
+      color: #fff;
+      border: 0.1vw solid var(--color-lightGreen);
+    }
+  }
+
+  & .navButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1.5vw;
+    height: 1.5vw;
+    border: none;
+    background-color: #1e1e1e;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 0.2vw;
+    transition: background-color 0.3s ease-in-out;
+
+    &:hover {
+      background-color: #252525;
+    }
+
+    &.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      &:hover {
+        background-color: #1e1e1e;
+      }
+    }
+
+    svg {
+      width: 0.75vw;
+      height: 0.75vw;
+    }
+  }
+}

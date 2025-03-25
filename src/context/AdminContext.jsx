@@ -1,16 +1,16 @@
 // context/AdminContext.js
 import { createContext, useContext, useState, useCallback } from 'react';
 import { db } from '../firebase';
-import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import { useAuth } from './AuthContext'; // Импортируем AuthContext для доступа к user и userRole
+import { collection, setDoc, doc, getDocs, updateDoc, deleteDoc, addDoc } from 'firebase/firestore'; // Добавляем addDoc
+import { useAuth } from './AuthContext';
 
 const AdminContext = createContext();
 
 export function AdminProvider({ children }) {
-  const { user, userRole } = useAuth(); // Используем AuthContext для авторизации
-  const [users, setUsers] = useState([]); // Список всех пользователей
-  const [courses, setCourses] = useState([]); // Список всех курсов
-  const [orders, setOrders] = useState([]); // Список всех заказов
+  const { user, userRole } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
 
   // Получение всех пользователей
@@ -41,7 +41,7 @@ export function AdminProvider({ children }) {
     }
   }, []);
 
-  // Получение всех заказов (предполагается, что у вас есть коллекция orders)
+  // Получение всех заказов
   const fetchAllOrders = useCallback(async () => {
     try {
       const orderDocs = await getDocs(collection(db, 'orders'));
@@ -104,15 +104,16 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Добавление нового курса
+  // Добавление нового курса с кастомным ID
   const addCourse = useCallback(
     async (courseData) => {
       if (userRole !== 'admin') {
         throw new Error('Только администраторы могут добавлять курсы');
       }
       try {
-        const docRef = await addDoc(collection(db, 'courses'), courseData);
-        setCourses((prev) => [...prev, { id: docRef.id, ...courseData }]);
+        const courseRef = doc(db, 'courses', courseData.id);
+        await setDoc(courseRef, courseData);
+        setCourses((prev) => [...prev, courseData]);
       } catch (error) {
         throw new Error('Ошибка при добавлении курса: ' + error.message);
       }

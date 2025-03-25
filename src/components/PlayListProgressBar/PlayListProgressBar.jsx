@@ -1,10 +1,12 @@
+// components/PlayListProgressBar.jsx
 import React from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import scss from './PlayListProgressBar.module.scss';
 
 export default function PlayListProgressBar({ progress }) {
-  const normalizedProgress = Math.min(100, Math.max(0, progress));
+  // Нормализуем прогресс (от 0 до 100) и округляем до целого числа
+  const normalizedProgress = Math.round(Math.min(100, Math.max(0, progress)));
 
   const renderCustomText = (value) => {
     return <tspan className={scss.customText}>{value}%</tspan>;

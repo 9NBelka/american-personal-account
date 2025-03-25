@@ -1,7 +1,17 @@
-// components/TextListUsers.jsx
+// components/admin/TextListUsers/TextListUsers.jsx
 import scss from './TextListUsers.module.scss';
 
 export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete }) {
+  // Функция для форматирования даты в формат DD.MM.YYYY
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Нет даты';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+
   return (
     <tbody className={scss.listUsers}>
       {paginatedUsers.map((user, index) => {
@@ -28,6 +38,7 @@ export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete
             <td>{user.email}</td>
             <td>{user.role}</td>
             <td>{user.purchasedCourses ? Object.keys(user.purchasedCourses).length : 0}</td>
+            <td>{formatDate(user.registrationDate)}</td> {/* Новый столбец с датой */}
             <td className={scss.actions}>
               <button className={scss.editButton} onClick={() => handleEdit(user.id)}>
                 Редактировать

@@ -5,7 +5,6 @@ import { useAdmin } from '../../../context/AdminContext';
 import { debounce } from 'lodash';
 import { toast } from 'react-toastify';
 import EditUser from '../EditUser/EditUser';
-import clsx from 'clsx';
 import AmountUsers from './AmountUsers/AmountUsers';
 import FilterUsers from './FilterUsers/FilterUsers';
 import PaginationOnUsers from './PaginationOnUsers/PaginationOnUsers';
@@ -19,7 +18,7 @@ export default function UserList() {
   const [sortOption, setSortOption] = useState('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(2);
-  const [editingUserId, setEditingUserId] = useState(null); // Состояние для редактирования
+  const [editingUserId, setEditingUserId] = useState(null);
 
   useEffect(() => {
     fetchAllUsers();
@@ -42,6 +41,11 @@ export default function UserList() {
     guest: users.filter((user) => user.role === 'guest').length,
     student: users.filter((user) => user.role === 'student').length,
   };
+
+  // Находим последнего зарегистрированного пользователя
+  const lastUser = users
+    .slice() // Создаём копию массива, чтобы не мутировать оригинал
+    .sort((a, b) => new Date(b.registrationDate) - new Date(a.registrationDate))[0]; // Сортируем по registrationDate (по убыванию)
 
   // Фильтрация и сортировка пользователей
   const filteredUsers = users
@@ -109,7 +113,7 @@ export default function UserList() {
   // Иначе показываем список пользователей
   return (
     <>
-      <AmountUsers roleCounts={roleCounts} />
+      <AmountUsers roleCounts={roleCounts} lastUser={lastUser} />
       <div className={scss.listMainBlock}>
         <h2 className={scss.listTitle}>Список пользователей</h2>
         {/* Фильтры и сортировка и Поиск */}

@@ -1,0 +1,137 @@
+// components/admin/FilterCourses/FilterCourses.module.scss
+
+.filterBlockMain {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1vw;
+  padding: 0.5vw;
+  background-color: #111111;
+  border-radius: 0.25vw;
+}
+
+.filterOnCategoryBlock {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75vw;
+
+  & .filterButton {
+    padding: 0.4vw 0.75vw;
+    border: none;
+    background-color: #1e1e1e;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    cursor: pointer;
+    border-radius: 0.2vw;
+    transition: background-color 0.3s ease-in-out;
+    border: 0.1vw solid transparent;
+
+    &:hover {
+      background-color: #252525;
+    }
+
+    &.active {
+      background-color: var(--color-green-opacity20);
+      border: 0.1vw solid var(--color-lightGreen);
+      color: #fff;
+    }
+  }
+}
+
+.sortContainer {
+  position: relative;
+
+  & .sortButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5vw;
+    padding: 0.4vw 0.75vw;
+    background-color: #1e1e1e;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    cursor: pointer;
+    border-radius: 0.2vw;
+    transition: background-color 0.3s ease-in-out;
+
+    &:hover {
+      background-color: #252525;
+    }
+
+    & .chevron {
+      width: 0.75vw;
+      height: 0.75vw;
+      transition: transform 0.3s ease-in-out;
+
+      &.chevronOpen {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  & .sortDropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: #1e1e1e;
+    border-radius: 0.2vw;
+    margin-top: 0.3vw;
+    padding: 0.3vw 0;
+    list-style: none;
+    z-index: 10;
+    box-shadow: 0 0.2vw 0.4vw rgba(0, 0, 0, 0.5);
+    border: 0.1vw solid #111111;
+  }
+
+  & .sortOption {
+    padding: 0.4vw 0.75vw;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+
+    &:hover {
+      background-color: #252525;
+    }
+
+    &.active {
+      background-color: #111111;
+      color: #fff;
+    }
+  }
+}
+
+.searchContainer {
+  & .searchInput {
+    padding: 0.4vw 0.75vw;
+    background-color: #1e1e1e;
+    border: none;
+    border-radius: 0.2vw;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    outline: none;
+    width: 15vw;
+
+    &::placeholder {
+      color: #888;
+    }
+
+    &:focus {
+      background-color: #252525;
+    }
+  }
+}
