@@ -1,4 +1,4 @@
-// components/admin/Sidebar.jsx
+// components/DashBoardComponents/Sidebar/Sidebar.jsx
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../../firebase';
 import scss from './Sidebar.module.scss';
@@ -12,10 +12,10 @@ import {
   BsFillMortarboardFill,
   BsFillPeopleFill,
   BsPower,
-  BsBellFill, // Добавляем иконку для уведомлений
+  BsBellFill,
 } from 'react-icons/bs';
 
-export default function Sidebar({ setActiveSection, activeSection, isCollapsed, setIsCollapsed }) {
+export default function Sidebar({ activeSection, isCollapsed, setIsCollapsed }) {
   const navigate = useNavigate();
   const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
@@ -33,8 +33,9 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
     }
   };
 
-  const handleSectionClick = (section, path) => {
-    setActiveSection(section);
+  const handleSectionClick = (section) => {
+    // Устанавливаем путь в формате /dashboard/[section]
+    const path = section === 'mainStatistics' ? '/dashboard' : `/dashboard/${section}`;
     navigate(path);
   };
 
@@ -47,7 +48,7 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
       <ul className={scss.menu}>
         <li
           className={clsx(scss.menuItem, activeSection === 'mainStatistics' && scss.active)}
-          onClick={() => handleSectionClick('mainStatistics', '/dashboard')}>
+          onClick={() => handleSectionClick('mainStatistics')}>
           <div className={scss.iconAndTextMenuMainBlock}>
             <BsFillHouseFill className={scss.menuIcon} />
             <span className={scss.menuText}>Главная</span>

@@ -1,3 +1,4 @@
+// App.jsx
 import { Route, Routes, Navigate, useNavigate, useLocation, matchPath } from 'react-router-dom';
 import Login from './pages/Login/Login';
 import PersonalAccount from './pages/PersonalAccount/PersonalAccount';
@@ -12,6 +13,12 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import HeaderPersonalAccount from './components/HeaderPersonalAccount/HeaderPersonalAccount';
 import { auth } from './firebase';
+import MainStatistics from './components/DashBoardComponents/MainStatistics/MainStatistics';
+import UserList from './components/DashBoardComponents/UserList/UserList';
+import AddUser from './components/DashBoardComponents/AddUser/AddUser';
+import CourseList from './components/DashBoardComponents/CourseList/CourseList';
+import AddCourse from './components/DashBoardComponents/AddCourse/AddCourse';
+import Notifications from './components/DashBoardComponents/Notifications/Notifications';
 
 export default function App() {
   const navigate = useNavigate();
@@ -26,7 +33,6 @@ export default function App() {
     }
   };
 
-  // Список маршрутов, где должен отображаться хеддер
   const headerRoutes = ['/account', '/playlist/:courseId', '/edit'];
 
   // Проверяем, соответствует ли текущий путь одному из маршрутов
@@ -55,8 +61,18 @@ export default function App() {
               <PrivateRoute allowedRoles={['admin']}>
                 <DashBoard />
               </PrivateRoute>
-            }
-          />
+            }>
+            {/* Вложенные маршруты для DashBoard */}
+            <Route index element={<MainStatistics />} />
+            <Route path='mainStatistics' element={<MainStatistics />} />
+            <Route path='userList' element={<UserList />} />
+            <Route path='addUser' element={<AddUser />} />
+            <Route path='courseList' element={<CourseList />} />
+            <Route path='addCourse' element={<AddCourse />} />
+            <Route path='editCourse' element={<CourseList />} />
+            <Route path='notifications' element={<Notifications />} />{' '}
+            <Route path='*' element={<div>Section Not Found</div>} />{' '}
+          </Route>
           <Route
             path='/playlist/:courseId'
             element={
