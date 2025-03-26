@@ -109,6 +109,28 @@
       flex-direction: row;
       gap: 1.25vw;
 
+      & .notificationWrapper {
+        display: flex;
+        position: relative;
+
+        & .notificationBadge {
+          display: flex;
+          position: absolute;
+          top: -0.2vw;
+          left: 0.4vw;
+          justify-content: center;
+          align-items: center;
+          font-size: 0.4vw;
+          color: var(--color-white);
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+          background-color: var(--color-red);
+          border-radius: 50%;
+          padding: 0.05vw 0.15vw;
+        }
+      }
+
       & .profileIcon {
         width: 0.75vw;
         height: 0.75vw;

@@ -11,6 +11,7 @@ import AddCourse from '../../components/DashBoardComponents/AddCourse/AddCourse'
 import scss from './DashBoard.module.scss';
 import MainStatistics from '../../components/DashBoardComponents/MainStatistics/MainStatistics.jsx';
 import clsx from 'clsx';
+import Notifications from '../../components/DashBoardComponents/Notifications/Notifications.jsx';
 
 export default function DashBoard() {
   const navigate = useNavigate();
@@ -41,7 +42,9 @@ export default function DashBoard() {
       case 'addCourse':
         return <AddCourse />;
       case 'editCourse':
-        return <CourseList />; // CourseList сам решает, показывать EditCourse или список
+        return <CourseList />;
+      case 'notifications':
+        return <Notifications />;
       default:
         return <MainStatistics />;
     }

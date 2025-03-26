@@ -1,0 +1,171 @@
+// components/HeaderPersonalAccount/NotificationDrop/NotificationDrop.module.scss
+.notificationsDropdown {
+  position: absolute;
+  top: 1.5vw;
+  right: 0;
+  background-color: #252525;
+  border-radius: 0.5vw;
+  box-shadow: 0 0.2vw 0.5vw rgba(0, 0, 0, 0.4);
+  width: 22vw;
+
+  z-index: 1000;
+  padding: 1vw;
+
+  & .notificationsTitle {
+    font-size: 1vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+  }
+
+  & .notificationsList {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.85vw;
+    gap: 0.5vw;
+    max-height: 18vw;
+    overflow-y: auto;
+
+    /* Кастомизация полосы прокрутки */
+    &::-webkit-scrollbar {
+      width: 0.3vw; /* Ширина скроллбара */
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #1e1e1e; /* Цвет фона полосы прокрутки */
+      border-radius: 0.2vw;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #666; /* Цвет самого скроллбара */
+      border-radius: 0.2vw;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #888; /* Цвет скроллбара при наведении */
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+      padding: 0.5vw;
+      background-color: #1e1e1e;
+      border-radius: 0.3vw;
+      transition: background-color 0.3s ease-in-out;
+      cursor: default;
+
+      &:hover {
+        background-color: #333;
+      }
+
+      & .notificationIconBlock {
+        width: 1.5vw;
+        height: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #2ecc71;
+        border-radius: 50%;
+
+        & .notificationsIcon {
+          width: 0.8vw;
+          height: 0.8vw;
+          color: var(--color-white);
+        }
+      }
+
+      .notificationContent {
+        flex: 1;
+
+        .notificationTitle {
+          font-size: 0.8vw;
+          color: var(--color-white);
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-normal);
+          line-height: var(--font-lineh-normal);
+          white-space: normal;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          margin: 0;
+        }
+
+        .notificationMessage {
+          font-size: 0.7vw;
+          color: var(--color-white);
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-normal);
+          white-space: normal;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          margin: 0;
+          margin-top: 0.5vw;
+        }
+
+        .notificationDate {
+          font-size: 0.6vw;
+          color: var(--color-lightGrey);
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+          margin: 0;
+          margin-top: 0.5vw;
+        }
+
+        .markAsReadButton {
+          margin-top: 0.5vw;
+          padding: 0.3vw 0vw;
+          background-color: transparent;
+          border: none;
+          border-radius: 0.4vw;
+          font-size: 0.65vw;
+          color: #27ae60;
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+          cursor: pointer;
+          transition: 0.3s ease-in-out;
+
+          &:hover {
+            opacity: 0.7;
+          }
+        }
+      }
+    }
+  }
+
+  .noNotifications {
+    font-size: 0.8vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    text-align: center;
+    padding: 1vw;
+  }
+
+  .clearAllButton {
+    width: 100%;
+    margin-top: 1vw;
+    padding: 0.5vw;
+    background-color: transparent;
+    border: 0.05vw solid var(--color-blue);
+    border-radius: 0.4vw;
+    font-size: 0.8vw;
+    background-color: var(--color-blue-opacity20);
+    color: var(--color-blue);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-small);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+      color: white;
+    }
+  }
+}

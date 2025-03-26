@@ -12,6 +12,7 @@ import {
   BsFillMortarboardFill,
   BsFillPeopleFill,
   BsPower,
+  BsBellFill, // Добавляем иконку для уведомлений
 } from 'react-icons/bs';
 
 export default function Sidebar({ setActiveSection, activeSection, isCollapsed, setIsCollapsed }) {
@@ -116,6 +117,14 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
               </li>
             </ul>
           )}
+        </li>
+        <li
+          className={clsx(scss.menuItem, activeSection === 'notifications' && scss.active)}
+          onClick={() => handleSectionClick('notifications')}>
+          <div className={scss.iconAndTextMenuMainBlock}>
+            <BsBellFill className={scss.menuIcon} />
+            <span className={scss.menuText}>Уведомления</span>
+          </div>
         </li>
         <li className={scss.menuItem} onClick={handleLogout}>
           <div className={scss.iconAndTextMenuMainBlock}>

@@ -1,4 +1,4 @@
-// AuthContext.js
+// context/AuthContext.js
 import { createContext, useContext, useEffect, useCallback, useState } from 'react';
 import { auth, db, storage } from '../firebase';
 import {
@@ -6,7 +6,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  sendPasswordResetEmail, // Добавляем для сброса пароля
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc, setDoc, getDocs, collection } from 'firebase/firestore';
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 'firebase/auth';
@@ -31,6 +31,7 @@ export function AuthProvider({ children }) {
   });
   const [courses, setCourses] = useState([]);
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [readNotifications, setReadNotifications] = useState([]); // Новое состояние для прочитанных уведомлений
 
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
@@ -40,10 +41,12 @@ export function AuthProvider({ children }) {
       setUserRole(data.role || 'guest');
       setRegistrationDate(data.registrationDate || '');
       setAvatarUrl(data.avatarUrl || null);
+      setReadNotifications(data.readNotifications || []); // Получаем прочитанные уведомления
       const purchasedCourses = data.purchasedCourses || {};
       return { purchasedCourses, role: data.role };
     }
     setAvatarUrl(null);
+    setReadNotifications([]); // Если данных нет, сбрасываем
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
@@ -151,6 +154,7 @@ export function AuthProvider({ children }) {
         role: 'guest',
         registrationDate,
         avatarUrl: null,
+        readNotifications: [], // Добавляем пустой массив при регистрации
       });
 
       await updateProfile(user, {
@@ -276,7 +280,7 @@ export function AuthProvider({ children }) {
       try {
         setIsLoading(true);
         await sendPasswordResetEmail(auth, email, {
-          url: `${window.location.origin}/login`, // Ссылка для возврата после сброса
+          url: `${window.location.origin}/login`,
         });
         return { success: true, message: 'Password reset email sent! Check your inbox.' };
       } catch (error) {
@@ -300,6 +304,27 @@ export function AuthProvider({ children }) {
       }
     },
     [auth],
+  );
+
+  // Новая функция для отметки уведомления как прочитанного
+  const markNotificationAsRead = useCallback(
+    async (notificationId) => {
+      if (!user || !user.uid) return;
+
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        const currentReadNotifications = userDoc.data().readNotifications || [];
+        if (!currentReadNotifications.includes(notificationId)) {
+          const updatedReadNotifications = [...currentReadNotifications, notificationId];
+          await updateDoc(userRef, {
+            readNotifications: updatedReadNotifications,
+          });
+          setReadNotifications(updatedReadNotifications);
+        }
+      }
+    },
+    [user],
   );
 
   useEffect(() => {
@@ -351,6 +376,7 @@ export function AuthProvider({ children }) {
         setCourses([]);
         setLastCourseId(null);
         setAvatarUrl(null);
+        setReadNotifications([]); // Сбрасываем прочитанные уведомления
         localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
@@ -382,7 +408,9 @@ export function AuthProvider({ children }) {
     fetchCourseUserCount,
     avatarUrl,
     updateUserAvatar,
-    resetPassword, // Добавляем в контекст
+    resetPassword,
+    readNotifications, // Добавляем в контекст
+    markNotificationAsRead, // Добавляем в контекст
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

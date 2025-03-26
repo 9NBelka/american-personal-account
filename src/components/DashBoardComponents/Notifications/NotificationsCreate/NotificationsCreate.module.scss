@@ -1,0 +1,90 @@
+.notificationsCreate {
+  display: flex;
+  flex-direction: column;
+  background-color: #252525;
+  padding: 1vw;
+  border-radius: 0.5vw;
+  width: 25%;
+}
+
+.notificationsCreate {
+  & .titleNotificationsCreate {
+    font-size: 1.4vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 1vw;
+    margin-top: 1vw;
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5vw;
+
+      label {
+        font-size: 0.85vw;
+        color: var(--color-white);
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+      }
+
+      input,
+      textarea {
+        padding: 0.5vw;
+        background-color: #111111;
+        border: none;
+        border-radius: 0.25vw;
+        font-size: 0.8vw;
+        color: var(--color-white);
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        outline: none;
+
+        &:focus {
+          background-color: #333;
+        }
+      }
+
+      textarea {
+        min-height: 20vw;
+        resize: vertical;
+      }
+    }
+
+    & .blockCenter {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+
+      & .submitButton {
+        display: flex;
+        justify-content: center;
+        width: 15vw;
+        padding: 0.5vw 1vw;
+        background-color: var(--color-green-opacity20);
+        border: 0.1vw solid var(--color-lightGreen);
+        border-radius: 0.25vw;
+        font-size: 0.8vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-normal);
+        line-height: var(--font-lineh-normal);
+        cursor: pointer;
+        transition: 0.3s ease-in-out;
+
+        &:hover {
+          background-color: #053a1b;
+          border: 0.1vw solid transparent;
+        }
+      }
+    }
+  }
+}

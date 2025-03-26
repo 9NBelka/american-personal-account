@@ -1,7 +1,16 @@
 // context/AdminContext.js
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, setDoc, doc, getDocs, updateDoc, deleteDoc, addDoc } from 'firebase/firestore'; // Добавляем addDoc
+import {
+  collection,
+  setDoc,
+  doc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  onSnapshot,
+} from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 
 const AdminContext = createContext();
@@ -11,6 +20,7 @@ export function AdminProvider({ children }) {
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState(null);
 
   // Получение всех пользователей
@@ -53,6 +63,26 @@ export function AdminProvider({ children }) {
     } catch (error) {
       setError('Ошибка при загрузке заказов: ' + error.message);
     }
+  }, []);
+
+  // Подписка на уведомления в реальном времени
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, 'notifications'),
+      (snapshot) => {
+        const notificationList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setNotifications(notificationList);
+      },
+      (error) => {
+        setError('Ошибка при загрузке уведомлений: ' + error.message);
+      },
+    );
+
+    // Отписываемся при размонтировании
+    return () => unsubscribe();
   }, []);
 
   // Добавление нового пользователя
@@ -154,10 +184,43 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
+  // Добавление нового уведомления
+  const addNotification = useCallback(
+    async (notificationData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут добавлять уведомления');
+      }
+      try {
+        await addDoc(collection(db, 'notifications'), notificationData);
+        // Убрали ручное обновление состояния, так как onSnapshot сделает это автоматически
+      } catch (error) {
+        throw new Error('Ошибка при добавлении уведомления: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
+  // Удаление уведомления
+  const deleteNotification = useCallback(
+    async (notificationId) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут удалять уведомления');
+      }
+      try {
+        await deleteDoc(doc(db, 'notifications', notificationId));
+        // Убрали ручное обновление состояния, так как onSnapshot сделает это автоматически
+      } catch (error) {
+        throw new Error('Ошибка при удалении уведомления: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
   const value = {
     users,
     courses,
     orders,
+    notifications,
     fetchAllUsers,
     fetchAllCourses,
     fetchAllOrders,
@@ -167,6 +230,8 @@ export function AdminProvider({ children }) {
     addCourse,
     updateCourse,
     deleteCourse,
+    addNotification,
+    deleteNotification,
     error,
     setError,
   };

@@ -1,0 +1,12 @@
+// components/DashBoardComponents/Notifications/Notifications.module.scss
+.notifications {
+  padding: 1vw;
+  background-color: #1e1e1e;
+  color: #fff;
+
+  .container {
+    display: flex;
+    gap: 1vw;
+    height: 100%;
+  }
+}
