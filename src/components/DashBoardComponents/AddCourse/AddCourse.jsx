@@ -162,7 +162,7 @@ export default function AddCourse() {
   return (
     <div className={scss.addCourse}>
       <h2 className={scss.title}>Добавить новый курс</h2>
-      {error && <p className={scss.error}>{error}</p>}
+      {error && console.error(error)}
       <form onSubmit={handleSubmit} className={scss.form}>
         {/* Основные поля курса */}
         <div className={scss.field}>
