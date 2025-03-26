@@ -75,10 +75,20 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
           </div>
           {isUsersOpen && !isCollapsed && (
             <ul className={scss.submenu}>
-              <li className={scss.submenuItem} onClick={() => handleSectionClick('userList')}>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'userList' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('userList')}>
                 Все пользователи
               </li>
-              <li className={scss.submenuItem} onClick={() => handleSectionClick('addUser')}>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'addUser' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('addUser')}>
                 Добавить пользователя
               </li>
             </ul>
@@ -109,10 +119,20 @@ export default function Sidebar({ setActiveSection, activeSection, isCollapsed, 
           </div>
           {isCoursesOpen && !isCollapsed && (
             <ul className={scss.submenu}>
-              <li className={scss.submenuItem} onClick={() => handleSectionClick('courseList')}>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'courseList' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('courseList')}>
                 Все курсы
               </li>
-              <li className={scss.submenuItem} onClick={() => handleSectionClick('addCourse')}>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'addCourse' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('addCourse')}>
                 Добавить курс
               </li>
             </ul>

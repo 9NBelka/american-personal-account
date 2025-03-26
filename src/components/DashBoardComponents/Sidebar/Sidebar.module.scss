@@ -153,5 +153,10 @@
       color: rgba(255, 255, 255, 0.9);
       transform: translateX(0.2vw);
     }
+
+    &.activeSubText {
+      color: var(--color-white);
+      transform: translateX(0.2vw);
+    }
   }
 }
