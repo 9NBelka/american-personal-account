@@ -1,6 +1,6 @@
 // context/AdminContext.js
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import {
   collection,
   setDoc,
@@ -12,7 +12,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
-import { getFunctions, httpsCallable } from 'firebase/functions'; // Для вызова функции
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const AdminContext = createContext();
 
@@ -92,10 +92,28 @@ export function AdminProvider({ children }) {
         throw new Error('Только администраторы могут добавлять пользователей');
       }
       try {
-        const userRef = doc(db, 'users', userData.id);
-        await setDoc(userRef, userData);
-        setUsers((prev) => [...prev, userData]);
+        // Проверяем, авторизован ли пользователь
+        console.log('Текущий пользователь:', auth.currentUser);
+        if (!auth.currentUser) {
+          throw new Error('Пользователь не авторизован');
+        }
+
+        // Обновляем токен
+        const token = await auth.currentUser.getIdToken(true);
+        console.log('Обновлённый токен:', token);
+
+        // Вызываем серверную функцию createUser
+        const functions = getFunctions(undefined, 'us-central1');
+        const createUserFunction = httpsCallable(functions, 'createUser');
+        const result = await createUserFunction(userData);
+
+        console.log('Результат от createUser:', result);
+
+        // Обновляем локальное состояние
+        setUsers((prev) => [...prev, { ...userData, id: result.data.uid }]);
+        return result.data;
       } catch (error) {
+        console.error('Ошибка в addUser:', error);
         throw new Error('Ошибка при добавлении пользователя: ' + error.message);
       }
     },
@@ -127,7 +145,7 @@ export function AdminProvider({ children }) {
       }
       try {
         // Вызываем серверную функцию для удаления пользователя
-        const functions = getFunctions();
+        const functions = getFunctions(undefined, 'us-central1');
         const deleteUserFunction = httpsCallable(functions, 'deleteUser');
         await deleteUserFunction({ userId });
 

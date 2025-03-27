@@ -5,8 +5,8 @@ import { Field, ErrorMessage } from 'formik';
 export default function UserInfoForm({
   values,
   initialValues,
-  setFieldValue, // Добавляем setFieldValue для генерации пароля
-  generateRandomPassword, // Добавляем функцию генерации пароля
+  setFieldValue,
+  generateRandomPassword,
   showRegistrationDate = true,
 }) {
   return (
@@ -43,6 +43,7 @@ export default function UserInfoForm({
             type='text'
             id='password'
             name='password'
+            autoComplete='new-password' // Добавляем autoComplete
             className={`${scss.input} ${
               values.password !== initialValues.password ? scss.changed : ''
             }`}

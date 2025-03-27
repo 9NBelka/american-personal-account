@@ -14,7 +14,7 @@ import { httpsCallable, getFunctions } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AuthContext = createContext();
-const functions = getFunctions();
+const functions = getFunctions(undefined, 'us-central1'); // Указываем регион
 const getCourseUserCount = httpsCallable(functions, 'getCourseUserCount');
 
 export function AuthProvider({ children }) {
@@ -31,22 +31,21 @@ export function AuthProvider({ children }) {
   });
   const [courses, setCourses] = useState([]);
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [readNotifications, setReadNotifications] = useState([]); // Новое состояние для прочитанных уведомлений
+  const [readNotifications, setReadNotifications] = useState([]);
 
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
       const data = userDoc.data();
       setUserName(data.name || '');
-      setUserRole(data.role || 'guest');
       setRegistrationDate(data.registrationDate || '');
       setAvatarUrl(data.avatarUrl || null);
-      setReadNotifications(data.readNotifications || []); // Получаем прочитанные уведомления
+      setReadNotifications(data.readNotifications || []);
       const purchasedCourses = data.purchasedCourses || {};
       return { purchasedCourses, role: data.role };
     }
     setAvatarUrl(null);
-    setReadNotifications([]); // Если данных нет, сбрасываем
+    setReadNotifications([]);
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
@@ -109,60 +108,51 @@ export function AuthProvider({ children }) {
     return courseList;
   }, []);
 
-  const fetchCourseUserCount = useCallback(
-    async (courseId) => {
-      try {
-        const response = await fetch(
-          `https://us-central1-k-syndicate.cloudfunctions.net/getCourseUserCount?courseId=${courseId}`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${await auth.currentUser.getIdToken()}`,
-            },
+  const fetchCourseUserCount = useCallback(async (courseId) => {
+    try {
+      const response = await fetch(
+        `https://us-central1-k-syndicate.cloudfunctions.net/getCourseUserCount?courseId=${courseId}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${await auth.currentUser.getIdToken()}`,
           },
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        return data.count;
-      } catch (error) {
-        console.error('Error getting number of users:', error);
-        return 0;
+        },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    },
-    [auth],
-  );
+      const data = await response.json();
+      return data.count;
+    } catch (error) {
+      console.error('Error getting number of users:', error);
+      return 0;
+    }
+  }, []);
 
-  const login = useCallback(
-    async (email, password) => {
-      await signInWithEmailAndPassword(auth, email, password);
-    },
-    [auth],
-  );
+  const login = useCallback(async (email, password) => {
+    await signInWithEmailAndPassword(auth, email, password);
+  }, []);
 
-  const signUp = useCallback(
-    async (name, lastName, email, password) => {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const registrationDate = new Date().toISOString();
-      const user = userCredential.user;
+  const signUp = useCallback(async (name, lastName, email, password) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const registrationDate = new Date().toISOString();
+    const user = userCredential.user;
 
-      await setDoc(doc(db, 'users', user.uid), {
-        name,
-        lastName: lastName || '',
-        email,
-        role: 'guest',
-        registrationDate,
-        avatarUrl: null,
-        readNotifications: [], // Добавляем пустой массив при регистрации
-      });
+    await setDoc(doc(db, 'users', user.uid), {
+      name,
+      lastName: lastName || '',
+      email,
+      role: 'guest',
+      registrationDate,
+      avatarUrl: null,
+      readNotifications: [],
+    });
 
-      await updateProfile(user, {
-        displayName: `${name} ${lastName || ''}`.trim(),
-      });
-    },
-    [auth, db],
-  );
+    await updateProfile(user, {
+      displayName: `${name} ${lastName || ''}`.trim(),
+    });
+  }, []);
 
   const updateCourseData = useCallback(
     async (courseId) => {
@@ -229,7 +219,7 @@ export function AuthProvider({ children }) {
         throw error;
       }
     },
-    [user, storage],
+    [user],
   );
 
   const toggleLessonCompletion = useCallback(
@@ -274,39 +264,34 @@ export function AuthProvider({ children }) {
     [user, completedLessons],
   );
 
-  // Добавляем функцию resetPassword
-  const resetPassword = useCallback(
-    async (email) => {
-      try {
-        setIsLoading(true);
-        await sendPasswordResetEmail(auth, email, {
-          url: `${window.location.origin}/login`,
-        });
-        return { success: true, message: 'Password reset email sent! Check your inbox.' };
-      } catch (error) {
-        let message;
-        switch (error.code) {
-          case 'auth/invalid-email':
-            message = 'Invalid email format.';
-            break;
-          case 'auth/user-not-found':
-            message = 'No user found with this email.';
-            break;
-          case 'auth/too-many-requests':
-            message = 'Too many requests. Please try again later.';
-            break;
-          default:
-            message = `Error: ${error.message}`;
-        }
-        return { success: false, message };
-      } finally {
-        setIsLoading(false);
+  const resetPassword = useCallback(async (email) => {
+    try {
+      setIsLoading(true);
+      await sendPasswordResetEmail(auth, email, {
+        url: `${window.location.origin}/login`,
+      });
+      return { success: true, message: 'Password reset email sent! Check your inbox.' };
+    } catch (error) {
+      let message;
+      switch (error.code) {
+        case 'auth/invalid-email':
+          message = 'Invalid email format.';
+          break;
+        case 'auth/user-not-found':
+          message = 'No user found with this email.';
+          break;
+        case 'auth/too-many-requests':
+          message = 'Too many requests. Please try again later.';
+          break;
+        default:
+          message = `Error: ${error.message}`;
       }
-    },
-    [auth],
-  );
+      return { success: false, message };
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Новая функция для отметки уведомления как прочитанного
   const markNotificationAsRead = useCallback(
     async (notificationId) => {
       if (!user || !user.uid) return;
@@ -329,6 +314,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('onAuthStateChanged вызван, firebaseUser:', firebaseUser);
       if (firebaseUser) {
         const userData = {
           uid: firebaseUser.uid,
@@ -336,9 +322,18 @@ export function AuthProvider({ children }) {
           displayName: firebaseUser.displayName,
         };
         try {
-          const { purchasedCourses, role } = await fetchUserData(firebaseUser.uid);
+          // Получаем кастомные claims из токена
+          const idTokenResult = await firebaseUser.getIdTokenResult(true);
+          console.log('Кастомные claims:', idTokenResult.claims);
+          const tokenRole = idTokenResult.claims.role || 'guest';
+
+          // Получаем данные из Firestore
+          const { purchasedCourses, role: firestoreRole } = await fetchUserData(firebaseUser.uid);
           setUser(userData);
-          setUserRole(role);
+
+          // Используем роль из токена, а не из Firestore
+          setUserRole(tokenRole);
+          console.log('Роль из токена:', tokenRole, 'Роль из Firestore:', firestoreRole);
 
           const initialProgress = {};
           const initialCompletedLessons = {};
@@ -367,6 +362,7 @@ export function AuthProvider({ children }) {
           setError(error.message);
         }
       } else {
+        console.log('Пользователь не авторизован, firebaseUser is null');
         setUser(null);
         setUserRole(null);
         setUserName('');
@@ -376,13 +372,16 @@ export function AuthProvider({ children }) {
         setCourses([]);
         setLastCourseId(null);
         setAvatarUrl(null);
-        setReadNotifications([]); // Сбрасываем прочитанные уведомления
+        setReadNotifications([]);
         localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('Удаляем слушатель onAuthStateChanged');
+      unsubscribe();
+    };
   }, [fetchUserData, fetchCourses]);
 
   const value = {
@@ -409,8 +408,8 @@ export function AuthProvider({ children }) {
     avatarUrl,
     updateUserAvatar,
     resetPassword,
-    readNotifications, // Добавляем в контекст
-    markNotificationAsRead, // Добавляем в контекст
+    readNotifications,
+    markNotificationAsRead,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
