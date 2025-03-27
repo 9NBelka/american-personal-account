@@ -82,6 +82,9 @@ export function AdminProvider({ children }) {
   }, []);
 
   // context/AdminContext.js
+  // context/AdminContext.js
+  // context/AdminContext.js
+  // context/AdminContext.js
   const addUser = useCallback(
     async (userData) => {
       if (userRole !== 'admin') {
