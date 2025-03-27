@@ -55,3 +55,50 @@ exports.getCourseUserCount = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+exports.createUser = functions.https.onCall(async (data, context) => {
+  // Проверяем, что запрос отправлен админом
+  if (!context.auth || context.auth.token.role !== 'admin') {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'Только администраторы могут создавать пользователей',
+    );
+  }
+
+  const { email, password, name, role, registrationDate, purchasedCourses } = data;
+
+  try {
+    // Создаём пользователя в Firebase Authentication
+    const userRecord = await admin.auth().createUser({
+      email: email,
+      password: password,
+    });
+
+    // Добавляем данные пользователя в Firestore
+    await admin
+      .firestore()
+      .collection('users')
+      .doc(userRecord.uid)
+      .set({
+        id: userRecord.uid,
+        email: email,
+        name: name,
+        role: role,
+        registrationDate: registrationDate,
+        purchasedCourses: purchasedCourses || {},
+      });
+
+    // Отправляем ссылку для сброса пароля
+    await admin.auth().generatePasswordResetLink(email, {
+      url: 'https://your-app-url/login', // Замени на URL твоего приложения
+      handleCodeInApp: true,
+    });
+
+    return { success: true, uid: userRecord.uid };
+  } catch (error) {
+    throw new functions.https.HttpsError(
+      'internal',
+      'Ошибка при создании пользователя: ' + error.message,
+    );
+  }
+});

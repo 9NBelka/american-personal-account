@@ -92,8 +92,10 @@ export function AdminProvider({ children }) {
         throw new Error('Только администраторы могут добавлять пользователей');
       }
       try {
-        const docRef = await addDoc(collection(db, 'users'), userData);
-        setUsers((prev) => [...prev, { id: docRef.id, ...userData }]);
+        // Используем setDoc с конкретным ID (userData.id — это UID из Firebase Authentication)
+        const userRef = doc(db, 'users', userData.id);
+        await setDoc(userRef, userData);
+        setUsers((prev) => [...prev, userData]); // Обновляем состояние users
       } catch (error) {
         throw new Error('Ошибка при добавлении пользователя: ' + error.message);
       }
