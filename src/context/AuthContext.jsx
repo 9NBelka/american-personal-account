@@ -31,23 +31,22 @@ export function AuthProvider({ children }) {
   });
   const [courses, setCourses] = useState([]);
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [readNotifications, setReadNotifications] = useState([]); // Новое состояние для прочитанных уведомлений
+  const [readNotifications, setReadNotifications] = useState([]);
 
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
       const data = userDoc.data();
       setUserName(data.name || '');
-      setUserRole(data.role || 'guest');
       setRegistrationDate(data.registrationDate || '');
       setAvatarUrl(data.avatarUrl || null);
-      setReadNotifications(data.readNotifications || []); // Получаем прочитанные уведомления
+      setReadNotifications(data.readNotifications || []);
       const purchasedCourses = data.purchasedCourses || {};
-      return { purchasedCourses, role: data.role };
+      return { purchasedCourses };
     }
     setAvatarUrl(null);
-    setReadNotifications([]); // Если данных нет, сбрасываем
-    return { purchasedCourses: {}, role: 'guest' };
+    setReadNotifications([]);
+    return { purchasedCourses: {} };
   }, []);
 
   const fetchCourses = useCallback(async (purchasedCourses) => {
@@ -154,7 +153,7 @@ export function AuthProvider({ children }) {
         role: 'guest',
         registrationDate,
         avatarUrl: null,
-        readNotifications: [], // Добавляем пустой массив при регистрации
+        readNotifications: [],
       });
 
       await updateProfile(user, {
@@ -274,7 +273,6 @@ export function AuthProvider({ children }) {
     [user, completedLessons],
   );
 
-  // Добавляем функцию resetPassword
   const resetPassword = useCallback(
     async (email) => {
       try {
@@ -306,7 +304,6 @@ export function AuthProvider({ children }) {
     [auth],
   );
 
-  // Новая функция для отметки уведомления как прочитанного
   const markNotificationAsRead = useCallback(
     async (notificationId) => {
       if (!user || !user.uid) return;
@@ -336,9 +333,14 @@ export function AuthProvider({ children }) {
           displayName: firebaseUser.displayName,
         };
         try {
-          const { purchasedCourses, role } = await fetchUserData(firebaseUser.uid);
+          // Получаем кастомный токен
+          const idTokenResult = await firebaseUser.getIdTokenResult(true);
+          console.log('Кастомные claims:', idTokenResult.claims);
+          const role = idTokenResult.claims.role || 'guest';
           setUser(userData);
           setUserRole(role);
+
+          const { purchasedCourses } = await fetchUserData(firebaseUser.uid);
 
           const initialProgress = {};
           const initialCompletedLessons = {};
@@ -376,7 +378,7 @@ export function AuthProvider({ children }) {
         setCourses([]);
         setLastCourseId(null);
         setAvatarUrl(null);
-        setReadNotifications([]); // Сбрасываем прочитанные уведомления
+        setReadNotifications([]);
         localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
@@ -409,8 +411,8 @@ export function AuthProvider({ children }) {
     avatarUrl,
     updateUserAvatar,
     resetPassword,
-    readNotifications, // Добавляем в контекст
-    markNotificationAsRead, // Добавляем в контекст
+    readNotifications,
+    markNotificationAsRead,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

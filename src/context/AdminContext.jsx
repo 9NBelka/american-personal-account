@@ -12,7 +12,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
-import { getFunctions, httpsCallable } from 'firebase/functions'; // Для вызова функции
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const AdminContext = createContext();
 
@@ -24,7 +24,6 @@ export function AdminProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState(null);
 
-  // Получение всех пользователей
   const fetchAllUsers = useCallback(async () => {
     try {
       const userDocs = await getDocs(collection(db, 'users'));
@@ -38,7 +37,6 @@ export function AdminProvider({ children }) {
     }
   }, []);
 
-  // Получение всех курсов
   const fetchAllCourses = useCallback(async () => {
     try {
       const courseDocs = await getDocs(collection(db, 'courses'));
@@ -52,7 +50,6 @@ export function AdminProvider({ children }) {
     }
   }, []);
 
-  // Получение всех заказов
   const fetchAllOrders = useCallback(async () => {
     try {
       const orderDocs = await getDocs(collection(db, 'orders'));
@@ -66,7 +63,6 @@ export function AdminProvider({ children }) {
     }
   }, []);
 
-  // Подписка на уведомления в реальном времени
   useEffect(() => {
     const unsubscribe = onSnapshot(
       collection(db, 'notifications'),
@@ -85,16 +81,17 @@ export function AdminProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // Добавление нового пользователя
   const addUser = useCallback(
     async (userData) => {
       if (userRole !== 'admin') {
         throw new Error('Только администраторы могут добавлять пользователей');
       }
       try {
-        const userRef = doc(db, 'users', userData.id);
-        await setDoc(userRef, userData);
-        setUsers((prev) => [...prev, userData]);
+        const functions = getFunctions();
+        const createUserFunction = httpsCallable(functions, 'createUser');
+        const result = await createUserFunction(userData);
+        setUsers((prev) => [...prev, { ...userData, id: result.data.uid }]);
+        return result.data;
       } catch (error) {
         throw new Error('Ошибка при добавлении пользователя: ' + error.message);
       }
@@ -102,7 +99,6 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Обновление пользователя
   const updateUser = useCallback(
     async (userId, updatedData) => {
       if (userRole !== 'admin') {
@@ -119,19 +115,15 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Удаление пользователя
   const deleteUser = useCallback(
     async (userId) => {
       if (userRole !== 'admin') {
         throw new Error('Только администраторы могут удалять пользователей');
       }
       try {
-        // Вызываем серверную функцию для удаления пользователя
         const functions = getFunctions();
         const deleteUserFunction = httpsCallable(functions, 'deleteUser');
         await deleteUserFunction({ userId });
-
-        // Обновляем локальное состояние
         setUsers((prev) => prev.filter((u) => u.id !== userId));
       } catch (error) {
         throw new Error('Ошибка при удалении пользователя: ' + error.message);
@@ -140,7 +132,6 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Добавление нового курса с кастомным ID
   const addCourse = useCallback(
     async (courseData) => {
       if (userRole !== 'admin') {
@@ -157,7 +148,6 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Обновление курса
   const updateCourse = useCallback(
     async (courseId, updatedData) => {
       if (userRole !== 'admin') {
@@ -174,7 +164,6 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Удаление курса
   const deleteCourse = useCallback(
     async (courseId) => {
       if (userRole !== 'admin') {
@@ -190,7 +179,6 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Добавление нового уведомления
   const addNotification = useCallback(
     async (notificationData) => {
       if (userRole !== 'admin') {
@@ -205,7 +193,6 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Удаление уведомления
   const deleteNotification = useCallback(
     async (notificationId) => {
       if (userRole !== 'admin') {
