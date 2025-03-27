@@ -10,7 +10,6 @@ import AddCourseForm from '../EditUser/AddCourseForm/AddCourseForm';
 import FormActions from '../EditUser/FormActions/FormActions';
 import { db } from '../../../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions'; // Для вызова функции
 
 export default function AddUser({ onBack }) {
   const { addUser, courses, fetchAllCourses } = useAdmin();
@@ -21,7 +20,6 @@ export default function AddUser({ onBack }) {
     fetchAllCourses();
   }, [fetchAllCourses]);
 
-  // Функция для генерации случайного пароля
   const generateRandomPassword = () => {
     const length = 12;
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
@@ -33,7 +31,6 @@ export default function AddUser({ onBack }) {
     return password;
   };
 
-  // Схема валидации с Yup
   const validationSchema = Yup.object({
     name: Yup.string().required('Имя обязательно'),
     email: Yup.string().email('Неверный формат email').required('Email обязателен'),
@@ -45,7 +42,6 @@ export default function AddUser({ onBack }) {
       .required('Роль обязательна'),
   });
 
-  // Начальные значения формы
   const initialValues = {
     name: '',
     email: '',
@@ -55,16 +51,13 @@ export default function AddUser({ onBack }) {
     purchasedCourses: {},
   };
 
-  // Проверка email в Firestore через прямой запрос
   const checkEmailInFirestore = async (email) => {
     const q = query(collection(db, 'users'), where('email', '==', email));
     const querySnapshot = await getDocs(q);
     return !querySnapshot.empty;
   };
 
-  // Обработчик отправки формы
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    // 1. Проверяем, существует ли email в Firestore
     try {
       const emailExistsInFirestore = await checkEmailInFirestore(values.email);
       if (emailExistsInFirestore) {
@@ -84,10 +77,8 @@ export default function AddUser({ onBack }) {
     }
 
     try {
-      // 2. Вызываем серверную функцию для создания пользователя
-      const functions = getFunctions();
-      const createUser = httpsCallable(functions, 'createUser');
-      const result = await createUser({
+      console.log('Отправляем данные в addUser:', values);
+      const result = await addUser({
         email: values.email,
         password: values.password,
         name: values.name,
@@ -96,13 +87,7 @@ export default function AddUser({ onBack }) {
         purchasedCourses: values.purchasedCourses,
       });
 
-      console.log('Пользователь успешно создан:', result.data); // Отладка
-
-      // 3. Локально обновляем состояние через addUser (опционально, если Firestore уже обновлён)
-      await addUser({
-        ...values,
-        id: result.data.uid,
-      });
+      console.log('Пользователь успешно создан:', result);
 
       toast.success(
         'Пользователь успешно зарегистрирован! Ссылка для сброса пароля отправлена на email.',
@@ -121,7 +106,6 @@ export default function AddUser({ onBack }) {
     }
   };
 
-  // Функция для получения названия курса по ID
   const getCourseTitle = (courseId) => {
     const course = courses.find((c) => c.id === courseId);
     return course ? course.title : courseId;

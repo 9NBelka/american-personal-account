@@ -81,23 +81,28 @@ export function AdminProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
+  // context/AdminContext.js
   const addUser = useCallback(
     async (userData) => {
-      console.log('Текущая роль пользователя:', userRole);
       if (userRole !== 'admin') {
         throw new Error('Только администраторы могут добавлять пользователей');
       }
       try {
-        // Принудительно обновляем токен перед вызовом функции
+        console.log('Текущий пользователь:', auth.currentUser);
+        if (!auth.currentUser) {
+          throw new Error('Пользователь не авторизован');
+        }
+
         const token = await auth.currentUser.getIdToken(true);
         console.log('Обновлённый токен:', token);
 
-        const functions = getFunctions();
+        const functions = getFunctions(undefined, 'us-central1');
         const createUserFunction = httpsCallable(functions, 'createUser');
         const result = await createUserFunction(userData);
         setUsers((prev) => [...prev, { ...userData, id: result.data.uid }]);
         return result.data;
       } catch (error) {
+        console.error('Ошибка в addUser:', error);
         throw new Error('Ошибка при добавлении пользователя: ' + error.message);
       }
     },

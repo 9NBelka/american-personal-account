@@ -71,10 +71,15 @@ exports.getCourseUserCount = functions.https.onRequest((req, res) => {
 });
 
 // functions/index.js
+// functions/index.js
 exports.createUser = functions.https.onCall(async (data, context) => {
-  console.log('Полный контекст:', context);
-  console.log('Токен пользователя:', context.auth ? context.auth.token : 'Нет токена');
+  console.log('Полный контекст:', JSON.stringify(context, null, 2));
+  console.log(
+    'Токен пользователя:',
+    context.auth ? JSON.stringify(context.auth.token, null, 2) : 'Нет токена',
+  );
   if (!context.auth || context.auth.token.role !== 'admin') {
+    console.log('Роль пользователя:', context.auth ? context.auth.token.role : 'Нет роли');
     throw new functions.https.HttpsError(
       'permission-denied',
       'Только администраторы могут создавать пользователей',
@@ -102,7 +107,6 @@ exports.createUser = functions.https.onCall(async (data, context) => {
         purchasedCourses: purchasedCourses || {},
       });
 
-    // Устанавливаем кастомный токен, если создаём админа
     if (role === 'admin') {
       await admin.auth().setCustomUserClaims(userRecord.uid, { role: 'admin' });
       console.log(`Кастомный токен установлен для нового админа: ${userRecord.uid}`);
