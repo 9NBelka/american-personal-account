@@ -1,6 +1,7 @@
 # Игнорируем файлы окружения
 .env
 
+
 # Logs
 logs
 *.log
@@ -18,6 +19,7 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+service-account-key.json
 .idea
 .DS_Store
 *.suo

@@ -57,7 +57,6 @@ exports.getCourseUserCount = functions.https.onRequest((req, res) => {
 });
 
 exports.createUser = functions.https.onCall(async (data, context) => {
-  // Проверяем, что запрос отправлен админом
   if (!context.auth || context.auth.token.role !== 'admin') {
     throw new functions.https.HttpsError(
       'permission-denied',
@@ -68,13 +67,11 @@ exports.createUser = functions.https.onCall(async (data, context) => {
   const { email, password, name, role, registrationDate, purchasedCourses } = data;
 
   try {
-    // Создаём пользователя в Firebase Authentication
     const userRecord = await admin.auth().createUser({
       email: email,
       password: password,
     });
 
-    // Добавляем данные пользователя в Firestore
     await admin
       .firestore()
       .collection('users')
@@ -88,9 +85,8 @@ exports.createUser = functions.https.onCall(async (data, context) => {
         purchasedCourses: purchasedCourses || {},
       });
 
-    // Отправляем ссылку для сброса пароля
     await admin.auth().generatePasswordResetLink(email, {
-      url: 'https://your-app-url/login', // Замени на URL твоего приложения
+      url: 'https://lms-jet-one.vercel.app/login',
       handleCodeInApp: true,
     });
 
@@ -99,6 +95,35 @@ exports.createUser = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError(
       'internal',
       'Ошибка при создании пользователя: ' + error.message,
+    );
+  }
+});
+
+// Новая функция для удаления пользователя
+exports.deleteUser = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.role !== 'admin') {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'Только администраторы могут удалять пользователей',
+    );
+  }
+
+  const { userId } = data;
+
+  try {
+    // Удаляем пользователя из Firebase Authentication
+    await admin.auth().deleteUser(userId);
+    console.log(`Пользователь ${userId} удалён из Authentication`);
+
+    // Удаляем пользователя из Firestore
+    await admin.firestore().collection('users').doc(userId).delete();
+    console.log(`Пользователь ${userId} удалён из Firestore`);
+
+    return { success: true };
+  } catch (error) {
+    throw new functions.https.HttpsError(
+      'internal',
+      'Ошибка при удалении пользователя: ' + error.message,
     );
   }
 });

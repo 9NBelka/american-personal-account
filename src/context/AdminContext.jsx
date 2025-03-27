@@ -12,6 +12,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
+import { getFunctions, httpsCallable } from 'firebase/functions'; // Для вызова функции
 
 const AdminContext = createContext();
 
@@ -81,7 +82,6 @@ export function AdminProvider({ children }) {
       },
     );
 
-    // Отписываемся при размонтировании
     return () => unsubscribe();
   }, []);
 
@@ -92,10 +92,9 @@ export function AdminProvider({ children }) {
         throw new Error('Только администраторы могут добавлять пользователей');
       }
       try {
-        // Используем setDoc с конкретным ID (userData.id — это UID из Firebase Authentication)
         const userRef = doc(db, 'users', userData.id);
         await setDoc(userRef, userData);
-        setUsers((prev) => [...prev, userData]); // Обновляем состояние users
+        setUsers((prev) => [...prev, userData]);
       } catch (error) {
         throw new Error('Ошибка при добавлении пользователя: ' + error.message);
       }
@@ -127,7 +126,12 @@ export function AdminProvider({ children }) {
         throw new Error('Только администраторы могут удалять пользователей');
       }
       try {
-        await deleteDoc(doc(db, 'users', userId));
+        // Вызываем серверную функцию для удаления пользователя
+        const functions = getFunctions();
+        const deleteUserFunction = httpsCallable(functions, 'deleteUser');
+        await deleteUserFunction({ userId });
+
+        // Обновляем локальное состояние
         setUsers((prev) => prev.filter((u) => u.id !== userId));
       } catch (error) {
         throw new Error('Ошибка при удалении пользователя: ' + error.message);
@@ -194,7 +198,6 @@ export function AdminProvider({ children }) {
       }
       try {
         await addDoc(collection(db, 'notifications'), notificationData);
-        // Убрали ручное обновление состояния, так как onSnapshot сделает это автоматически
       } catch (error) {
         throw new Error('Ошибка при добавлении уведомления: ' + error.message);
       }
@@ -210,7 +213,6 @@ export function AdminProvider({ children }) {
       }
       try {
         await deleteDoc(doc(db, 'notifications', notificationId));
-        // Убрали ручное обновление состояния, так как onSnapshot сделает это автоматически
       } catch (error) {
         throw new Error('Ошибка при удалении уведомления: ' + error.message);
       }
