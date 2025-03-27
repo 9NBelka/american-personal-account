@@ -70,7 +70,10 @@ exports.getCourseUserCount = functions.https.onRequest((req, res) => {
   });
 });
 
+// functions/index.js
 exports.createUser = functions.https.onCall(async (data, context) => {
+  console.log('Полный контекст:', context);
+  console.log('Токен пользователя:', context.auth ? context.auth.token : 'Нет токена');
   if (!context.auth || context.auth.token.role !== 'admin') {
     throw new functions.https.HttpsError(
       'permission-denied',
@@ -98,6 +101,12 @@ exports.createUser = functions.https.onCall(async (data, context) => {
         registrationDate: registrationDate,
         purchasedCourses: purchasedCourses || {},
       });
+
+    // Устанавливаем кастомный токен, если создаём админа
+    if (role === 'admin') {
+      await admin.auth().setCustomUserClaims(userRecord.uid, { role: 'admin' });
+      console.log(`Кастомный токен установлен для нового админа: ${userRecord.uid}`);
+    }
 
     await admin.auth().generatePasswordResetLink(email, {
       url: 'https://lms-jet-one.vercel.app/login',

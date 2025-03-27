@@ -1,6 +1,6 @@
 // context/AdminContext.js
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { db } from '../firebase';
+import { db, auth } from '../firebase'; // Добавляем auth
 import {
   collection,
   setDoc,
@@ -83,10 +83,15 @@ export function AdminProvider({ children }) {
 
   const addUser = useCallback(
     async (userData) => {
+      console.log('Текущая роль пользователя:', userRole);
       if (userRole !== 'admin') {
         throw new Error('Только администраторы могут добавлять пользователей');
       }
       try {
+        // Принудительно обновляем токен перед вызовом функции
+        const token = await auth.currentUser.getIdToken(true);
+        console.log('Обновлённый токен:', token);
+
         const functions = getFunctions();
         const createUserFunction = httpsCallable(functions, 'createUser');
         const result = await createUserFunction(userData);
