@@ -1,5 +1,5 @@
 import scss from './UserList.module.scss';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
 import { debounce } from 'lodash';
 import { toast } from 'react-toastify';
@@ -11,13 +11,19 @@ import TitleListUsers from './TitleListUsers/TitleListUsers';
 import TextListUsers from './TextListUsers/TextListUsers';
 
 export default function UserList() {
-  const { users, deleteUser } = useAdmin();
+  const { users, deleteUser, courses, fetchAllCourses } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [courseFilter, setCourseFilter] = useState('all');
   const [sortOption, setSortOption] = useState('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(2);
   const [editingUserId, setEditingUserId] = useState(null);
+
+  // Загружаем курсы при монтировании компонента
+  useEffect(() => {
+    fetchAllCourses();
+  }, [fetchAllCourses]);
 
   // Debounce для поиска
   const debouncedSetSearchQuery = useMemo(
@@ -50,7 +56,12 @@ export default function UserList() {
         searchQuery === '' ||
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesRole && matchesSearch;
+      const matchesCourse =
+        courseFilter === 'all' ||
+        (user.purchasedCourses &&
+          user.purchasedCourses[courseFilter] &&
+          ['standard', 'vanilla'].includes(user.purchasedCourses[courseFilter].access));
+      return matchesRole && matchesSearch && matchesCourse;
     })
     .sort((a, b) => {
       if (sortOption === 'name-asc') {
@@ -120,8 +131,11 @@ export default function UserList() {
         <FilterUsers
           roleFilter={roleFilter}
           setRoleFilter={setRoleFilter}
+          courseFilter={courseFilter}
+          setCourseFilter={setCourseFilter}
           setCurrentPage={setCurrentPage}
           roleCounts={roleCounts}
+          courses={courses}
           sortOption={sortOption}
           setSortOption={setSortOption}
           debouncedSetSearchQuery={debouncedSetSearchQuery}
@@ -136,7 +150,11 @@ export default function UserList() {
                 handleDelete={handleDelete}
               />
             ) : (
-              <p>Пользователи не найдены.</p>
+              <p>
+                {courseFilter !== 'all' && filteredUsers.length === 0
+                  ? 'Нет пользователей с данным курсом.'
+                  : 'Пользователи не найдены.'}
+              </p>
             )}
           </table>
         </div>

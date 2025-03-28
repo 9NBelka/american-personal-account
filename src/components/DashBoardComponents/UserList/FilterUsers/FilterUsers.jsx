@@ -1,4 +1,3 @@
-// components/FilterUsers.jsx
 import clsx from 'clsx';
 import scss from './FilterUsers.module.scss';
 import { useState } from 'react';
@@ -7,13 +6,17 @@ import { BsChevronDown } from 'react-icons/bs';
 export default function FilterUsers({
   roleFilter,
   setRoleFilter,
+  courseFilter,
+  setCourseFilter,
   setCurrentPage,
   roleCounts,
+  courses,
   sortOption,
   setSortOption,
   debouncedSetSearchQuery,
 }) {
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isCourseOpen, setIsCourseOpen] = useState(false); // Состояние для выпадающего списка курсов
 
   const sortOptions = [
     { value: 'name-asc', label: 'Имени (А-Я)' },
@@ -22,10 +25,25 @@ export default function FilterUsers({
     { value: 'courses-desc', label: 'Курсам (убыв.)' },
   ];
 
+  // Опции для фильтра по курсам
+  const courseOptions = [
+    { value: 'all', label: 'All courses' },
+    ...courses.map((course) => ({
+      value: course.id,
+      label: course.title || course.id, // Используем title курса, если есть, иначе id
+    })),
+  ];
+
   const handleSortSelect = (value) => {
     setSortOption(value);
     setCurrentPage(1);
     setIsSortOpen(false);
+  };
+
+  const handleCourseSelect = (value) => {
+    setCourseFilter(value);
+    setCurrentPage(1);
+    setIsCourseOpen(false);
   };
 
   return (
@@ -64,6 +82,27 @@ export default function FilterUsers({
           Администраторы ({roleCounts.admin})
         </button>
 
+        {/* Выпадающий список для фильтра по курсам */}
+        <div className={scss.sortContainer}>
+          <div className={scss.sortButton} onClick={() => setIsCourseOpen(!isCourseOpen)}>
+            {courseOptions.find((option) => option.value === courseFilter)?.label || 'Курсы'}
+            <BsChevronDown className={clsx(scss.chevron, isCourseOpen && scss.chevronOpen)} />
+          </div>
+          {isCourseOpen && (
+            <ul className={scss.sortDropdown}>
+              {courseOptions.map((option) => (
+                <li
+                  key={option.value}
+                  className={clsx(scss.sortOption, courseFilter === option.value && scss.active)}
+                  onClick={() => handleCourseSelect(option.value)}>
+                  {option.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Сортировка */}
         <div className={scss.sortContainer}>
           <div className={scss.sortButton} onClick={() => setIsSortOpen(!isSortOpen)}>
             {sortOptions.find((option) => option.value === sortOption)?.label || 'Сортировка'}
