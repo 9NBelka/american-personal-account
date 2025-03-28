@@ -11,7 +11,7 @@ import TitleListUsers from './TitleListUsers/TitleListUsers';
 import TextListUsers from './TextListUsers/TextListUsers';
 
 export default function UserList() {
-  const { users } = useAdmin(); // Убрали fetchAllUsers, так как используем onSnapshot
+  const { users, deleteUser } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [sortOption, setSortOption] = useState('name-asc');

@@ -1,4 +1,3 @@
-// components/admin/TextListUsers/TextListUsers.jsx
 import scss from './TextListUsers.module.scss';
 
 export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete }) {
@@ -38,7 +37,7 @@ export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete
             <td>{user.email}</td>
             <td>{user.role}</td>
             <td>{user.purchasedCourses ? Object.keys(user.purchasedCourses).length : 0}</td>
-            <td>{formatDate(user.registrationDate)}</td> {/* Новый столбец с датой */}
+            <td>{formatDate(user.registrationDate)}</td>
             <td className={scss.actions}>
               <button className={scss.editButton} onClick={() => handleEdit(user.id)}>
                 Редактировать
