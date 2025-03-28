@@ -50,10 +50,9 @@ export default function AddUser({ onBack }) {
     }
 
     try {
-      // Вызываем addUser и получаем сгенерированный пароль
-      const generatedPassword = await addUser(values);
+      await addUser(values);
       toast.success(
-        `Пользователь успешно зарегистрирован! Сгенерированный пароль: ${generatedPassword}`,
+        'Пользователь успешно зарегистрирован! Ссылка для установки пароля отправлена на email.',
       );
       resetForm();
       if (typeof onBack === 'function') {

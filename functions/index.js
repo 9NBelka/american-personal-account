@@ -67,7 +67,7 @@ exports.getCourseUserCount = functions.https.onRequest((req, res) => {
   });
 });
 
-// Новая функция для добавления пользователя
+// Функция для добавления пользователя
 exports.addNewUser = functions.https.onRequest((req, res) => {
   return cors(req, res, async () => {
     if (req.method !== 'POST') {
@@ -131,11 +131,18 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
           readNotifications: [],
         });
 
-      // Возвращаем сгенерированный пароль
+      // Генерируем ссылку для сброса пароля
+      const actionCodeSettings = {
+        url: 'https://lms-jet-one.vercel.app/login',
+        handleCodeInApp: true,
+      };
+
+      const resetLink = await admin.auth().generatePasswordResetLink(email, actionCodeSettings);
+
       res.status(200).json({
         message: 'User created successfully',
         userId: userRecord.uid,
-        password,
+        resetLink, // Возвращаем ссылку для сброса пароля
       });
     } catch (error) {
       console.error('Error adding user:', error);

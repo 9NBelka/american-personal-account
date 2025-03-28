@@ -10,6 +10,7 @@ import {
   addDoc,
   onSnapshot,
 } from 'firebase/firestore';
+import { sendPasswordResetEmail } from 'firebase/auth'; // Импортируем метод для отправки email
 import { useAuth } from './AuthContext';
 
 const AdminContext = createContext();
@@ -22,18 +23,23 @@ export function AdminProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState(null);
 
-  // Получение всех пользователей
-  const fetchAllUsers = useCallback(async () => {
-    try {
-      const userDocs = await getDocs(collection(db, 'users'));
-      const userList = userDocs.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setUsers(userList);
-    } catch (error) {
-      setError('Ошибка при загрузке пользователей: ' + error.message);
-    }
+  // Подписка на пользователей в реальном времени
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, 'users'),
+      (snapshot) => {
+        const userList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setUsers(userList);
+      },
+      (error) => {
+        setError('Ошибка при загрузке пользователей: ' + error.message);
+      },
+    );
+
+    return () => unsubscribe();
   }, []);
 
   // Получение всех курсов
@@ -109,10 +115,15 @@ export function AdminProvider({ children }) {
         }
 
         const result = await response.json();
-        // Обновляем локальное состояние
-        setUsers((prev) => [...prev, { id: result.userId, ...userData }]);
-        // Возвращаем сгенерированный пароль
-        return result.password;
+
+        // Отправляем email с ссылкой для сброса пароля
+        const actionCodeSettings = {
+          url: 'https://lms-jet-one.vercel.app/login',
+          handleCodeInApp: true,
+        };
+        await sendPasswordResetEmail(auth, userData.email, actionCodeSettings);
+
+        return result;
       } catch (error) {
         throw new Error('Ошибка при добавлении пользователя: ' + error.message);
       }
@@ -129,7 +140,6 @@ export function AdminProvider({ children }) {
       try {
         const userRef = doc(db, 'users', userId);
         await updateDoc(userRef, updatedData);
-        setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...updatedData } : u)));
       } catch (error) {
         throw new Error('Ошибка при обновлении пользователя: ' + error.message);
       }
@@ -145,7 +155,6 @@ export function AdminProvider({ children }) {
       }
       try {
         await deleteDoc(doc(db, 'users', userId));
-        setUsers((prev) => prev.filter((u) => u.id !== userId));
       } catch (error) {
         throw new Error('Ошибка при удалении пользователя: ' + error.message);
       }
@@ -238,7 +247,6 @@ export function AdminProvider({ children }) {
     courses,
     orders,
     notifications,
-    fetchAllUsers,
     fetchAllCourses,
     fetchAllOrders,
     addUser,
