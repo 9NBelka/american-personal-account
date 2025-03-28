@@ -142,11 +142,68 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
       res.status(200).json({
         message: 'User created successfully',
         userId: userRecord.uid,
-        resetLink, // Возвращаем ссылку для сброса пароля
+        resetLink,
       });
     } catch (error) {
       console.error('Error adding user:', error);
       res.status(500).send(`Error adding user: ${error.message}`);
+    }
+  });
+});
+
+// Новая функция для удаления пользователя
+exports.deleteUser = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    if (req.method !== 'POST') {
+      return res.status(405).send('Method Not Allowed');
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).send('Unauthorized: No token provided');
+    }
+
+    try {
+      const idToken = authHeader.split('Bearer ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const adminUserId = decodedToken.uid;
+
+      // Проверяем, что вызывающий пользователь — администратор
+      const adminUserDoc = await admin.firestore().doc(`users/${adminUserId}`).get();
+      if (!adminUserDoc.exists || adminUserDoc.data().role !== 'admin') {
+        return res.status(403).send('Forbidden: Only admins can delete users');
+      }
+
+      const { userId } = req.body;
+
+      // Проверяем, что userId передан
+      if (!userId) {
+        return res.status(400).send('Missing required field: userId');
+      }
+
+      // Проверяем, что пользователь, которого пытаются удалить, существует
+      const userDoc = await admin.firestore().doc(`users/${userId}`).get();
+      if (!userDoc.exists) {
+        return res.status(404).send('User not found in Firestore');
+      }
+
+      // Нельзя удалить самого себя
+      if (userId === adminUserId) {
+        return res.status(403).send('Forbidden: Cannot delete yourself');
+      }
+
+      // Удаляем пользователя из Firebase Authentication
+      await admin.auth().deleteUser(userId);
+
+      // Удаляем данные пользователя из Firestore
+      await admin.firestore().doc(`users/${userId}`).delete();
+
+      res.status(200).json({
+        message: 'User deleted successfully',
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).send(`Error deleting user: ${error.message}`);
     }
   });
 });

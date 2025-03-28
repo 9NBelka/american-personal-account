@@ -6,7 +6,6 @@ import {
   doc,
   getDocs,
   updateDoc,
-  deleteDoc,
   addDoc,
   onSnapshot,
 } from 'firebase/firestore';
@@ -25,9 +24,8 @@ export function AdminProvider({ children }) {
 
   // Подписка на пользователей в реальном времени
   useEffect(() => {
-    // Подписываемся только если пользователь авторизован и является админом
     if (!user || userRole !== 'admin') {
-      setUsers([]); // Сбрасываем список, если пользователь не админ
+      setUsers([]);
       return;
     }
 
@@ -46,7 +44,7 @@ export function AdminProvider({ children }) {
     );
 
     return () => unsubscribe();
-  }, [user, userRole]); // Зависимости: user и userRole
+  }, [user, userRole]);
 
   // Получение всех курсов
   const fetchAllCourses = useCallback(async () => {
@@ -127,7 +125,6 @@ export function AdminProvider({ children }) {
 
         const result = await response.json();
 
-        // Отправляем email с ссылкой для сброса пароля
         const actionCodeSettings = {
           url: 'https://lms-jet-one.vercel.app/login',
           handleCodeInApp: true,
@@ -158,14 +155,33 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
-  // Удаление пользователя
+  // Удаление пользователя через Cloud Function
   const deleteUser = useCallback(
     async (userId) => {
       if (userRole !== 'admin') {
         throw new Error('Только администраторы могут удалять пользователей');
       }
       try {
-        await deleteDoc(doc(db, 'users', userId));
+        const idToken = await auth.currentUser.getIdToken();
+        const response = await fetch(
+          'https://us-central1-k-syndicate.cloudfunctions.net/deleteUser',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ userId }),
+          },
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Ошибка при удалении пользователя');
+        }
+
+        const result = await response.json();
+        return result;
       } catch (error) {
         throw new Error('Ошибка при удалении пользователя: ' + error.message);
       }
