@@ -15,6 +15,7 @@ export default function UserList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
+  const [accessFilter, setAccessFilter] = useState('all'); // Новое состояние для фильтра по типу доступа
   const [sortOption, setSortOption] = useState('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(2);
@@ -61,7 +62,13 @@ export default function UserList() {
         (user.purchasedCourses &&
           user.purchasedCourses[courseFilter] &&
           ['standard', 'vanilla'].includes(user.purchasedCourses[courseFilter].access));
-      return matchesRole && matchesSearch && matchesCourse;
+      const matchesAccess =
+        courseFilter === 'all' || // Если курс не выбран, фильтр по доступу не применяется
+        accessFilter === 'all' || // Если выбрано "Все доступы", показываем всех
+        (user.purchasedCourses &&
+          user.purchasedCourses[courseFilter] &&
+          user.purchasedCourses[courseFilter].access === accessFilter);
+      return matchesRole && matchesSearch && matchesCourse && matchesAccess;
     })
     .sort((a, b) => {
       if (sortOption === 'name-asc') {
@@ -133,6 +140,8 @@ export default function UserList() {
           setRoleFilter={setRoleFilter}
           courseFilter={courseFilter}
           setCourseFilter={setCourseFilter}
+          accessFilter={accessFilter} // Передаем фильтр по типу доступа
+          setAccessFilter={setAccessFilter} // Передаем setter для фильтра по типу доступа
           setCurrentPage={setCurrentPage}
           roleCounts={roleCounts}
           courses={courses}

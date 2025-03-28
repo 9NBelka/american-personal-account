@@ -8,6 +8,8 @@ export default function FilterUsers({
   setRoleFilter,
   courseFilter,
   setCourseFilter,
+  accessFilter,
+  setAccessFilter,
   setCurrentPage,
   roleCounts,
   courses,
@@ -16,7 +18,8 @@ export default function FilterUsers({
   debouncedSetSearchQuery,
 }) {
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [isCourseOpen, setIsCourseOpen] = useState(false); // Состояние для выпадающего списка курсов
+  const [isCourseOpen, setIsCourseOpen] = useState(false);
+  const [isAccessOpen, setIsAccessOpen] = useState(false); // Состояние для выпадающего списка доступа
 
   const sortOptions = [
     { value: 'name-asc', label: 'Имени (А-Я)' },
@@ -27,11 +30,18 @@ export default function FilterUsers({
 
   // Опции для фильтра по курсам
   const courseOptions = [
-    { value: 'all', label: 'All courses' },
+    { value: 'all', label: 'Все курсы' },
     ...courses.map((course) => ({
       value: course.id,
-      label: course.title || course.id, // Используем title курса, если есть, иначе id
+      label: course.title || course.id,
     })),
+  ];
+
+  // Опции для фильтра по типу доступа
+  const accessOptions = [
+    { value: 'all', label: 'Все доступы' },
+    { value: 'standard', label: 'Standard' },
+    { value: 'vanilla', label: 'Vanilla' },
   ];
 
   const handleSortSelect = (value) => {
@@ -42,8 +52,15 @@ export default function FilterUsers({
 
   const handleCourseSelect = (value) => {
     setCourseFilter(value);
+    setAccessFilter('all'); // Сбрасываем фильтр по доступу при смене курса
     setCurrentPage(1);
     setIsCourseOpen(false);
+  };
+
+  const handleAccessSelect = (value) => {
+    setAccessFilter(value);
+    setCurrentPage(1);
+    setIsAccessOpen(false);
   };
 
   return (
@@ -101,6 +118,28 @@ export default function FilterUsers({
             </ul>
           )}
         </div>
+
+        {/* Выпадающий список для фильтра по типу доступа (показываем только если курс выбран) */}
+        {courseFilter !== 'all' && (
+          <div className={scss.sortContainer}>
+            <div className={scss.sortButton} onClick={() => setIsAccessOpen(!isAccessOpen)}>
+              {accessOptions.find((option) => option.value === accessFilter)?.label || 'Доступ'}
+              <BsChevronDown className={clsx(scss.chevron, isAccessOpen && scss.chevronOpen)} />
+            </div>
+            {isAccessOpen && (
+              <ul className={scss.sortDropdown}>
+                {accessOptions.map((option) => (
+                  <li
+                    key={option.value}
+                    className={clsx(scss.sortOption, accessFilter === option.value && scss.active)}
+                    onClick={() => handleAccessSelect(option.value)}>
+                    {option.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* Сортировка */}
         <div className={scss.sortContainer}>
