@@ -14,7 +14,6 @@
     "@reduxjs/toolkit": "^2.6.0",
     "clsx": "^2.1.1",
     "firebase": "^11.4.0",
-    "firebase-admin": "^13.2.0",
     "formik": "^2.4.6",
     "lodash": "^4.17.21",
     "react": "^19.0.0",
