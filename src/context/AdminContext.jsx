@@ -225,30 +225,13 @@ export function AdminProvider({ children }) {
   );
 
   // Удаление курса
-  // Удаление курса
   const deleteCourse = useCallback(
     async (courseId) => {
       if (userRole !== 'admin') {
         throw new Error('Только администраторы могут удалять курсы');
       }
       try {
-        // Удаляем курс из коллекции courses
         await deleteDoc(doc(db, 'courses', courseId));
-
-        // Обновляем всех пользователей, у которых есть этот курс в purchasedCourses
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const batch = db.batch();
-        usersSnapshot.forEach((userDoc) => {
-          const userData = userDoc.data();
-          if (userData.purchasedCourses && userData.purchasedCourses[courseId]) {
-            const updatedPurchasedCourses = { ...userData.purchasedCourses };
-            delete updatedPurchasedCourses[courseId];
-            batch.update(userDoc.ref, { purchasedCourses: updatedPurchasedCourses });
-          }
-        });
-        await batch.commit();
-
-        // Обновляем локальное состояние
         setCourses((prev) => prev.filter((c) => c.id !== courseId));
       } catch (error) {
         throw new Error('Ошибка при удалении курса: ' + error.message);
