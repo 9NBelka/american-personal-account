@@ -1,4 +1,3 @@
-// components/admin/AddUser.jsx
 import scss from './AddUser.module.scss';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
@@ -51,10 +50,12 @@ export default function AddUser({ onBack }) {
     }
 
     try {
-      await addUser(values);
-      toast.success('Пользователь успешно зарегистрирован!');
+      // Вызываем addUser и получаем сгенерированный пароль
+      const generatedPassword = await addUser(values);
+      toast.success(
+        `Пользователь успешно зарегистрирован! Сгенерированный пароль: ${generatedPassword}`,
+      );
       resetForm();
-      // Проверяем, что onBack — это функция, перед вызовом
       if (typeof onBack === 'function') {
         onBack();
       } else {
