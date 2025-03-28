@@ -10,7 +10,7 @@ import {
   addDoc,
   onSnapshot,
 } from 'firebase/firestore';
-import { sendPasswordResetEmail } from 'firebase/auth'; // Импортируем метод для отправки email
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { useAuth } from './AuthContext';
 
 const AdminContext = createContext();
@@ -25,6 +25,12 @@ export function AdminProvider({ children }) {
 
   // Подписка на пользователей в реальном времени
   useEffect(() => {
+    // Подписываемся только если пользователь авторизован и является админом
+    if (!user || userRole !== 'admin') {
+      setUsers([]); // Сбрасываем список, если пользователь не админ
+      return;
+    }
+
     const unsubscribe = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
@@ -40,7 +46,7 @@ export function AdminProvider({ children }) {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [user, userRole]); // Зависимости: user и userRole
 
   // Получение всех курсов
   const fetchAllCourses = useCallback(async () => {
@@ -72,6 +78,11 @@ export function AdminProvider({ children }) {
 
   // Подписка на уведомления в реальном времени
   useEffect(() => {
+    if (!user || userRole !== 'admin') {
+      setNotifications([]);
+      return;
+    }
+
     const unsubscribe = onSnapshot(
       collection(db, 'notifications'),
       (snapshot) => {
@@ -87,7 +98,7 @@ export function AdminProvider({ children }) {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [user, userRole]);
 
   // Добавление нового пользователя через Cloud Function
   const addUser = useCallback(

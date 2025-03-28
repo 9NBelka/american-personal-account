@@ -1,6 +1,5 @@
-// components/admin/UserList.jsx
 import scss from './UserList.module.scss';
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
 import { debounce } from 'lodash';
 import { toast } from 'react-toastify';
@@ -12,17 +11,13 @@ import TitleListUsers from './TitleListUsers/TitleListUsers';
 import TextListUsers from './TextListUsers/TextListUsers';
 
 export default function UserList() {
-  const { users, fetchAllUsers, deleteUser } = useAdmin();
+  const { users } = useAdmin(); // Убрали fetchAllUsers, так как используем onSnapshot
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [sortOption, setSortOption] = useState('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(2);
   const [editingUserId, setEditingUserId] = useState(null);
-
-  useEffect(() => {
-    fetchAllUsers();
-  }, [fetchAllUsers]);
 
   // Debounce для поиска
   const debouncedSetSearchQuery = useMemo(
@@ -44,8 +39,8 @@ export default function UserList() {
 
   // Находим последнего зарегистрированного пользователя
   const lastUser = users
-    .slice() // Создаём копию массива, чтобы не мутировать оригинал
-    .sort((a, b) => new Date(b.registrationDate) - new Date(a.registrationDate))[0]; // Сортируем по registrationDate (по убыванию)
+    .slice()
+    .sort((a, b) => new Date(b.registrationDate) - new Date(a.registrationDate))[0];
 
   // Фильтрация и сортировка пользователей
   const filteredUsers = users
@@ -108,6 +103,11 @@ export default function UserList() {
   // Если редактируем пользователя, показываем EditUser
   if (editingUserId) {
     return <EditUser userId={editingUserId} onBack={handleBack} />;
+  }
+
+  // Показываем индикатор загрузки, если пользователи еще не загрузились
+  if (users.length === 0) {
+    return <div>Загрузка пользователей...</div>;
   }
 
   // Иначе показываем список пользователей
