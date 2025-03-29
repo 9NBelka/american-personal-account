@@ -19,6 +19,7 @@ import AddUser from './components/DashBoardComponents/AddUser/AddUser';
 import CourseList from './components/DashBoardComponents/CourseList/CourseList';
 import AddCourse from './components/DashBoardComponents/AddCourse/AddCourse';
 import Notifications from './components/DashBoardComponents/Notifications/Notifications';
+import ProductList from './components/DashBoardComponents/ProductList/ProductList';
 
 export default function App() {
   const navigate = useNavigate();
@@ -70,6 +71,8 @@ export default function App() {
             <Route path='courseList' element={<CourseList />} />
             <Route path='addCourse' element={<AddCourse />} />
             <Route path='editCourse' element={<CourseList />} />
+            <Route path='productList' element={<ProductList />} />{' '}
+            {/* Добавляем маршрут для ProductList */}
             <Route path='notifications' element={<Notifications />} />{' '}
             <Route path='*' element={<div>Section Not Found</div>} />{' '}
           </Route>

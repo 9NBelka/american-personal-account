@@ -1,0 +1,26 @@
+.listMainBlock {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 2vw;
+
+  & .listTitle {
+    font-size: 1.4vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    margin-top: 1vw;
+  }
+}
+
+.tableWrapper {
+  border-radius: 0.25vw;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #111111;
+}

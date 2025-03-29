@@ -8,7 +8,7 @@ import {
   updateDoc,
   addDoc,
   onSnapshot,
-  deleteDoc, // Добавляем импорт deleteDoc
+  deleteDoc,
 } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useAuth } from './AuthContext';
@@ -19,6 +19,7 @@ export function AdminProvider({ children }) {
   const { user, userRole } = useAuth();
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [products, setProducts] = useState([]); // Новое состояние для продуктов
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState(null);
@@ -58,6 +59,20 @@ export function AdminProvider({ children }) {
       setCourses(courseList);
     } catch (error) {
       setError('Ошибка при загрузке курсов: ' + error.message);
+    }
+  }, []);
+
+  // Получение всех продуктов
+  const fetchAllProducts = useCallback(async () => {
+    try {
+      const productDocs = await getDocs(collection(db, 'products'));
+      const productList = productDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setProducts(productList);
+    } catch (error) {
+      setError('Ошибка при загрузке продуктов: ' + error.message);
     }
   }, []);
 
@@ -231,32 +246,20 @@ export function AdminProvider({ children }) {
         throw new Error('Только администраторы могут удалять курсы');
       }
       try {
-        // 1. Удаляем курс из коллекции courses
         await deleteDoc(doc(db, 'courses', courseId));
-
-        // 2. Находим всех пользователей и обновляем их purchasedCourses
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
           const userData = userDoc.data();
           const purchasedCourses = userData.purchasedCourses || {};
-
-          // Проверяем, есть ли удаляемый курс в purchasedCourses
           if (purchasedCourses[courseId]) {
-            // Удаляем курс из purchasedCourses
             const updatedPurchasedCourses = { ...purchasedCourses };
             delete updatedPurchasedCourses[courseId];
-
-            // Обновляем пользователя в базе
             await updateDoc(doc(db, 'users', userDoc.id), {
               purchasedCourses: updatedPurchasedCourses,
             });
           }
         });
-
-        // Дожидаемся завершения всех обновлений
         await Promise.all(updatePromises);
-
-        // 3. Обновляем локальное состояние курсов
         setCourses((prev) => prev.filter((c) => c.id !== courseId));
       } catch (error) {
         throw new Error('Ошибка при удалении курса: ' + error.message);
@@ -298,9 +301,11 @@ export function AdminProvider({ children }) {
   const value = {
     users,
     courses,
+    products, // Добавляем products в контекст
     orders,
     notifications,
     fetchAllCourses,
+    fetchAllProducts, // Добавляем fetchAllProducts в контекст
     fetchAllOrders,
     addUser,
     updateUser,

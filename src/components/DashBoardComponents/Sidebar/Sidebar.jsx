@@ -13,6 +13,7 @@ import {
   BsFillPeopleFill,
   BsPower,
   BsBellFill,
+  BsFillBoxFill,
 } from 'react-icons/bs';
 
 export default function Sidebar({
@@ -134,6 +135,50 @@ export default function Sidebar({
                 )}
                 onClick={() => handleSectionClick('addCourse')}>
                 Добавить курс
+              </li>
+            </ul>
+          )}
+        </li>
+        <li
+          className={clsx(
+            scss.menuItem,
+            (activeSection === 'courseList' ||
+              activeSection === 'addCourse' ||
+              activeSection === 'editCourse') &&
+              scss.active,
+          )}>
+          <div
+            className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
+            onClick={() => {
+              if (!isCollapsed) setIsCoursesOpen(!isCoursesOpen);
+            }}>
+            <div className={scss.iconAndTextMenuBlock}>
+              <BsFillBoxFill className={scss.menuIcon} />
+              <span className={scss.menuText}>Товары</span>
+            </div>
+            {isCoursesOpen ? (
+              <BsChevronDown className={scss.iconDrop} />
+            ) : (
+              <BsChevronRight className={scss.iconDrop} />
+            )}
+          </div>
+          {isCoursesOpen && !isCollapsed && (
+            <ul className={scss.submenu}>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'productList' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('productList')}>
+                Все товары
+              </li>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'addCourse' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('addCourse')}>
+                Добавить товар
               </li>
             </ul>
           )}
