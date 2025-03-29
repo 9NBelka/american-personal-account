@@ -9,8 +9,10 @@ import FilterUsers from './FilterUsers/FilterUsers';
 import PaginationOnUsers from './PaginationOnUsers/PaginationOnUsers';
 import TitleListUsers from './TitleListUsers/TitleListUsers';
 import TextListUsers from './TextListUsers/TextListUsers';
+import { useOutletContext } from 'react-router-dom';
 
 export default function UserList() {
+  const { handleSectionClick } = useOutletContext();
   const { users, deleteUser, courses, fetchAllCourses } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -133,6 +135,11 @@ export default function UserList() {
     <>
       <AmountUsers roleCounts={roleCounts} lastUser={lastUser} />
       <div className={scss.listMainBlock}>
+        <div>
+          <button className={scss.addUserButton} onClick={() => handleSectionClick('addUser')}>
+            Добавить пользователя
+          </button>
+        </div>
         <h2 className={scss.listTitle}>Список пользователей</h2>
         {/* Фильтры и сортировка и Поиск */}
         <FilterUsers

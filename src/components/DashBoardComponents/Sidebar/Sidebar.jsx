@@ -15,7 +15,12 @@ import {
   BsBellFill,
 } from 'react-icons/bs';
 
-export default function Sidebar({ activeSection, isCollapsed, setIsCollapsed }) {
+export default function Sidebar({
+  activeSection,
+  isCollapsed,
+  setIsCollapsed,
+  handleSectionClick,
+}) {
   const navigate = useNavigate();
   const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
@@ -31,12 +36,6 @@ export default function Sidebar({ activeSection, isCollapsed, setIsCollapsed }) 
       setIsUsersOpen(false);
       setIsCoursesOpen(false);
     }
-  };
-
-  const handleSectionClick = (section) => {
-    // Устанавливаем путь в формате /dashboard/[section]
-    const path = section === 'mainStatistics' ? '/dashboard' : `/dashboard/${section}`;
-    navigate(path);
   };
 
   return (

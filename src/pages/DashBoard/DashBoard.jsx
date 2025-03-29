@@ -22,6 +22,12 @@ export default function DashBoard() {
     }
   }, [userRole, isLoading, navigate]);
 
+  const handleSectionClick = (section) => {
+    // Устанавливаем путь в формате /dashboard/[section]
+    const path = section === 'mainStatistics' ? '/dashboard' : `/dashboard/${section}`;
+    navigate(path);
+  };
+
   if (isLoading) {
     return <AccountLoadingIndicator />;
   }
@@ -33,9 +39,10 @@ export default function DashBoard() {
           activeSection={activeSection}
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
+          handleSectionClick={handleSectionClick}
         />
         <div className={clsx(scss.content, isCollapsed && scss.contentCollapsed)}>
-          <Outlet /> {/* Отображаем вложенный компонент */}
+          <Outlet context={{ handleSectionClick }} /> {/* Отображаем вложенный компонент */}
         </div>
       </div>
     </div>

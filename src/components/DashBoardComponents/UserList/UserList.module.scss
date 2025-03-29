@@ -10,6 +10,26 @@
     font-family: var(--font-main-for-account);
     font-weight: var(--font-weight-normal);
     line-height: var(--font-lineh-normal);
+    margin-top: 1vw;
+  }
+
+  & .addUserButton {
+    padding: 0.3vw 1vw;
+    border-radius: 0.2vw;
+    font-size: 0.65vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    transition: 0.3s ease-in-out;
+    cursor: pointer;
+    background-color: var(--color-green-opacity20);
+    border: 0.1vw solid var(--color-lightGreen);
+
+    &:hover {
+      background-color: #053a1b;
+      border: 0.1vw solid transparent;
+    }
   }
 }
 

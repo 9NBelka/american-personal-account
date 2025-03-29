@@ -231,7 +231,32 @@ export function AdminProvider({ children }) {
         throw new Error('Только администраторы могут удалять курсы');
       }
       try {
+        // 1. Удаляем курс из коллекции courses
         await deleteDoc(doc(db, 'courses', courseId));
+
+        // 2. Находим всех пользователей и обновляем их purchasedCourses
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
+          const userData = userDoc.data();
+          const purchasedCourses = userData.purchasedCourses || {};
+
+          // Проверяем, есть ли удаляемый курс в purchasedCourses
+          if (purchasedCourses[courseId]) {
+            // Удаляем курс из purchasedCourses
+            const updatedPurchasedCourses = { ...purchasedCourses };
+            delete updatedPurchasedCourses[courseId];
+
+            // Обновляем пользователя в базе
+            await updateDoc(doc(db, 'users', userDoc.id), {
+              purchasedCourses: updatedPurchasedCourses,
+            });
+          }
+        });
+
+        // Дожидаемся завершения всех обновлений
+        await Promise.all(updatePromises);
+
+        // 3. Обновляем локальное состояние курсов
         setCourses((prev) => prev.filter((c) => c.id !== courseId));
       } catch (error) {
         throw new Error('Ошибка при удалении курса: ' + error.message);

@@ -10,8 +10,10 @@ import TextListCourses from './TextListCourses/TextListCourses';
 import FilterCourses from './FilterCourses/FilterCourses';
 import PaginationOnCourses from './PaginationOnCourses/PaginationOnCourses';
 import AmountCourses from './AmountCourses/AmountCourses';
+import { useOutletContext } from 'react-router-dom';
 
 export default function CourseList() {
+  const { handleSectionClick } = useOutletContext();
   const { courses, fetchAllCourses, deleteCourse, setError } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -110,6 +112,11 @@ export default function CourseList() {
     <>
       <AmountCourses categoryCounts={categoryCounts} lastCourse={lastCourse} />
       <div className={scss.listMainBlock}>
+        <div>
+          <button className={scss.addCourseButton} onClick={() => handleSectionClick('addCourse')}>
+            Добавить курс
+          </button>
+        </div>
         <h2 className={scss.listTitle}>Список курсов</h2>
 
         {/* Фильтры и сортировка */}
