@@ -8,7 +8,15 @@ import {
   updateProfile,
   sendPasswordResetEmail,
 } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc, getDocs, collection } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  setDoc,
+  getDocs,
+  collection,
+  onSnapshot,
+} from 'firebase/firestore';
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 'firebase/auth';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -32,6 +40,7 @@ export function AuthProvider({ children }) {
   const [courses, setCourses] = useState([]);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [readNotifications, setReadNotifications] = useState([]); // Новое состояние для прочитанных уведомлений
+  const [notifications, setNotifications] = useState([]);
 
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
@@ -328,6 +337,29 @@ export function AuthProvider({ children }) {
   );
 
   useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'notifications'),
+      (snapshot) => {
+        const notificationList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setNotifications(notificationList);
+      },
+      (error) => {
+        console.error('Ошибка при загрузке уведомлений:', error);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const userData = {
@@ -394,6 +426,7 @@ export function AuthProvider({ children }) {
     progress,
     completedLessons,
     courses,
+    notifications,
     setProgress,
     setCompletedLessons,
     updateCourseData,

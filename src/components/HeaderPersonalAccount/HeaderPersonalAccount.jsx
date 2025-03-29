@@ -13,9 +13,17 @@ import NotificationDrop from './NotificationDrop/NotificationDrop';
 export default function HeaderPersonalAccount({ handleLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { lastCourseId, progress, user, isLoading, userName, avatarUrl, readNotifications } =
-    useAuth();
-  const { notifications } = useAdmin();
+  const {
+    lastCourseId,
+    progress,
+    user,
+    isLoading,
+    userName,
+    avatarUrl,
+    readNotifications,
+    notifications,
+  } = useAuth();
+  // const { notifications } = useAdmin();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationRef = useRef(null); // Ссылка на выпадающий блок
   const bellIconRef = useRef(null); // Ссылка на иконку колокольчика
