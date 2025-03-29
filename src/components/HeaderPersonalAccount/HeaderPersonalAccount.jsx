@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import scss from './HeaderPersonalAccount.module.scss';
 import { useAuth } from '../../context/AuthContext';
 import { useAdmin } from '../../context/AdminContext';
-import { BsBellFill, BsBoxArrowInRight, BsFillGearFill } from 'react-icons/bs';
+import { BsBellFill, BsBoxArrowInRight } from 'react-icons/bs';
 import AccountLoadingIndicator from '../AccountLoadingIndicator/AccountLoadingIndicator';
 import NotificationDrop from './NotificationDrop/NotificationDrop';
 
@@ -157,7 +157,7 @@ export default function HeaderPersonalAccount({ handleLogout }) {
                   </div>
                 )}
               </div>
-              <BsFillGearFill className={scss.profileIcon} />
+
               <BsBoxArrowInRight className={scss.profileIcon} onClick={handleLogout} />
             </div>
           </div>
