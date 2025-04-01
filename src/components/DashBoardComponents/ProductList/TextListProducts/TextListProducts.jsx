@@ -37,7 +37,7 @@ export default function TextListProducts({ products, handleEdit, handleDelete })
           <td>{product.nameProduct || 'Без названия'}</td>
           <td>{product.categoryProduct || 'Нет категории'}</td>
           <td>{product.priceProduct ? `${product.priceProduct} $` : 'Нет цены'}</td>
-          <td>{product.access || 'Нет доступа'}</td>
+          <td>{product.available ? 'В продаже' : 'Не в продаже'}</td>
           <td>{formatDate(product.createdAtProduct)}</td>
           <td className={scss.actions}>
             <button className={scss.editButton} onClick={() => handleEdit(product.id)}>

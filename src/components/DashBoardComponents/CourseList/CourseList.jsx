@@ -143,7 +143,7 @@ export default function CourseList() {
             )}
           </table>
         </div>
-        {/* Пагинация */}
+
         {totalPages > 1 && (
           <PaginationOnCourses
             totalPages={totalPages}

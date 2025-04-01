@@ -38,7 +38,7 @@ export default function TextListCourses({ courses, handleEdit, handleDelete }) {
           <td>{course.title}</td>
           <td>{course.category || 'Нет категории'}</td>
           <td>{course.id}</td>
-          <td>{formatDate(course.createdAt)}</td> {/* Новый столбец с датой */}
+          <td>{formatDate(course.createdAt)}</td>
           <td className={scss.actions}>
             <button className={scss.editButton} onClick={() => handleEdit(course.id)}>
               Редактировать
