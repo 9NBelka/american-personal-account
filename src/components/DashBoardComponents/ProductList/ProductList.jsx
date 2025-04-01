@@ -4,9 +4,10 @@ import { toast } from 'react-toastify';
 import scss from './ProductList.module.scss';
 import TitleListProducts from './TitleListProducts/TitleListProducts';
 import TextListProducts from './TextListProducts/TextListProducts';
+import EditProduct from './EditProduct/EditProduct';
 
 export default function ProductList() {
-  const { products, fetchAllProducts } = useAdmin();
+  const { products, fetchAllProducts, deleteProduct } = useAdmin();
   const [editingProductId, setEditingProductId] = useState(null);
 
   // Загружаем продукты при монтировании компонента
@@ -19,12 +20,27 @@ export default function ProductList() {
     setEditingProductId(productId);
   };
 
-  // Обработчик удаления (пока заглушка, так как функции deleteProduct нет)
-  const handleDelete = (productId) => {
+  // Обработчик возврата к списку
+  const handleBack = () => {
+    setEditingProductId(null);
+  };
+
+  // Обработчик удаления
+  const handleDelete = async (productId) => {
     if (window.confirm('Вы уверены, что хотите удалить этот продукт?')) {
-      toast.info('Функция удаления продукта пока не реализована.');
+      try {
+        await deleteProduct(productId);
+        toast.success('Продукт успешно удален!');
+      } catch (error) {
+        toast.error('Ошибка при удалении: ' + error.message);
+      }
     }
   };
+
+  // Если выбран продукт для редактирования, показываем форму редактирования
+  if (editingProductId) {
+    return <EditProduct productId={editingProductId} onBack={handleBack} />;
+  }
 
   // Показываем индикатор загрузки, если продукты еще не загрузились
   if (products.length === 0) {

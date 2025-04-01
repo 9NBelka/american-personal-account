@@ -25,6 +25,7 @@ export default function Sidebar({
   const navigate = useNavigate();
   const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
+  const [isProductOpen, setIsProductOpen] = useState(false);
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -36,6 +37,7 @@ export default function Sidebar({
     if (!isCollapsed) {
       setIsUsersOpen(false);
       setIsCoursesOpen(false);
+      setIsProductOpen(false);
     }
   };
 
@@ -142,27 +144,27 @@ export default function Sidebar({
         <li
           className={clsx(
             scss.menuItem,
-            (activeSection === 'courseList' ||
-              activeSection === 'addCourse' ||
-              activeSection === 'editCourse') &&
+            (activeSection === 'productList' ||
+              activeSection === 'addProduct' ||
+              activeSection === 'editProduct') &&
               scss.active,
           )}>
           <div
             className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
             onClick={() => {
-              if (!isCollapsed) setIsCoursesOpen(!isCoursesOpen);
+              if (!isCollapsed) setIsProductOpen(!isProductOpen);
             }}>
             <div className={scss.iconAndTextMenuBlock}>
               <BsFillBoxFill className={scss.menuIcon} />
               <span className={scss.menuText}>Товары</span>
             </div>
-            {isCoursesOpen ? (
+            {isProductOpen ? (
               <BsChevronDown className={scss.iconDrop} />
             ) : (
               <BsChevronRight className={scss.iconDrop} />
             )}
           </div>
-          {isCoursesOpen && !isCollapsed && (
+          {isProductOpen && !isCollapsed && (
             <ul className={scss.submenu}>
               <li
                 className={clsx(
@@ -175,9 +177,9 @@ export default function Sidebar({
               <li
                 className={clsx(
                   scss.submenuItem,
-                  activeSection === 'addCourse' && scss.activeSubText,
+                  activeSection === 'addProduct' && scss.activeSubText,
                 )}
-                onClick={() => handleSectionClick('addCourse')}>
+                onClick={() => handleSectionClick('addProduct')}>
                 Добавить товар
               </li>
             </ul>

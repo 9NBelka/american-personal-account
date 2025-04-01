@@ -20,6 +20,7 @@ import CourseList from './components/DashBoardComponents/CourseList/CourseList';
 import AddCourse from './components/DashBoardComponents/AddCourse/AddCourse';
 import Notifications from './components/DashBoardComponents/Notifications/Notifications';
 import ProductList from './components/DashBoardComponents/ProductList/ProductList';
+import AddProduct from './components/DashBoardComponents/AddProduct/AddProduct';
 
 export default function App() {
   const navigate = useNavigate();
@@ -71,10 +72,10 @@ export default function App() {
             <Route path='courseList' element={<CourseList />} />
             <Route path='addCourse' element={<AddCourse />} />
             <Route path='editCourse' element={<CourseList />} />
-            <Route path='productList' element={<ProductList />} />{' '}
-            {/* Добавляем маршрут для ProductList */}
-            <Route path='notifications' element={<Notifications />} />{' '}
-            <Route path='*' element={<div>Section Not Found</div>} />{' '}
+            <Route path='productList' element={<ProductList />} />
+            <Route path='addProduct' element={<AddProduct />} />
+            <Route path='notifications' element={<Notifications />} />
+            <Route path='*' element={<div>Section Not Found</div>} />
           </Route>
           <Route
             path='/playlist/:courseId'

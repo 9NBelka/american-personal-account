@@ -19,7 +19,7 @@ export function AdminProvider({ children }) {
   const { user, userRole } = useAuth();
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [products, setProducts] = useState([]); // Новое состояние для продуктов
+  const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState(null);
@@ -42,6 +42,30 @@ export function AdminProvider({ children }) {
       },
       (error) => {
         setError('Ошибка при загрузке пользователей: ' + error.message);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user, userRole]);
+
+  // Подписка на продукты в реальном времени
+  useEffect(() => {
+    if (!user || userRole !== 'admin') {
+      setProducts([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'products'),
+      (snapshot) => {
+        const productList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setProducts(productList);
+      },
+      (error) => {
+        setError('Ошибка при загрузке продуктов: ' + error.message);
       },
     );
 
@@ -222,6 +246,23 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
+  // Добавление нового продукта с кастомным ID
+  const addProduct = useCallback(
+    async (productData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут добавлять продукты');
+      }
+      try {
+        const productRef = doc(db, 'products', productData.id);
+        await setDoc(productRef, productData);
+        setProducts((prev) => [...prev, productData]);
+      } catch (error) {
+        throw new Error('Ошибка при добавлении продукта: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
   // Обновление курса
   const updateCourse = useCallback(
     async (courseId, updatedData) => {
@@ -234,6 +275,23 @@ export function AdminProvider({ children }) {
         setCourses((prev) => prev.map((c) => (c.id === courseId ? { ...c, ...updatedData } : c)));
       } catch (error) {
         throw new Error('Ошибка при обновлении курса: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
+  // Обновление продукта
+  const updateProduct = useCallback(
+    async (productId, updatedData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут обновлять продукты');
+      }
+      try {
+        const productRef = doc(db, 'products', productId);
+        await updateDoc(productRef, updatedData);
+        setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, ...updatedData } : p)));
+      } catch (error) {
+        throw new Error('Ошибка при обновлении продукта: ' + error.message);
       }
     },
     [userRole],
@@ -263,6 +321,22 @@ export function AdminProvider({ children }) {
         setCourses((prev) => prev.filter((c) => c.id !== courseId));
       } catch (error) {
         throw new Error('Ошибка при удалении курса: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
+  // Удаление продукта
+  const deleteProduct = useCallback(
+    async (productId) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут удалять продукты');
+      }
+      try {
+        await deleteDoc(doc(db, 'products', productId));
+        setProducts((prev) => prev.filter((p) => p.id !== productId));
+      } catch (error) {
+        throw new Error('Ошибка при удалении продукта: ' + error.message);
       }
     },
     [userRole],
@@ -301,18 +375,21 @@ export function AdminProvider({ children }) {
   const value = {
     users,
     courses,
-    products, // Добавляем products в контекст
+    products,
     orders,
     notifications,
     fetchAllCourses,
-    fetchAllProducts, // Добавляем fetchAllProducts в контекст
+    fetchAllProducts,
     fetchAllOrders,
     addUser,
     updateUser,
     deleteUser,
     addCourse,
+    addProduct,
     updateCourse,
+    updateProduct, // Добавляем updateProduct
     deleteCourse,
+    deleteProduct,
     addNotification,
     deleteNotification,
     error,

@@ -1,5 +1,12 @@
-.addProduct {
+.editProduct {
   padding: 1vw;
+
+  & .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1vw;
+  }
 
   & .title {
     font-size: 1.2vw;
@@ -7,7 +14,24 @@
     font-family: var(--font-main-for-account);
     font-weight: var(--font-weight-normal);
     line-height: var(--font-lineh-normal);
-    margin-bottom: 1vw;
+  }
+
+  & .backButton {
+    padding: 0.5vw 1vw;
+    background-color: #666;
+    border: none;
+    border-radius: 0.2vw;
+    font-size: 0.8vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+
+    &:hover {
+      background-color: #555;
+    }
   }
 
   & .error {
@@ -57,6 +81,11 @@
 
       &:focus {
         background-color: #252525;
+      }
+
+      &:disabled {
+        background-color: #333;
+        cursor: not-allowed;
       }
     }
 

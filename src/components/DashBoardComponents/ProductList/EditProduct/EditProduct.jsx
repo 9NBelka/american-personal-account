@@ -1,12 +1,15 @@
-import { useState } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
-import scss from './AddProduct.module.scss';
+import { useState, useEffect } from 'react';
+import { useAdmin } from '../../../../context/AdminContext';
+import scss from './EditProduct.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
-export default function AddProduct() {
-  const { addProduct, error, setError } = useAdmin();
+export default function EditProduct({ productId, onBack }) {
+  const { products, updateProduct, error, setError } = useAdmin();
+
+  // Находим продукт для редактирования
+  const productToEdit = products.find((product) => product.id === productId);
 
   // Состояние для данных продукта
   const [productData, setProductData] = useState({
@@ -34,6 +37,27 @@ export default function AddProduct() {
     { value: 'vanilla', label: 'Vanilla' },
     { value: 'standard', label: 'Standard' },
   ];
+
+  // Инициализация данных продукта при загрузке компонента
+  useEffect(() => {
+    if (!productToEdit) {
+      setError('Продукт не найден');
+      onBack(); // Возвращаемся назад, если продукт не найден
+      return;
+    }
+
+    setProductData({
+      id: productToEdit.id,
+      nameProduct: productToEdit.nameProduct || '',
+      imageProduct: productToEdit.imageProduct || '',
+      priceProduct: productToEdit.priceProduct || 0,
+      access: productToEdit.access || 'vanilla',
+      available: productToEdit.available !== undefined ? productToEdit.available : true,
+      categoryProduct: productToEdit.categoryProduct || 'Course',
+      descriptionProduct: productToEdit.descriptionProduct || [],
+      speakersProduct: productToEdit.speakersProduct || [],
+    });
+  }, [productToEdit, setError, onBack]);
 
   // Обработчик изменения полей продукта
   const handleInputChange = (e) => {
@@ -110,35 +134,32 @@ export default function AddProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Формируем данные продукта для отправки в базу
-      const formattedProductData = {
+      const updatedProductData = {
         ...productData,
-        createdAtProduct: new Date().toISOString(), // Добавляем текущую дату создания
+        createdAtProduct: productToEdit.createdAtProduct, // Сохраняем оригинальную дату создания
       };
 
-      await addProduct(formattedProductData);
-      toast.success('Продукт успешно добавлен!');
-      // Сбрасываем форму
-      setProductData({
-        id: '',
-        nameProduct: '',
-        imageProduct: '',
-        priceProduct: 0,
-        access: 'vanilla',
-        available: true,
-        categoryProduct: 'Course',
-        descriptionProduct: [],
-        speakersProduct: [],
-      });
+      await updateProduct(productData.id, updatedProductData);
+      toast.success('Продукт успешно обновлен!');
+      onBack(); // Возвращаемся к списку после сохранения
     } catch (err) {
-      setError('Ошибка при добавлении продукта: ' + err.message);
-      toast.error('Ошибка при добавлении: ' + err.message);
+      setError('Ошибка при обновлении продукта: ' + err.message);
+      toast.error('Ошибка при обновлении: ' + err.message);
     }
   };
 
+  if (!productToEdit) {
+    return <div>Загрузка...</div>;
+  }
+
   return (
-    <div className={scss.addProduct}>
-      <h2 className={scss.title}>Добавить новый продукт</h2>
+    <div className={scss.editProduct}>
+      <div className={scss.header}>
+        <h2 className={scss.title}>Редактировать продукт</h2>
+        <button className={scss.backButton} onClick={onBack}>
+          Назад
+        </button>
+      </div>
       {error && <p className={scss.error}>{error}</p>}
       <form onSubmit={handleSubmit} className={scss.form}>
         {/* Основные поля продукта */}
@@ -152,6 +173,7 @@ export default function AddProduct() {
             onChange={handleInputChange}
             placeholder='Введите ID продукта (уникальный идентификатор)...'
             required
+            disabled
           />
         </div>
         <div className={scss.field}>
@@ -302,7 +324,7 @@ export default function AddProduct() {
 
         {/* Кнопка отправки */}
         <button type='submit' className={scss.submitButton}>
-          Добавить продукт
+          Сохранить изменения
         </button>
       </form>
     </div>
