@@ -1,7 +1,7 @@
 // SignUp.js
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import scss from './SignUp.module.scss';
@@ -12,6 +12,7 @@ import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/Ac
 export default function SignUp() {
   const navigate = useNavigate();
   const { userRole, isLoading, signUp, loginWithGoogle, loginWithGithub } = useAuth();
+  const [socialError, setSocialError] = useState(null);
 
   useEffect(() => {
     if (userRole) {
@@ -63,19 +64,21 @@ export default function SignUp() {
 
   const handleGoogleSignUp = async () => {
     try {
+      setSocialError(null);
       await loginWithGoogle();
       navigate('/account');
     } catch (error) {
-      console.error('Google sign-up error:', error);
+      setSocialError(error.message);
     }
   };
 
   const handleGithubSignUp = async () => {
     try {
+      setSocialError(null);
       await loginWithGithub();
       navigate('/account');
     } catch (error) {
-      console.error('GitHub sign-up error:', error);
+      setSocialError(error.message);
     }
   };
 
@@ -112,15 +115,15 @@ export default function SignUp() {
               fields={fields}
               submitText='Create an account'
               linkText='Already have an account?'
-              linkToText='Sing in'
+              linkToText='Log in'
               linkTo='/login'
               isSubmitting={isLoading}
               halfInput={halfInput}
               otherPointsText='Register'
-              onGoogleLogin={handleGoogleSignUp} // Передаем обработчик для Google
-              onGithubLogin={handleGithubSignUp} // Передаем обработчик для GitHub
-            >
+              onGoogleLogin={handleGoogleSignUp}
+              onGithubLogin={handleGithubSignUp}>
               <LSPrivacyCheckbox />
+              {socialError && <div className={scss.socialError}>{socialError}</div>}
             </LSAuthForm>
           </div>
         </div>

@@ -14,6 +14,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { userRole, isLoading, login, loginWithGoogle, loginWithGithub, resetPassword } = useAuth();
   const [showResetModal, setShowResetModal] = useState(false);
+  const [socialError, setSocialError] = useState(null);
 
   useEffect(() => {
     if (userRole) {
@@ -52,17 +53,19 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
+      setSocialError(null);
       await loginWithGoogle();
     } catch (error) {
-      console.error('Google login error:', error);
+      setSocialError(error.message);
     }
   };
 
   const handleGithubLogin = async () => {
     try {
+      setSocialError(null);
       await loginWithGithub();
     } catch (error) {
-      console.error('GitHub login error:', error);
+      setSocialError(error.message);
     }
   };
 
@@ -94,19 +97,19 @@ export default function Login() {
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
-              title='Sing in to your account'
+              title='Login to your account'
               fields={fields}
-              submitText='Sing in'
+              submitText='Login'
               linkText='Don`t have an account?'
-              linkToText='Sign Up'
+              linkToText='Sign In'
               linkTo='/signUp'
               isSubmitting={isLoading}
-              otherPointsText='Sign In'
+              otherPointsText='Log in'
               onForgotPassword={handleForgotPassword}
-              onGoogleLogin={handleGoogleLogin} // Передаем обработчик для Google
-              onGithubLogin={handleGithubLogin} // Передаем обработчик для GitHub
-            >
+              onGoogleLogin={handleGoogleLogin}
+              onGithubLogin={handleGithubLogin}>
               <LSPrivacyCheckbox />
+              {socialError && <div className={scss.socialError}>{socialError}</div>}
             </LSAuthForm>
             <LSResetPasswordModal
               isOpen={showResetModal}
