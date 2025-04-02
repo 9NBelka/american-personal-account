@@ -1,3 +1,4 @@
+// SignUp.js
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
@@ -10,7 +11,7 @@ import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/Ac
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const { userRole, isLoading, signUp } = useAuth();
+  const { userRole, isLoading, signUp, loginWithGoogle, loginWithGithub } = useAuth();
 
   useEffect(() => {
     if (userRole) {
@@ -60,6 +61,24 @@ export default function SignUp() {
     setSubmitting(false);
   };
 
+  const handleGoogleSignUp = async () => {
+    try {
+      await loginWithGoogle();
+      navigate('/account');
+    } catch (error) {
+      console.error('Google sign-up error:', error);
+    }
+  };
+
+  const handleGithubSignUp = async () => {
+    try {
+      await loginWithGithub();
+      navigate('/account');
+    } catch (error) {
+      console.error('GitHub sign-up error:', error);
+    }
+  };
+
   if (isLoading) {
     return <AccountLoadingIndicator />;
   }
@@ -93,11 +112,14 @@ export default function SignUp() {
               fields={fields}
               submitText='Create an account'
               linkText='Already have an account?'
-              linkToText='Log in'
+              linkToText='Sing in'
               linkTo='/login'
               isSubmitting={isLoading}
               halfInput={halfInput}
-              otherPointsText='Register'>
+              otherPointsText='Register'
+              onGoogleLogin={handleGoogleSignUp} // Передаем обработчик для Google
+              onGithubLogin={handleGithubSignUp} // Передаем обработчик для GitHub
+            >
               <LSPrivacyCheckbox />
             </LSAuthForm>
           </div>

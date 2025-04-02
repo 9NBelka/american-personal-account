@@ -12,7 +12,7 @@ import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetP
 
 export default function Login() {
   const navigate = useNavigate();
-  const { userRole, isLoading, login, resetPassword } = useAuth();
+  const { userRole, isLoading, login, loginWithGoogle, loginWithGithub, resetPassword } = useAuth();
   const [showResetModal, setShowResetModal] = useState(false);
 
   useEffect(() => {
@@ -50,6 +50,22 @@ export default function Login() {
     setSubmitting(false);
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      console.error('Google login error:', error);
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    try {
+      await loginWithGithub();
+    } catch (error) {
+      console.error('GitHub login error:', error);
+    }
+  };
+
   const handleForgotPassword = () => {
     setShowResetModal(true);
   };
@@ -78,15 +94,17 @@ export default function Login() {
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
-              title='Login to your account'
+              title='Sing in to your account'
               fields={fields}
-              submitText='Login'
+              submitText='Sing in'
               linkText='Don`t have an account?'
-              linkToText='Sign In'
+              linkToText='Sign Up'
               linkTo='/signUp'
               isSubmitting={isLoading}
-              otherPointsText='Log in'
-              onForgotPassword={handleForgotPassword} // Передаем обработчик
+              otherPointsText='Sign In'
+              onForgotPassword={handleForgotPassword}
+              onGoogleLogin={handleGoogleLogin} // Передаем обработчик для Google
+              onGithubLogin={handleGithubLogin} // Передаем обработчик для GitHub
             >
               <LSPrivacyCheckbox />
             </LSAuthForm>
