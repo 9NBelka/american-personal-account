@@ -189,7 +189,16 @@ export function AuthProvider({ children }) {
       const userDoc = await getDoc(userDocRef);
 
       if (!userDoc.exists()) {
-        // Если пользователь новый, создаем запись в Firestore
+        // Проверяем, существует ли email в другой учетной записи
+        const signInMethods = await auth.fetchSignInMethodsForEmail(user.email);
+        if (signInMethods.includes('password')) {
+          // Учетная запись с email/password уже существует, нужно связать
+          console.log('Учетная запись с этим email уже существует. Свяжите провайдеры.');
+          // Здесь можно предложить пользователю войти через email/password и связать Google
+          return { needsLinking: true, email: user.email };
+        }
+
+        // Если учетной записи нет, создаем новую
         const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
         const lastName = user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '';
         await setDoc(userDocRef, {
@@ -207,6 +216,24 @@ export function AuthProvider({ children }) {
       throw error;
     }
   }, [auth, db]);
+
+  const linkGoogleProvider = useCallback(
+    async (email, password) => {
+      try {
+        // Аутентификация через email/password
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+        const user = credential.user;
+
+        // Связывание с Google
+        await linkWithPopup(user, googleProvider);
+        console.log('Google успешно связан с учетной записью!');
+      } catch (error) {
+        console.error('Ошибка при связывании Google:', error);
+        throw error;
+      }
+    },
+    [auth],
+  );
 
   // Вход через GitHub
   const loginWithGithub = useCallback(async () => {
@@ -497,6 +524,7 @@ export function AuthProvider({ children }) {
     login,
     signUp,
     loginWithGoogle, // Добавляем в контекст
+    linkGoogleProvider,
     loginWithGithub, // Добавляем в контекст
     error,
     lastCourseId,

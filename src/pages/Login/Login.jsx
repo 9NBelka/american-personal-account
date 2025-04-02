@@ -52,7 +52,12 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      await loginWithGoogle();
+      const result = await loginWithGoogle();
+      if (result?.needsLinking) {
+        // Показать модальное окно или сообщение о необходимости связывания
+        alert('Этот email уже используется. Войдите через email/password, чтобы связать Google.');
+        // Здесь можно открыть форму для ввода пароля и вызова linkGoogleProvider
+      }
     } catch (error) {
       console.error('Google login error:', error);
     }
