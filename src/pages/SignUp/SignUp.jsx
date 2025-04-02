@@ -1,18 +1,18 @@
 // SignUp.js
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import scss from './SignUp.module.scss';
 import { BsBoxArrowInRight } from 'react-icons/bs';
 import LSPrivacyCheckbox from '../../components/LSPrivacyCheckbox/LSPrivacyCheckbox';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
+import { toast } from 'react-toastify';
 
 export default function SignUp() {
   const navigate = useNavigate();
   const { userRole, isLoading, signUp, loginWithGoogle, loginWithGithub } = useAuth();
-  const [socialError, setSocialError] = useState(null);
 
   useEffect(() => {
     if (userRole) {
@@ -64,21 +64,25 @@ export default function SignUp() {
 
   const handleGoogleSignUp = async () => {
     try {
-      setSocialError(null);
       await loginWithGoogle();
       navigate('/account');
     } catch (error) {
-      setSocialError(error.message);
+      toast.error(error.message, {
+        position: 'top-right',
+        autoClose: 5000,
+      });
     }
   };
 
   const handleGithubSignUp = async () => {
     try {
-      setSocialError(null);
       await loginWithGithub();
       navigate('/account');
     } catch (error) {
-      setSocialError(error.message);
+      toast.error(error.message, {
+        position: 'top-right',
+        autoClose: 5000,
+      });
     }
   };
 
@@ -123,7 +127,6 @@ export default function SignUp() {
               onGoogleLogin={handleGoogleSignUp}
               onGithubLogin={handleGithubSignUp}>
               <LSPrivacyCheckbox />
-              {socialError && <div className={scss.socialError}>{socialError}</div>}
             </LSAuthForm>
           </div>
         </div>

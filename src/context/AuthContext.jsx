@@ -10,7 +10,7 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
-  OAuthProvider,
+  fetchSignInMethodsForEmail, // Импортируем метод
 } from 'firebase/auth';
 import {
   doc,
@@ -204,17 +204,12 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       if (error.code === 'auth/account-exists-with-different-credential') {
-        const pendingCred = OAuthProvider.credentialFromError(error);
         const email = error.customData?.email;
-        if (email && pendingCred) {
-          // Проверяем, какие провайдеры уже связаны с этим email
-          const methods = await auth.fetchSignInMethodsForEmail(email);
+        if (email) {
+          const methods = await fetchSignInMethodsForEmail(auth, email); // Правильный вызов
           console.log('Sign-in methods for email:', methods);
-          // Если email уже связан с другим провайдером, можно предложить пользователю войти через тот провайдер
           throw new Error(
-            `This email is already associated with another provider: ${methods.join(
-              ', ',
-            )}. Please sign in with that provider.`,
+            `This email is already used with another provider (e.g., Google). Please sign in with that provider first.`,
           );
         }
       }
@@ -246,15 +241,12 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       if (error.code === 'auth/account-exists-with-different-credential') {
-        const pendingCred = OAuthProvider.credentialFromError(error);
         const email = error.customData?.email;
-        if (email && pendingCred) {
-          const methods = await auth.fetchSignInMethodsForEmail(email);
+        if (email) {
+          const methods = await fetchSignInMethodsForEmail(auth, email); // Правильный вызов
           console.log('Sign-in methods for email:', methods);
           throw new Error(
-            `This email is already associated with another provider: ${methods.join(
-              ', ',
-            )}. Please sign in with that provider.`,
+            `This email is already used with another provider (e.g., Google). Please sign in with that provider first.`,
           );
         }
       }

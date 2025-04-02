@@ -9,12 +9,12 @@ import { BsBoxArrowInRight } from 'react-icons/bs';
 import LSPrivacyCheckbox from '../../components/LSPrivacyCheckbox/LSPrivacyCheckbox';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
 import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetPasswordModal';
+import { toast } from 'react-toastify'; // Импортируем тостик
 
 export default function Login() {
   const navigate = useNavigate();
   const { userRole, isLoading, login, loginWithGoogle, loginWithGithub, resetPassword } = useAuth();
   const [showResetModal, setShowResetModal] = useState(false);
-  const [socialError, setSocialError] = useState(null);
 
   useEffect(() => {
     if (userRole) {
@@ -53,19 +53,31 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      setSocialError(null);
       await loginWithGoogle();
     } catch (error) {
-      setSocialError(error.message);
+      toast.error(error.message, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
   const handleGithubLogin = async () => {
     try {
-      setSocialError(null);
       await loginWithGithub();
     } catch (error) {
-      setSocialError(error.message);
+      toast.error(error.message, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
@@ -109,7 +121,6 @@ export default function Login() {
               onGoogleLogin={handleGoogleLogin}
               onGithubLogin={handleGithubLogin}>
               <LSPrivacyCheckbox />
-              {socialError && <div className={scss.socialError}>{socialError}</div>}
             </LSAuthForm>
             <LSResetPasswordModal
               isOpen={showResetModal}
