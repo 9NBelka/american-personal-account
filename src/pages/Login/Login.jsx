@@ -12,7 +12,7 @@ import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetP
 
 export default function Login() {
   const navigate = useNavigate();
-  const { userRole, isLoading, login, loginWithGoogle, loginWithGithub, resetPassword } = useAuth();
+  const { userRole, isLoading, login, resetPassword } = useAuth();
   const [showResetModal, setShowResetModal] = useState(false);
 
   useEffect(() => {
@@ -48,22 +48,6 @@ export default function Login() {
       }
     }
     setSubmitting(false);
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-    } catch (error) {
-      console.error('Google login error:', error);
-    }
-  };
-
-  const handleGithubLogin = async () => {
-    try {
-      await loginWithGithub();
-    } catch (error) {
-      console.error('GitHub login error:', error);
-    }
   };
 
   const handleForgotPassword = () => {
@@ -102,9 +86,7 @@ export default function Login() {
               linkTo='/signUp'
               isSubmitting={isLoading}
               otherPointsText='Log in'
-              onForgotPassword={handleForgotPassword}
-              onGoogleLogin={handleGoogleLogin} // Передаем обработчик для Google
-              onGithubLogin={handleGithubLogin} // Передаем обработчик для GitHub
+              onForgotPassword={handleForgotPassword} // Передаем обработчик
             >
               <LSPrivacyCheckbox />
             </LSAuthForm>

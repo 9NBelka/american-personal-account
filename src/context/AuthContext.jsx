@@ -7,9 +7,6 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   sendPasswordResetEmail,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  signInWithPopup,
 } from 'firebase/auth';
 import {
   doc,
@@ -27,10 +24,6 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 const AuthContext = createContext();
 const functions = getFunctions();
 const getCourseUserCount = httpsCallable(functions, 'getCourseUserCount');
-
-// Инициализация провайдеров
-const googleProvider = new GoogleAuthProvider();
-const githubProvider = new GithubAuthProvider();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -180,62 +173,6 @@ export function AuthProvider({ children }) {
     [auth, db],
   );
 
-  // Вход через Google
-  const loginWithGoogle = useCallback(async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (!userDoc.exists()) {
-        // Если пользователь новый, создаем запись в Firestore
-        const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
-        const lastName = user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '';
-        await setDoc(userDocRef, {
-          name,
-          lastName: lastName || '',
-          email: user.email,
-          role: 'guest',
-          registrationDate: new Date().toISOString(),
-          avatarUrl: user.photoURL || null,
-          readNotifications: [],
-        });
-      }
-    } catch (error) {
-      console.error('Google login error:', error);
-      throw error;
-    }
-  }, [auth, db]);
-
-  // Вход через GitHub
-  const loginWithGithub = useCallback(async () => {
-    try {
-      const result = await signInWithPopup(auth, githubProvider);
-      const user = result.user;
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (!userDoc.exists()) {
-        // Если пользователь новый, создаем запись в Firestore
-        const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
-        const lastName = user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '';
-        await setDoc(userDocRef, {
-          name,
-          lastName: lastName || '',
-          email: user.email,
-          role: 'guest',
-          registrationDate: new Date().toISOString(),
-          avatarUrl: user.photoURL || null,
-          readNotifications: [],
-        });
-      }
-    } catch (error) {
-      console.error('GitHub login error:', error);
-      throw error;
-    }
-  }, [auth, db]);
-
   const updateCourseData = useCallback(
     async (courseId) => {
       if (!user || !user.uid || !courseId) return;
@@ -346,6 +283,7 @@ export function AuthProvider({ children }) {
     [user, completedLessons],
   );
 
+  // Добавляем функцию resetPassword
   const resetPassword = useCallback(
     async (email) => {
       try {
@@ -377,6 +315,7 @@ export function AuthProvider({ children }) {
     [auth],
   );
 
+  // Новая функция для отметки уведомления как прочитанного
   const markNotificationAsRead = useCallback(
     async (notificationId) => {
       if (!user || !user.uid) return;
@@ -496,8 +435,6 @@ export function AuthProvider({ children }) {
     toggleLessonCompletion,
     login,
     signUp,
-    loginWithGoogle, // Добавляем в контекст
-    loginWithGithub, // Добавляем в контекст
     error,
     lastCourseId,
     setLastCourseId,
@@ -505,8 +442,8 @@ export function AuthProvider({ children }) {
     avatarUrl,
     updateUserAvatar,
     resetPassword,
-    readNotifications,
-    markNotificationAsRead,
+    readNotifications, // Добавляем в контекст
+    markNotificationAsRead, // Добавляем в контекст
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -21,9 +21,7 @@ export default function LSAuthForm({
   isSubmitting,
   halfInput,
   otherPointsText,
-  onForgotPassword,
-  onGoogleLogin, // Новый пропс для Google
-  onGithubLogin, // Новый пропс для GitHub
+  onForgotPassword, // Новый пропс
   children,
 }) {
   return (
@@ -94,10 +92,10 @@ export default function LSAuthForm({
               <span>Or {otherPointsText} with</span>
             </div>
             <div className={scss.socialButtonsBlock}>
-              <button type='button' className={scss.socialButton} onClick={onGoogleLogin}>
+              <button type='button' className={scss.socialButton}>
                 <BsGoogle className={scss.iconSocial} /> Google
               </button>
-              <button type='button' className={scss.socialButton} onClick={onGithubLogin}>
+              <button type='button' className={scss.socialButton}>
                 <BsGithub className={scss.iconSocial} /> GitHub
               </button>
             </div>
