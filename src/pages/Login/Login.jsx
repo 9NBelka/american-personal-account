@@ -12,17 +12,8 @@ import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetP
 
 export default function Login() {
   const navigate = useNavigate();
-  const {
-    userRole,
-    isLoading,
-    login,
-    loginWithGoogle,
-    loginWithGithub,
-    resetPassword,
-    linkGoogleProvider,
-  } = useAuth();
+  const { userRole, isLoading, login, loginWithGoogle, loginWithGithub, resetPassword } = useAuth();
   const [showResetModal, setShowResetModal] = useState(false);
-  const [linkingPassword, setLinkingPassword] = useState('');
 
   useEffect(() => {
     if (userRole) {
@@ -61,33 +52,9 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await loginWithGoogle();
-      if (result?.needsLinking) {
-        // Показываем пользователю сообщение или модальное окно
-        setShowLinkingModal(true); // Предположим, что ты добавишь состояние для модального окна
-        setLinkingEmail(result.email); // Сохраняем email для связывания
-      }
+      await loginWithGoogle();
     } catch (error) {
       console.error('Google login error:', error);
-    }
-  };
-
-  // Добавь состояние для модального окна и email
-  const [showLinkingModal, setShowLinkingModal] = useState(false);
-  const [linkingEmail, setLinkingEmail] = useState('');
-
-  // Обработчик для связывания
-  const handleLinkGoogle = async (password) => {
-    try {
-      const result = await linkGoogleProvider(linkingEmail, password);
-      if (result.success) {
-        setShowLinkingModal(false);
-        navigate('/account'); // Переход после успешного связывания
-      } else {
-        alert(result.message); // Показываем ошибку, например, "Неверный пароль"
-      }
-    } catch (error) {
-      console.error('Ошибка при связывании:', error);
     }
   };
 
@@ -150,19 +117,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-      {showLinkingModal && (
-        <div className={scss.modal}>
-          <p>{`Этот email (${linkingEmail}) уже используется. Введите пароль для связывания с Google.`}</p>
-          <input
-            type='password'
-            value={linkingPassword}
-            onChange={(e) => setLinkingPassword(e.target.value)}
-            placeholder='Введите пароль'
-          />
-          <button onClick={() => handleLinkGoogle(linkingPassword)}>Связать</button>
-          <button onClick={() => setShowLinkingModal(false)}>Отмена</button>
-        </div>
-      )}
     </div>
   );
 }

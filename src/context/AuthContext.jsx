@@ -183,31 +183,13 @@ export function AuthProvider({ children }) {
   // Вход через Google
   const loginWithGoogle = useCallback(async () => {
     try {
-      // Сначала проверяем, какие методы входа связаны с email
-      const googleCredential = await signInWithPopup(auth, googleProvider);
-      const user = googleCredential.user;
-
-      const signInMethods = await auth.fetchSignInMethodsForEmail(user.email);
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
-      if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
-        // Учетная запись с email/password существует, но Google еще не привязан
-        console.log('Учетная запись существует с email/password. Нужно связать Google.');
-
-        // Сразу выходим из текущей сессии Google, чтобы не перезаписать
-        await auth.signOut();
-
-        return {
-          needsLinking: true,
-          email: user.email,
-          message:
-            'Этот email уже используется с паролем. Войдите через email/password, чтобы связать Google.',
-        };
-      }
-
-      // Если учетной записи в Firestore нет, создаем новую
       if (!userDoc.exists()) {
+        // Если пользователь новый, создаем запись в Firestore
         const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
         const lastName = user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '';
         await setDoc(userDocRef, {
@@ -220,39 +202,11 @@ export function AuthProvider({ children }) {
           readNotifications: [],
         });
       }
-
-      return { success: true };
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
     }
   }, [auth, db]);
-
-  const linkGoogleProvider = useCallback(
-    async (email, password) => {
-      try {
-        // Аутентифицируем пользователя через email/password
-        const credential = await signInWithEmailAndPassword(auth, email, password);
-        const user = credential.user;
-
-        // Привязываем Google к существующей учетной записи
-        const googleResult = await linkWithPopup(user, googleProvider);
-        console.log('Google успешно привязан к учетной записи!');
-
-        return { success: true };
-      } catch (error) {
-        console.error('Ошибка при связывании Google:', error);
-        if (error.code === 'auth/provider-already-linked') {
-          return { success: false, message: 'Google уже привязан к этой учетной записи.' };
-        }
-        if (error.code === 'auth/wrong-password') {
-          return { success: false, message: 'Неверный пароль.' };
-        }
-        throw error;
-      }
-    },
-    [auth],
-  );
 
   // Вход через GitHub
   const loginWithGithub = useCallback(async () => {
@@ -542,8 +496,7 @@ export function AuthProvider({ children }) {
     toggleLessonCompletion,
     login,
     signUp,
-    loginWithGoogle,
-    linkGoogleProvider,
+    loginWithGoogle, // Добавляем в контекст
     loginWithGithub, // Добавляем в контекст
     error,
     lastCourseId,
