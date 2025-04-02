@@ -21,31 +21,28 @@
       vertical-align: middle;
 
       &:nth-child(1) {
-        width: 5%;
+        width: 5%; // №
       }
-
       &:nth-child(2) {
-        width: 10%;
+        width: 5%; // Превью
       }
-
       &:nth-child(3) {
-        width: 20%;
+        width: 20%; // Название (уменьшили)
       }
-
       &:nth-child(4) {
-        width: 15%;
+        width: 15%; // Категория (уменьшили)
       }
-
       &:nth-child(5) {
-        width: 20%;
+        width: 15%; // ID (уменьшили)
       }
-
       &:nth-child(6) {
-        width: 15%; /* Новый столбец с датой */
+        width: 15%; // Уровень доступа (новый столбец)
       }
-
       &:nth-child(7) {
-        width: 15%;
+        width: 15%; // Дата создания (уменьшили)
+      }
+      &:nth-child(8) {
+        width: 10%; // Действия (уменьшили)
       }
     }
 

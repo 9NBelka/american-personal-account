@@ -1,12 +1,12 @@
-// components/admin/AddCourse.jsx
 import { useState } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
 import scss from './AddCourse.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
+import { toast } from 'react-toastify';
 
 export default function AddCourse() {
-  const { addCourse, error, setError } = useAdmin();
+  const { addCourse, addAccessLevel, accessLevels, error, setError } = useAdmin();
 
   // Состояние для данных курса
   const [courseData, setCourseData] = useState({
@@ -15,6 +15,7 @@ export default function AddCourse() {
     description: '',
     category: 'Course',
     gitHubRepLink: '',
+    access: '',
     modules: {},
   });
 
@@ -29,6 +30,16 @@ export default function AddCourse() {
     { value: 'Master class', label: 'Master class' },
   ];
 
+  // Состояние для выпадающего списка уровней доступа
+  const [isAccessOpen, setIsAccessOpen] = useState(false);
+  const [newAccessName, setNewAccessName] = useState('');
+  const [showNewAccessInput, setShowNewAccessInput] = useState(false);
+
+  // Удаляем дубликаты из accessLevels
+  const uniqueAccessLevels = Array.from(
+    new Map(accessLevels.map((level) => [level.id, level])).values(),
+  );
+
   // Обработчик изменения полей курса
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,6 +50,40 @@ export default function AddCourse() {
   const handleCategorySelect = (value) => {
     setCourseData((prev) => ({ ...prev, category: value }));
     setIsCategoryOpen(false);
+  };
+
+  // Обработчик выбора уровня доступа
+  const handleAccessSelect = (accessId) => {
+    setCourseData((prev) => ({ ...prev, access: accessId }));
+    setIsAccessOpen(false);
+  };
+
+  // Обработчик добавления нового уровня доступа
+  const handleAddAccessLevel = async () => {
+    if (!newAccessName.trim()) {
+      toast.error('Название уровня доступа не может быть пустым');
+
+      return;
+    }
+
+    const accessId = newAccessName.toLowerCase().replace(/\s+/g, '');
+    // Проверяем, существует ли уже уровень с таким ID
+    if (accessLevels.some((level) => level.id === accessId)) {
+      toast.error('Уровень доступа с таким названием уже существует');
+      return;
+    }
+
+    try {
+      await addAccessLevel({
+        id: accessId,
+        name: newAccessName,
+      });
+      setCourseData((prev) => ({ ...prev, access: accessId }));
+      setNewAccessName('');
+      setShowNewAccessInput(false);
+    } catch (err) {
+      toast.error('Ошибка при добавлении уровня доступа: ' + err.message);
+    }
   };
 
   // Добавление нового модуля
@@ -125,11 +170,15 @@ export default function AddCourse() {
   // Обработчик отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!courseData.access) {
+      toast.error('Пожалуйста, выберите или добавьте уровень доступа');
+      return;
+    }
     try {
       // Формируем данные курса для отправки в базу
       const formattedCourseData = {
         ...courseData,
-        createdAt: new Date().toISOString(), // Добавляем текущую дату создания
+        createdAt: new Date().toISOString(),
         modules: Object.keys(modules).reduce((acc, moduleId) => {
           const module = modules[moduleId];
           acc[moduleId] = {
@@ -142,7 +191,7 @@ export default function AddCourse() {
       };
 
       await addCourse(formattedCourseData);
-      alert('Курс успешно добавлен!');
+      toast.success('Курс успешно добавлен!');
       // Сбрасываем форму
       setCourseData({
         id: '',
@@ -150,19 +199,20 @@ export default function AddCourse() {
         description: '',
         category: 'Course',
         gitHubRepLink: '',
+        access: '',
         modules: {},
       });
       setModules({});
       setModuleCount(0);
     } catch (err) {
-      setError('Ошибка при добавлении курса: ' + err.message);
+      toast.error('Ошибка при добавлении курса: ' + err.message);
     }
   };
 
   return (
     <div className={scss.addCourse}>
       <h2 className={scss.title}>Добавить новый курс</h2>
-      {error && console.error(error)}
+      {error && <div className={scss.error}>{error}</div>}
       <form onSubmit={handleSubmit} className={scss.form}>
         {/* Основные поля курса */}
         <div className={scss.field}>
@@ -221,6 +271,57 @@ export default function AddCourse() {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+        </div>
+        <div className={scss.field}>
+          <label>Уровень доступа</label>
+          <div className={scss.accessContainer}>
+            <div className={scss.accessButton} onClick={() => setIsAccessOpen(!isAccessOpen)}>
+              {courseData.access
+                ? uniqueAccessLevels.find((level) => level.id === courseData.access)?.name
+                : 'Выберите уровень доступа'}
+              <BsChevronDown className={clsx(scss.chevron, isAccessOpen && scss.chevronOpen)} />
+            </div>
+            {isAccessOpen && (
+              <ul className={scss.accessDropdown}>
+                {uniqueAccessLevels.map((level) => (
+                  <li
+                    key={level.id}
+                    className={clsx(
+                      scss.accessOption,
+                      courseData.access === level.id && scss.active,
+                    )}
+                    onClick={() => handleAccessSelect(level.id)}>
+                    {level.name}
+                  </li>
+                ))}
+                <li className={scss.accessOption} onClick={() => setShowNewAccessInput(true)}>
+                  + Добавить новый уровень доступа
+                </li>
+              </ul>
+            )}
+            {showNewAccessInput && (
+              <div className={scss.newAccessInput}>
+                <input
+                  type='text'
+                  value={newAccessName}
+                  onChange={(e) => setNewAccessName(e.target.value)}
+                  placeholder='Введите название уровня доступа...'
+                />
+                <button
+                  type='button'
+                  className={scss.addAccessButton}
+                  onClick={handleAddAccessLevel}>
+                  Добавить
+                </button>
+                <button
+                  type='button'
+                  className={scss.cancelButton}
+                  onClick={() => setShowNewAccessInput(false)}>
+                  Отмена
+                </button>
+              </div>
             )}
           </div>
         </div>

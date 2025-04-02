@@ -1,4 +1,3 @@
-// components/admin/TitleListCourses.jsx
 import scss from './TitleListCourses.module.scss';
 
 export default function TitleListCourses() {
@@ -10,6 +9,7 @@ export default function TitleListCourses() {
         <th>Название</th>
         <th>Категория</th>
         <th>ID</th>
+        <th>Уровень доступа</th> {/* Новый столбец */}
         <th>Дата создания</th>
         <th>Действия</th>
       </tr>

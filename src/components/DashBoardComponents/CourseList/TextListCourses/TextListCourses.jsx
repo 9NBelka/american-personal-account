@@ -1,15 +1,20 @@
-// components/admin/TextListCourses/TextListCourses.jsx
 import scss from './TextListCourses.module.scss';
 
-export default function TextListCourses({ courses, handleEdit, handleDelete }) {
+export default function TextListCourses({ courses, handleEdit, handleDelete, accessLevels }) {
   // Функция для форматирования даты в формат DD.MM.YYYY
   const formatDate = (dateString) => {
     if (!dateString) return 'Нет даты';
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Месяцы начинаются с 0
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}.${month}.${year}`;
+  };
+
+  // Функция для получения названия уровня доступа
+  const getAccessLevelName = (accessId) => {
+    const accessLevel = accessLevels.find((level) => level.id === accessId);
+    return accessLevel ? accessLevel.name : accessId || 'Не указан';
   };
 
   return (
@@ -38,6 +43,7 @@ export default function TextListCourses({ courses, handleEdit, handleDelete }) {
           <td>{course.title}</td>
           <td>{course.category || 'Нет категории'}</td>
           <td>{course.id}</td>
+          <td>{getAccessLevelName(course.access)}</td> {/* Новый столбец */}
           <td>{formatDate(course.createdAt)}</td>
           <td className={scss.actions}>
             <button className={scss.editButton} onClick={() => handleEdit(course.id)}>

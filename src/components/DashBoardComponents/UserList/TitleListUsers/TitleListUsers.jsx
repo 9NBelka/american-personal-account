@@ -1,4 +1,3 @@
-// components/TitleListUsers.jsx
 import scss from './TitleListUsers.module.scss';
 
 export default function TitleListUsers() {
@@ -11,6 +10,7 @@ export default function TitleListUsers() {
         <th>Почта</th>
         <th>Роль</th>
         <th>Курсы</th>
+        <th>Уровни доступа</th> {/* Новый столбец */}
         <th>Дата регистрации</th>
         <th>Действия</th>
       </tr>

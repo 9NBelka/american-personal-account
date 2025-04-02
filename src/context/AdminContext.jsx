@@ -22,6 +22,7 @@ export function AdminProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [accessLevels, setAccessLevels] = useState([]); // Новое состояние для уровней доступа
   const [error, setError] = useState(null);
 
   // Подписка на пользователей в реальном времени
@@ -66,6 +67,30 @@ export function AdminProvider({ children }) {
       },
       (error) => {
         setError('Ошибка при загрузке продуктов: ' + error.message);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user, userRole]);
+
+  // Подписка на уровни доступа в реальном времени
+  useEffect(() => {
+    if (!user || userRole !== 'admin') {
+      setAccessLevels([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'accessLevels'),
+      (snapshot) => {
+        const accessLevelList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAccessLevels(accessLevelList);
+      },
+      (error) => {
+        setError('Ошибка при загрузке уровней доступа: ' + error.message);
       },
     );
 
@@ -229,6 +254,23 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
+  // Добавление нового уровня доступа
+  const addAccessLevel = useCallback(
+    async (accessLevelData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут добавлять уровни доступа');
+      }
+      try {
+        const accessLevelRef = doc(db, 'accessLevels', accessLevelData.id);
+        await setDoc(accessLevelRef, accessLevelData);
+        // Удаляем ручное добавление в состояние, так как onSnapshot сам обновит accessLevels
+      } catch (error) {
+        throw new Error('Ошибка при добавлении уровня доступа: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
   // Добавление нового курса с кастомным ID
   const addCourse = useCallback(
     async (courseData) => {
@@ -264,6 +306,7 @@ export function AdminProvider({ children }) {
   );
 
   // Обновление курса
+  // В AdminContext.jsx
   const updateCourse = useCallback(
     async (courseId, updatedData) => {
       if (userRole !== 'admin') {
@@ -272,12 +315,30 @@ export function AdminProvider({ children }) {
       try {
         const courseRef = doc(db, 'courses', courseId);
         await updateDoc(courseRef, updatedData);
+
+        // Если уровень доступа изменился, обновляем purchasedCourses у пользователей
+        const oldCourse = courses.find((c) => c.id === courseId);
+        if (oldCourse.access !== updatedData.access) {
+          const usersSnapshot = await getDocs(collection(db, 'users'));
+          const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
+            const userData = userDoc.data();
+            const purchasedCourses = userData.purchasedCourses || {};
+            if (purchasedCourses[courseId]) {
+              purchasedCourses[courseId].access = updatedData.access;
+              await updateDoc(doc(db, 'users', userDoc.id), {
+                purchasedCourses,
+              });
+            }
+          });
+          await Promise.all(updatePromises);
+        }
+
         setCourses((prev) => prev.map((c) => (c.id === courseId ? { ...c, ...updatedData } : c)));
       } catch (error) {
         throw new Error('Ошибка при обновлении курса: ' + error.message);
       }
     },
-    [userRole],
+    [userRole, courses],
   );
 
   // Обновление продукта
@@ -378,6 +439,7 @@ export function AdminProvider({ children }) {
     products,
     orders,
     notifications,
+    accessLevels, // Добавляем уровни доступа в контекст
     fetchAllCourses,
     fetchAllProducts,
     fetchAllOrders,
@@ -387,11 +449,12 @@ export function AdminProvider({ children }) {
     addCourse,
     addProduct,
     updateCourse,
-    updateProduct, // Добавляем updateProduct
+    updateProduct,
     deleteCourse,
     deleteProduct,
     addNotification,
     deleteNotification,
+    addAccessLevel, // Добавляем функцию добавления уровня доступа
     error,
     setError,
   };

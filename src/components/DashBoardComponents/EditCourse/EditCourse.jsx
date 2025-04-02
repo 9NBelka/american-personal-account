@@ -1,4 +1,3 @@
-// components/admin/EditCourse.jsx
 import { useState, useEffect } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
 import scss from './EditCourse.module.scss';
@@ -7,7 +6,7 @@ import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function EditCourse({ courseId, onBack }) {
-  const { courses, updateCourse, error, setError } = useAdmin();
+  const { courses, updateCourse, error, setError, accessLevels, addAccessLevel } = useAdmin();
 
   // Находим курс для редактирования
   const courseToEdit = courses.find((course) => course.id === courseId);
@@ -19,6 +18,7 @@ export default function EditCourse({ courseId, onBack }) {
     description: '',
     category: 'Course',
     gitHubRepLink: '',
+    access: '', // Добавляем поле access
     modules: {},
   });
 
@@ -33,11 +33,16 @@ export default function EditCourse({ courseId, onBack }) {
     { value: 'Master class', label: 'Master class' },
   ];
 
+  // Состояние для выпадающего списка уровней доступа
+  const [isAccessOpen, setIsAccessOpen] = useState(false);
+  const [newAccessName, setNewAccessName] = useState('');
+  const [showNewAccessInput, setShowNewAccessInput] = useState(false);
+
   // Инициализация данных курса при загрузке компонента
   useEffect(() => {
     if (!courseToEdit) {
       setError('Курс не найден');
-      onBack(); // Возвращаемся назад, если курс не найден
+      onBack();
       return;
     }
 
@@ -57,6 +62,7 @@ export default function EditCourse({ courseId, onBack }) {
       description: courseToEdit.description || '',
       category: courseToEdit.category || 'Course',
       gitHubRepLink: courseToEdit.gitHubRepLink || '',
+      access: courseToEdit.access || '', // Инициализируем access
       modules: formattedModules,
     });
 
@@ -75,6 +81,39 @@ export default function EditCourse({ courseId, onBack }) {
   const handleCategorySelect = (value) => {
     setCourseData((prev) => ({ ...prev, category: value }));
     setIsCategoryOpen(false);
+  };
+
+  // Обработчик выбора уровня доступа
+  const handleAccessSelect = (accessId) => {
+    setCourseData((prev) => ({ ...prev, access: accessId }));
+    setIsAccessOpen(false);
+  };
+
+  // Обработчик добавления нового уровня доступа
+  const handleAddAccessLevel = async () => {
+    if (!newAccessName.trim()) {
+      setError('Название уровня доступа не может быть пустым');
+      return;
+    }
+
+    const accessId = newAccessName.toLowerCase().replace(/\s+/g, '');
+    // Проверяем, существует ли уже уровень с таким ID
+    if (accessLevels.some((level) => level.id === accessId)) {
+      setError('Уровень доступа с таким названием уже существует');
+      return;
+    }
+
+    try {
+      await addAccessLevel({
+        id: accessId,
+        name: newAccessName,
+      });
+      setCourseData((prev) => ({ ...prev, access: accessId }));
+      setNewAccessName('');
+      setShowNewAccessInput(false);
+    } catch (err) {
+      setError('Ошибка при добавлении уровня доступа: ' + err.message);
+    }
   };
 
   // Добавление нового модуля
@@ -161,6 +200,10 @@ export default function EditCourse({ courseId, onBack }) {
   // Обработчик отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!courseData.access) {
+      setError('Пожалуйста, выберите или добавьте уровень доступа');
+      return;
+    }
     try {
       const updatedCourseData = {
         ...courseData,
@@ -179,7 +222,7 @@ export default function EditCourse({ courseId, onBack }) {
 
       await updateCourse(courseData.id, updatedCourseData);
       toast.success('Курс успешно обновлен!');
-      onBack(); // Возвращаемся к списку после сохранения
+      onBack();
     } catch (err) {
       setError('Ошибка при обновлении курса: ' + err.message);
       toast.error('Ошибка при обновлении: ' + err.message);
@@ -258,6 +301,57 @@ export default function EditCourse({ courseId, onBack }) {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+        </div>
+        <div className={scss.field}>
+          <label>Уровень доступа</label>
+          <div className={scss.accessContainer}>
+            <div className={scss.accessButton} onClick={() => setIsAccessOpen(!isAccessOpen)}>
+              {courseData.access
+                ? accessLevels.find((level) => level.id === courseData.access)?.name
+                : 'Выберите уровень доступа'}
+              <BsChevronDown className={clsx(scss.chevron, isAccessOpen && scss.chevronOpen)} />
+            </div>
+            {isAccessOpen && (
+              <ul className={scss.accessDropdown}>
+                {accessLevels.map((level) => (
+                  <li
+                    key={level.id}
+                    className={clsx(
+                      scss.accessOption,
+                      courseData.access === level.id && scss.active,
+                    )}
+                    onClick={() => handleAccessSelect(level.id)}>
+                    {level.name}
+                  </li>
+                ))}
+                <li className={scss.accessOption} onClick={() => setShowNewAccessInput(true)}>
+                  + Добавить новый уровень доступа
+                </li>
+              </ul>
+            )}
+            {showNewAccessInput && (
+              <div className={scss.newAccessInput}>
+                <input
+                  type='text'
+                  value={newAccessName}
+                  onChange={(e) => setNewAccessName(e.target.value)}
+                  placeholder='Введите название уровня доступа...'
+                />
+                <button
+                  type='button'
+                  className={scss.addAccessButton}
+                  onClick={handleAddAccessLevel}>
+                  Добавить
+                </button>
+                <button
+                  type='button'
+                  className={scss.cancelButton}
+                  onClick={() => setShowNewAccessInput(false)}>
+                  Отмена
+                </button>
+              </div>
             )}
           </div>
         </div>

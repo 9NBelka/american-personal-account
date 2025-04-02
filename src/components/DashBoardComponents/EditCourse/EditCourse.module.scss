@@ -315,3 +315,109 @@
     }
   }
 }
+
+.accessContainer {
+  position: relative;
+}
+
+.accessButton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5vw 1vw;
+  background-color: #333;
+  border: 0.1vw solid #555;
+  border-radius: 0.2vw;
+  color: #fff;
+  font-size: 0.7vw;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+
+  &:hover {
+    background-color: #444;
+  }
+
+  .chevron {
+    transition: 0.3s ease-in-out;
+  }
+
+  .chevronOpen {
+    transform: rotate(180deg);
+  }
+}
+
+.accessDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #333;
+  border: 0.1vw solid #555;
+  border-radius: 0.2vw;
+  list-style: none;
+  padding: 0;
+  margin: 0.2vw 0 0 0;
+  z-index: 10;
+  max-height: 15vw;
+  overflow-y: auto;
+}
+
+.accessOption {
+  padding: 0.5vw 1vw;
+  color: #fff;
+  font-size: 0.7vw;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+
+  &:hover {
+    background-color: #444;
+  }
+
+  &.active {
+    background-color: #555;
+  }
+}
+
+.newAccessInput {
+  display: flex;
+  gap: 0.5vw;
+  margin-top: 0.5vw;
+
+  input {
+    flex: 1;
+    padding: 0.5vw;
+    background-color: #333;
+    border: 0.1vw solid #555;
+    border-radius: 0.2vw;
+    color: #fff;
+    font-size: 0.7vw;
+  }
+
+  .addAccessButton,
+  .cancelButton {
+    padding: 0.5vw 1vw;
+    border-radius: 0.2vw;
+    font-size: 0.7vw;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+  }
+
+  .addAccessButton {
+    background-color: var(--color-green-opacity20);
+    border: 0.1vw solid var(--color-lightGreen);
+    &:hover {
+      background-color: #053a1b;
+      border: 0.1vw solid transparent;
+    }
+  }
+
+  .cancelButton {
+    background-color: var(--color-red-opacity20);
+    border: 0.1vw solid var(--color-red);
+    &:hover {
+      background-color: #3f0d07;
+      border: 0.1vw solid transparent;
+    }
+  }
+}

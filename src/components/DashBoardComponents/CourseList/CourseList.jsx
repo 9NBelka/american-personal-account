@@ -1,4 +1,3 @@
-// components/admin/CourseList.jsx
 import { useEffect, useState, useMemo } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
 import { debounce } from 'lodash';
@@ -14,7 +13,7 @@ import { useOutletContext } from 'react-router-dom';
 
 export default function CourseList() {
   const { handleSectionClick } = useOutletContext();
-  const { courses, fetchAllCourses, deleteCourse, setError } = useAdmin();
+  const { courses, fetchAllCourses, deleteCourse, setError, accessLevels } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOption, setSortOption] = useState('title-asc');
@@ -45,8 +44,8 @@ export default function CourseList() {
 
   // Находим последний добавленный курс
   const lastCourse = courses
-    .slice() // Создаём копию массива, чтобы не мутировать оригинал
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]; // Сортируем по createdAt (по убыванию)
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
 
   // Фильтрация и сортировка курсов для списка
   const filteredCourses = courses
@@ -137,9 +136,10 @@ export default function CourseList() {
                 courses={paginatedCourses}
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
+                accessLevels={accessLevels} // Передаем accessLevels
               />
             ) : (
-              <p> Курсы не найдены.</p>
+              <p>Курсы не найдены.</p>
             )}
           </table>
         </div>

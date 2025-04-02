@@ -13,13 +13,14 @@ export default function FilterUsers({
   setCurrentPage,
   roleCounts,
   courses,
+  accessLevels, // Добавляем accessLevels
   sortOption,
   setSortOption,
   debouncedSetSearchQuery,
 }) {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isCourseOpen, setIsCourseOpen] = useState(false);
-  const [isAccessOpen, setIsAccessOpen] = useState(false); // Состояние для выпадающего списка доступа
+  const [isAccessOpen, setIsAccessOpen] = useState(false);
 
   const sortOptions = [
     { value: 'name-asc', label: 'Имени (А-Я)' },
@@ -37,11 +38,13 @@ export default function FilterUsers({
     })),
   ];
 
-  // Опции для фильтра по типу доступа
+  // Опции для фильтра по типу доступа (динамические из accessLevels)
   const accessOptions = [
     { value: 'all', label: 'Все доступы' },
-    { value: 'standard', label: 'Standard' },
-    { value: 'vanilla', label: 'Vanilla' },
+    ...accessLevels.map((level) => ({
+      value: level.id,
+      label: level.name,
+    })),
   ];
 
   const handleSortSelect = (value) => {

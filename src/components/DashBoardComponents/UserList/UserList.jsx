@@ -13,11 +13,11 @@ import { useOutletContext } from 'react-router-dom';
 
 export default function UserList() {
   const { handleSectionClick } = useOutletContext();
-  const { users, deleteUser, courses, fetchAllCourses } = useAdmin();
+  const { users, deleteUser, courses, fetchAllCourses, accessLevels } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
-  const [accessFilter, setAccessFilter] = useState('all'); // Новое состояние для фильтра по типу доступа
+  const [accessFilter, setAccessFilter] = useState('all');
   const [sortOption, setSortOption] = useState('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(2);
@@ -60,13 +60,10 @@ export default function UserList() {
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCourse =
-        courseFilter === 'all' ||
-        (user.purchasedCourses &&
-          user.purchasedCourses[courseFilter] &&
-          ['standard', 'vanilla'].includes(user.purchasedCourses[courseFilter].access));
+        courseFilter === 'all' || (user.purchasedCourses && user.purchasedCourses[courseFilter]); // Убрали проверку на ['standard', 'vanilla']
       const matchesAccess =
-        courseFilter === 'all' || // Если курс не выбран, фильтр по доступу не применяется
-        accessFilter === 'all' || // Если выбрано "Все доступы", показываем всех
+        courseFilter === 'all' ||
+        accessFilter === 'all' ||
         (user.purchasedCourses &&
           user.purchasedCourses[courseFilter] &&
           user.purchasedCourses[courseFilter].access === accessFilter);
@@ -147,11 +144,12 @@ export default function UserList() {
           setRoleFilter={setRoleFilter}
           courseFilter={courseFilter}
           setCourseFilter={setCourseFilter}
-          accessFilter={accessFilter} // Передаем фильтр по типу доступа
-          setAccessFilter={setAccessFilter} // Передаем setter для фильтра по типу доступа
+          accessFilter={accessFilter}
+          setAccessFilter={setAccessFilter}
           setCurrentPage={setCurrentPage}
           roleCounts={roleCounts}
           courses={courses}
+          accessLevels={accessLevels} // Передаем accessLevels
           sortOption={sortOption}
           setSortOption={setSortOption}
           debouncedSetSearchQuery={debouncedSetSearchQuery}
@@ -164,6 +162,7 @@ export default function UserList() {
                 paginatedUsers={paginatedUsers}
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
+                accessLevels={accessLevels}
               />
             ) : (
               <p>

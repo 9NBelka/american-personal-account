@@ -9,7 +9,7 @@ import AddCourseForm from '../EditUser/AddCourseForm/AddCourseForm';
 import FormActions from '../EditUser/FormActions/FormActions';
 
 export default function AddUser({ onBack }) {
-  const { addUser, users, courses, fetchAllCourses } = useAdmin();
+  const { addUser, users, courses, fetchAllCourses, accessLevels } = useAdmin();
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
 
@@ -92,6 +92,7 @@ export default function AddUser({ onBack }) {
               selectedPackage={selectedPackage}
               setSelectedPackage={setSelectedPackage}
               getCourseTitle={getCourseTitle}
+              accessLevels={accessLevels} // Передаем accessLevels
             />
             <FormActions
               isSubmitting={isSubmitting}

@@ -1,6 +1,6 @@
 import scss from './TextListUsers.module.scss';
 
-export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete }) {
+export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete, accessLevels }) {
   // Функция для форматирования даты в формат DD.MM.YYYY
   const formatDate = (dateString) => {
     if (!dateString) return 'Нет даты';
@@ -9,6 +9,21 @@ export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}.${month}.${year}`;
+  };
+
+  // Функция для получения списка курсов с уровнями доступа
+  const getCoursesWithAccess = (purchasedCourses) => {
+    if (!purchasedCourses || Object.keys(purchasedCourses).length === 0) {
+      return 'Нет курсов';
+    }
+
+    return Object.entries(purchasedCourses)
+      .map(([courseId, courseData]) => {
+        const accessLevel = accessLevels.find((level) => level.id === courseData.access);
+        const accessName = accessLevel ? accessLevel.name : courseData.access;
+        return `${courseId} (${accessName})`;
+      })
+      .join(', ');
   };
 
   return (
@@ -37,6 +52,7 @@ export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete
             <td>{user.email}</td>
             <td>{user.role}</td>
             <td>{user.purchasedCourses ? Object.keys(user.purchasedCourses).length : 0}</td>
+            <td>{getCoursesWithAccess(user.purchasedCourses)}</td> {/* Новый столбец */}
             <td>{formatDate(user.registrationDate)}</td>
             <td className={scss.actions}>
               <button className={scss.editButton} onClick={() => handleEdit(user.id)}>

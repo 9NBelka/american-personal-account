@@ -1,4 +1,3 @@
-// components/admin/EditUser.jsx
 import scss from './EditUser.module.scss';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
@@ -11,7 +10,7 @@ import AddCourseForm from './AddCourseForm/AddCourseForm';
 import FormActions from './FormActions/FormActions';
 
 export default function EditUser({ userId, onBack }) {
-  const { users, updateUser, courses, fetchAllCourses } = useAdmin();
+  const { users, updateUser, courses, fetchAllCourses, accessLevels } = useAdmin();
   const user = users.find((u) => u.id === userId);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
@@ -68,6 +67,12 @@ export default function EditUser({ userId, onBack }) {
     return course ? course.title : courseId;
   };
 
+  // Функция для получения названия уровня доступа по ID
+  const getAccessLevelName = (accessId) => {
+    const accessLevel = accessLevels.find((level) => level.id === accessId);
+    return accessLevel ? accessLevel.name : accessId || 'Не указан';
+  };
+
   if (!user) {
     return <p>Пользователь не найден.</p>;
   }
@@ -86,6 +91,9 @@ export default function EditUser({ userId, onBack }) {
               values={values}
               setFieldValue={setFieldValue}
               getCourseTitle={getCourseTitle}
+              getAccessLevelName={getAccessLevelName}
+              accessLevels={accessLevels}
+              courses={courses}
             />
             <AddCourseForm
               courses={courses}
@@ -96,6 +104,7 @@ export default function EditUser({ userId, onBack }) {
               selectedPackage={selectedPackage}
               setSelectedPackage={setSelectedPackage}
               getCourseTitle={getCourseTitle}
+              accessLevels={accessLevels}
             />
             <FormActions isSubmitting={isSubmitting} onBack={onBack} />
           </Form>
