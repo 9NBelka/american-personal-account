@@ -10,7 +10,6 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
-  fetchSignInMethodsForEmail, // Импортируем метод
 } from 'firebase/auth';
 import {
   doc,
@@ -47,7 +46,7 @@ export function AuthProvider({ children }) {
   });
   const [courses, setCourses] = useState([]);
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [readNotifications, setReadNotifications] = useState([]);
+  const [readNotifications, setReadNotifications] = useState([]); // Новое состояние для прочитанных уведомлений
   const [notifications, setNotifications] = useState([]);
 
   const fetchUserData = useCallback(async (uid) => {
@@ -58,12 +57,12 @@ export function AuthProvider({ children }) {
       setUserRole(data.role || 'guest');
       setRegistrationDate(data.registrationDate || '');
       setAvatarUrl(data.avatarUrl || null);
-      setReadNotifications(data.readNotifications || []);
+      setReadNotifications(data.readNotifications || []); // Получаем прочитанные уведомления
       const purchasedCourses = data.purchasedCourses || {};
       return { purchasedCourses, role: data.role };
     }
     setAvatarUrl(null);
-    setReadNotifications([]);
+    setReadNotifications([]); // Если данных нет, сбрасываем
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
@@ -171,7 +170,7 @@ export function AuthProvider({ children }) {
         role: 'guest',
         registrationDate,
         avatarUrl: null,
-        readNotifications: [],
+        readNotifications: [], // Добавляем пустой массив при регистрации
       });
 
       await updateProfile(user, {
@@ -181,7 +180,7 @@ export function AuthProvider({ children }) {
     [auth, db],
   );
 
-  // Вход через Google с обработкой ошибки
+  // Вход через Google
   const loginWithGoogle = useCallback(async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -190,6 +189,7 @@ export function AuthProvider({ children }) {
       const userDoc = await getDoc(userDocRef);
 
       if (!userDoc.exists()) {
+        // Если пользователь новый, создаем запись в Firestore
         const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
         const lastName = user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '';
         await setDoc(userDocRef, {
@@ -203,22 +203,12 @@ export function AuthProvider({ children }) {
         });
       }
     } catch (error) {
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        const email = error.customData?.email;
-        if (email) {
-          const methods = await fetchSignInMethodsForEmail(auth, email); // Правильный вызов
-          console.log('Sign-in methods for email:', methods);
-          throw new Error(
-            `This email is already used with another provider (e.g., Google). Please sign in with that provider first.`,
-          );
-        }
-      }
       console.error('Google login error:', error);
       throw error;
     }
   }, [auth, db]);
 
-  // Вход через GitHub с обработкой ошибки
+  // Вход через GitHub
   const loginWithGithub = useCallback(async () => {
     try {
       const result = await signInWithPopup(auth, githubProvider);
@@ -227,6 +217,7 @@ export function AuthProvider({ children }) {
       const userDoc = await getDoc(userDocRef);
 
       if (!userDoc.exists()) {
+        // Если пользователь новый, создаем запись в Firestore
         const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
         const lastName = user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '';
         await setDoc(userDocRef, {
@@ -240,16 +231,6 @@ export function AuthProvider({ children }) {
         });
       }
     } catch (error) {
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        const email = error.customData?.email;
-        if (email) {
-          const methods = await fetchSignInMethodsForEmail(auth, email); // Правильный вызов
-          console.log('Sign-in methods for email:', methods);
-          throw new Error(
-            `This email is already used with another provider (e.g., Google). Please sign in with that provider first.`,
-          );
-        }
-      }
       console.error('GitHub login error:', error);
       throw error;
     }
@@ -488,7 +469,7 @@ export function AuthProvider({ children }) {
         setCourses([]);
         setLastCourseId(null);
         setAvatarUrl(null);
-        setReadNotifications([]);
+        setReadNotifications([]); // Сбрасываем прочитанные уведомления
         localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
@@ -515,8 +496,8 @@ export function AuthProvider({ children }) {
     toggleLessonCompletion,
     login,
     signUp,
-    loginWithGoogle,
-    loginWithGithub,
+    loginWithGoogle, // Добавляем в контекст
+    loginWithGithub, // Добавляем в контекст
     error,
     lastCourseId,
     setLastCourseId,

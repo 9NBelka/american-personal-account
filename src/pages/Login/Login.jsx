@@ -9,7 +9,6 @@ import { BsBoxArrowInRight } from 'react-icons/bs';
 import LSPrivacyCheckbox from '../../components/LSPrivacyCheckbox/LSPrivacyCheckbox';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
 import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetPasswordModal';
-import { toast } from 'react-toastify'; // Импортируем тостик
 
 export default function Login() {
   const navigate = useNavigate();
@@ -55,14 +54,7 @@ export default function Login() {
     try {
       await loginWithGoogle();
     } catch (error) {
-      toast.error(error.message, {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      console.error('Google login error:', error);
     }
   };
 
@@ -70,14 +62,7 @@ export default function Login() {
     try {
       await loginWithGithub();
     } catch (error) {
-      toast.error(error.message, {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      console.error('GitHub login error:', error);
     }
   };
 
@@ -118,8 +103,9 @@ export default function Login() {
               isSubmitting={isLoading}
               otherPointsText='Log in'
               onForgotPassword={handleForgotPassword}
-              onGoogleLogin={handleGoogleLogin}
-              onGithubLogin={handleGithubLogin}>
+              onGoogleLogin={handleGoogleLogin} // Передаем обработчик для Google
+              onGithubLogin={handleGithubLogin} // Передаем обработчик для GitHub
+            >
               <LSPrivacyCheckbox />
             </LSAuthForm>
             <LSResetPasswordModal

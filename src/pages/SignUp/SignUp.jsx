@@ -8,7 +8,6 @@ import scss from './SignUp.module.scss';
 import { BsBoxArrowInRight } from 'react-icons/bs';
 import LSPrivacyCheckbox from '../../components/LSPrivacyCheckbox/LSPrivacyCheckbox';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
-import { toast } from 'react-toastify';
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -67,10 +66,7 @@ export default function SignUp() {
       await loginWithGoogle();
       navigate('/account');
     } catch (error) {
-      toast.error(error.message, {
-        position: 'top-right',
-        autoClose: 5000,
-      });
+      console.error('Google sign-up error:', error);
     }
   };
 
@@ -79,10 +75,7 @@ export default function SignUp() {
       await loginWithGithub();
       navigate('/account');
     } catch (error) {
-      toast.error(error.message, {
-        position: 'top-right',
-        autoClose: 5000,
-      });
+      console.error('GitHub sign-up error:', error);
     }
   };
 
@@ -124,8 +117,9 @@ export default function SignUp() {
               isSubmitting={isLoading}
               halfInput={halfInput}
               otherPointsText='Register'
-              onGoogleLogin={handleGoogleSignUp}
-              onGithubLogin={handleGithubSignUp}>
+              onGoogleLogin={handleGoogleSignUp} // Передаем обработчик для Google
+              onGithubLogin={handleGithubSignUp} // Передаем обработчик для GitHub
+            >
               <LSPrivacyCheckbox />
             </LSAuthForm>
           </div>
