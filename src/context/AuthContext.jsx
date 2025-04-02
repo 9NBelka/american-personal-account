@@ -183,22 +183,31 @@ export function AuthProvider({ children }) {
   // Вход через Google
   const loginWithGoogle = useCallback(async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
+      // Сначала проверяем, какие методы входа связаны с email
+      const googleCredential = await signInWithPopup(auth, googleProvider);
+      const user = googleCredential.user;
+
+      const signInMethods = await auth.fetchSignInMethodsForEmail(user.email);
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
-      if (!userDoc.exists()) {
-        // Проверяем, существует ли email в другой учетной записи
-        const signInMethods = await auth.fetchSignInMethodsForEmail(user.email);
-        if (signInMethods.includes('password')) {
-          // Учетная запись с email/password уже существует, нужно связать
-          console.log('Учетная запись с этим email уже существует. Свяжите провайдеры.');
-          // Здесь можно предложить пользователю войти через email/password и связать Google
-          return { needsLinking: true, email: user.email };
-        }
+      if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
+        // Учетная запись с email/password существует, но Google еще не привязан
+        console.log('Учетная запись существует с email/password. Нужно связать Google.');
 
-        // Если учетной записи нет, создаем новую
+        // Сразу выходим из текущей сессии Google, чтобы не перезаписать
+        await auth.signOut();
+
+        return {
+          needsLinking: true,
+          email: user.email,
+          message:
+            'Этот email уже используется с паролем. Войдите через email/password, чтобы связать Google.',
+        };
+      }
+
+      // Если учетной записи в Firestore нет, создаем новую
+      if (!userDoc.exists()) {
         const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
         const lastName = user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '';
         await setDoc(userDocRef, {
@@ -211,6 +220,8 @@ export function AuthProvider({ children }) {
           readNotifications: [],
         });
       }
+
+      return { success: true };
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
@@ -220,15 +231,23 @@ export function AuthProvider({ children }) {
   const linkGoogleProvider = useCallback(
     async (email, password) => {
       try {
-        // Аутентификация через email/password
+        // Аутентифицируем пользователя через email/password
         const credential = await signInWithEmailAndPassword(auth, email, password);
         const user = credential.user;
 
-        // Связывание с Google
-        await linkWithPopup(user, googleProvider);
-        console.log('Google успешно связан с учетной записью!');
+        // Привязываем Google к существующей учетной записи
+        const googleResult = await linkWithPopup(user, googleProvider);
+        console.log('Google успешно привязан к учетной записи!');
+
+        return { success: true };
       } catch (error) {
         console.error('Ошибка при связывании Google:', error);
+        if (error.code === 'auth/provider-already-linked') {
+          return { success: false, message: 'Google уже привязан к этой учетной записи.' };
+        }
+        if (error.code === 'auth/wrong-password') {
+          return { success: false, message: 'Неверный пароль.' };
+        }
         throw error;
       }
     },
@@ -523,7 +542,7 @@ export function AuthProvider({ children }) {
     toggleLessonCompletion,
     login,
     signUp,
-    loginWithGoogle, // Добавляем в контекст
+    loginWithGoogle,
     linkGoogleProvider,
     loginWithGithub, // Добавляем в контекст
     error,
