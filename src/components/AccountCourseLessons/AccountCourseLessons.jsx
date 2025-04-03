@@ -27,6 +27,9 @@ export default function AccountCourseLessons({
     setExpandedModule(expandedModule === moduleIndex ? null : moduleIndex);
   };
 
+  // Сортируем перед рендерингом
+  const sortedModules = [...modules].sort((a, b) => a.id.localeCompare(b.id)); // Сортировка по строковым ID
+
   return (
     <div className={scss.courseSection}>
       <div className={scss.courseHeader}>
@@ -81,7 +84,7 @@ export default function AccountCourseLessons({
           })()}
         </div>
       </div>
-      {modules.map((module, index) => (
+      {sortedModules.map((module, index) => (
         <CourseLessonsList
           key={module.id}
           module={module}

@@ -1,3 +1,4 @@
+// context/AdminContext.js
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import {
@@ -22,7 +23,7 @@ export function AdminProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [accessLevels, setAccessLevels] = useState([]); // Новое состояние для уровней доступа
+  const [accessLevels, setAccessLevels] = useState([]);
   const [error, setError] = useState(null);
 
   // Подписка на пользователей в реальном времени
@@ -263,7 +264,6 @@ export function AdminProvider({ children }) {
       try {
         const accessLevelRef = doc(db, 'accessLevels', accessLevelData.id);
         await setDoc(accessLevelRef, accessLevelData);
-        // Удаляем ручное добавление в состояние, так как onSnapshot сам обновит accessLevels
       } catch (error) {
         throw new Error('Ошибка при добавлении уровня доступа: ' + error.message);
       }
@@ -306,7 +306,6 @@ export function AdminProvider({ children }) {
   );
 
   // Обновление курса
-  // В AdminContext.jsx
   const updateCourse = useCallback(
     async (courseId, updatedData) => {
       if (userRole !== 'admin') {
@@ -316,23 +315,79 @@ export function AdminProvider({ children }) {
         const courseRef = doc(db, 'courses', courseId);
         await updateDoc(courseRef, updatedData);
 
-        // Если уровень доступа изменился, обновляем purchasedCourses у пользователей
+        // Находим старые данные курса
         const oldCourse = courses.find((c) => c.id === courseId);
-        if (oldCourse.access !== updatedData.access) {
-          const usersSnapshot = await getDocs(collection(db, 'users'));
-          const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
-            const userData = userDoc.data();
-            const purchasedCourses = userData.purchasedCourses || {};
-            if (purchasedCourses[courseId]) {
-              purchasedCourses[courseId].access = updatedData.access;
-              await updateDoc(doc(db, 'users', userDoc.id), {
-                purchasedCourses,
-              });
+        const oldModules = oldCourse?.modules || {};
+        const newModules = updatedData.modules || {};
+
+        // Определяем, какие модули и уроки были удалены
+        const deletedModuleIds = Object.keys(oldModules).filter(
+          (moduleId) => !newModules[moduleId],
+        );
+        const updatedModuleIds = Object.keys(newModules);
+
+        // Получаем всех пользователей
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
+          const userData = userDoc.data();
+          const purchasedCourses = userData.purchasedCourses || {};
+          if (!purchasedCourses[courseId]) return; // Пропускаем, если пользователь не купил курс
+
+          let updatedCompletedLessons = { ...purchasedCourses[courseId].completedLessons };
+
+          // Удаляем записи о просмотренных уроках для удалённых модулей
+          deletedModuleIds.forEach((moduleId) => {
+            if (updatedCompletedLessons[moduleId]) {
+              delete updatedCompletedLessons[moduleId];
             }
           });
-          await Promise.all(updatePromises);
-        }
 
+          // Для оставшихся модулей проверяем удалённые уроки
+          updatedModuleIds.forEach((moduleId) => {
+            const oldLessons = oldModules[moduleId]?.lessons || [];
+            const newLessons = newModules[moduleId]?.lessons || [];
+            const newLessonCount = newLessons.length;
+
+            if (updatedCompletedLessons[moduleId]) {
+              // Фильтруем индексы уроков, оставляя только те, которые существуют в новом списке уроков
+              updatedCompletedLessons[moduleId] = updatedCompletedLessons[moduleId].filter(
+                (lessonIndex) => lessonIndex < newLessonCount,
+              );
+              // Если после фильтрации массив пуст, удаляем модуль из completedLessons
+              if (updatedCompletedLessons[moduleId].length === 0) {
+                delete updatedCompletedLessons[moduleId];
+              }
+            }
+          });
+
+          // Пересчитываем общее количество уроков в курсе
+          const totalLessons = Object.values(newModules).reduce(
+            (sum, module) => sum + (module.lessons?.length || 0),
+            0,
+          );
+
+          // Пересчитываем количество завершённых уроков
+          const completedLessonsCount = Object.values(updatedCompletedLessons).reduce(
+            (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
+            0,
+          );
+
+          // Пересчитываем прогресс
+          const newProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
+
+          // Обновляем данные пользователя
+          await updateDoc(doc(db, 'users', userDoc.id), {
+            [`purchasedCourses.${courseId}.completedLessons`]: updatedCompletedLessons,
+            [`purchasedCourses.${courseId}.progress`]: Math.round(newProgress),
+            ...(oldCourse.access !== updatedData.access && {
+              [`purchasedCourses.${courseId}.access`]: updatedData.access,
+            }),
+          });
+        });
+
+        await Promise.all(updatePromises);
+
+        // Обновляем локальное состояние курсов
         setCourses((prev) => prev.map((c) => (c.id === courseId ? { ...c, ...updatedData } : c)));
       } catch (error) {
         throw new Error('Ошибка при обновлении курса: ' + error.message);
@@ -439,7 +494,7 @@ export function AdminProvider({ children }) {
     products,
     orders,
     notifications,
-    accessLevels, // Добавляем уровни доступа в контекст
+    accessLevels,
     fetchAllCourses,
     fetchAllProducts,
     fetchAllOrders,
@@ -454,7 +509,7 @@ export function AdminProvider({ children }) {
     deleteProduct,
     addNotification,
     deleteNotification,
-    addAccessLevel, // Добавляем функцию добавления уровня доступа
+    addAccessLevel,
     error,
     setError,
   };

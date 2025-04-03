@@ -1,4 +1,4 @@
-// components/admin/EditCourse.module.scss
+// components/DashBoardComponents/EditCourse/EditCourse.module.scss
 .editCourse {
   padding: 1vw;
 
@@ -168,6 +168,7 @@
     display: flex;
     flex-direction: column;
     gap: 1vw;
+    counter-reset: module-counter; // Сбрасываем счётчик для модулей
 
     h3 {
       font-size: 0.9vw;
@@ -181,12 +182,25 @@
       background-color: #1e1e1e;
       padding: 0.75vw;
       border-radius: 0.2vw;
+      counter-reset: lesson-counter; // Сбрасываем счётчик для уроков в каждом модуле
 
       & .moduleHeader {
         display: flex;
         align-items: center;
         gap: 0.5vw;
         margin-bottom: 0.5vw;
+        position: relative;
+
+        &::before {
+          content: 'Модуль ' counter(module-counter);
+          counter-increment: module-counter;
+          font-size: 0.75vw;
+          color: #888;
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+          margin-right: 0.5vw;
+        }
 
         input {
           flex: 1;

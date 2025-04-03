@@ -17,6 +17,9 @@ export default function PlayListModuleBlock({
   getTotalDuration,
   totalDuration,
 }) {
+  // Сортируем перед рендерингом
+  const sortedModules = [...modules].sort((a, b) => a.id.localeCompare(b.id)); // Сортировка по строковым ID
+
   return (
     <div className={scss.moduleBlock}>
       <PlayListModuleHeader
@@ -25,7 +28,7 @@ export default function PlayListModuleBlock({
         totalLessons={totalLessons}
         totalDuration={totalDuration}
       />
-      {modules.map((module, index) => (
+      {sortedModules.map((module, index) => (
         <CourseLessonsList
           key={module.id}
           module={module}

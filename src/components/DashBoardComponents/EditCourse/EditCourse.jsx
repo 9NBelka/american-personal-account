@@ -1,3 +1,4 @@
+// components/DashBoardComponents/EditCourse/EditCourse.jsx
 import { useState, useEffect } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
 import scss from './EditCourse.module.scss';
@@ -18,13 +19,12 @@ export default function EditCourse({ courseId, onBack }) {
     description: '',
     category: 'Course',
     gitHubRepLink: '',
-    access: '', // Добавляем поле access
+    access: '',
     modules: {},
   });
 
   // Состояние для управления модулями и уроками
-  const [moduleCount, setModuleCount] = useState(0);
-  const [modules, setModules] = useState({});
+  const [moduleList, setModuleList] = useState([]); // Массив модулей
 
   // Состояние для выпадающего списка категорий
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -46,15 +46,24 @@ export default function EditCourse({ courseId, onBack }) {
       return;
     }
 
-    // Форматируем unlockDate для input type="datetime-local"
-    const formattedModules = Object.keys(courseToEdit.modules || {}).reduce((acc, moduleId) => {
-      const module = courseToEdit.modules[moduleId];
-      acc[moduleId] = {
-        ...module,
+    // Преобразуем объект modules в массив moduleList
+    const formattedModules = Object.entries(courseToEdit.modules || {})
+      .sort(([, moduleA], [, moduleB]) => {
+        // Проверяем, есть ли у модуля дата создания (если есть)
+        if (moduleA.createdAt && moduleB.createdAt) {
+          return new Date(moduleA.createdAt) - new Date(moduleB.createdAt);
+        }
+        // Если даты нет, сортируем по порядку ключей (модуль1, модуль2 и т.д.)
+        const numA = parseInt(moduleA.title.replace(/\D/g, ''), 10) || 0;
+        const numB = parseInt(moduleB.title.replace(/\D/g, ''), 10) || 0;
+        return numA - numB;
+      })
+      .map(([moduleId, module]) => ({
+        id: moduleId,
+        title: module.title || '',
         unlockDate: module.unlockDate ? new Date(module.unlockDate).toISOString().slice(0, 16) : '',
-      };
-      return acc;
-    }, {});
+        lessons: module.lessons || [],
+      }));
 
     setCourseData({
       id: courseToEdit.id,
@@ -62,13 +71,11 @@ export default function EditCourse({ courseId, onBack }) {
       description: courseToEdit.description || '',
       category: courseToEdit.category || 'Course',
       gitHubRepLink: courseToEdit.gitHubRepLink || '',
-      access: courseToEdit.access || '', // Инициализируем access
-      modules: formattedModules,
+      access: courseToEdit.access || '',
+      modules: courseToEdit.modules || {},
     });
 
-    setModules(formattedModules);
-    const existingModuleCount = Object.keys(formattedModules).length;
-    setModuleCount(existingModuleCount);
+    setModuleList(formattedModules);
   }, [courseToEdit, setError, onBack]);
 
   // Обработчик изменения полей курса
@@ -97,7 +104,6 @@ export default function EditCourse({ courseId, onBack }) {
     }
 
     const accessId = newAccessName.toLowerCase().replace(/\s+/g, '');
-    // Проверяем, существует ли уже уровень с таким ID
     if (accessLevels.some((level) => level.id === accessId)) {
       setError('Уровень доступа с таким названием уже существует');
       return;
@@ -118,83 +124,76 @@ export default function EditCourse({ courseId, onBack }) {
 
   // Добавление нового модуля
   const addModule = () => {
-    const newModuleId = `module${moduleCount + 1}`;
-    setModules((prev) => ({
-      ...prev,
-      [newModuleId]: {
-        title: '',
-        unlockDate: '',
-        lessons: [],
-      },
-    }));
-    setModuleCount((prev) => prev + 1);
+    const newModuleId = `module_${Date.now()}`;
+    setModuleList((prev) => [...prev, { id: newModuleId, title: '', unlockDate: '', lessons: [] }]);
   };
 
   // Добавление нового урока в модуль
   const addLesson = (moduleId) => {
-    setModules((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        lessons: [
-          ...prev[moduleId].lessons,
-          {
-            title: '',
-            videoUrl: '',
-            videoTime: 0,
-          },
-        ],
-      },
-    }));
+    setModuleList((prev) =>
+      prev.map((module) =>
+        module.id === moduleId
+          ? {
+              ...module,
+              lessons: [
+                ...module.lessons,
+                {
+                  title: '',
+                  videoUrl: '',
+                  videoTime: 0,
+                },
+              ],
+            }
+          : module,
+      ),
+    );
   };
 
   // Обработчик изменения данных модуля
   const handleModuleChange = (moduleId, field, value) => {
-    setModules((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        [field]: value,
-      },
-    }));
+    setModuleList((prev) =>
+      prev.map((module) => (module.id === moduleId ? { ...module, [field]: value } : module)),
+    );
   };
 
   // Обработчик изменения данных урока
   const handleLessonChange = (moduleId, lessonIndex, field, value) => {
-    setModules((prev) => {
-      const updatedLessons = [...prev[moduleId].lessons];
-      updatedLessons[lessonIndex] = {
-        ...updatedLessons[lessonIndex],
-        [field]: field === 'videoTime' ? Number(value) : value,
-      };
-      return {
-        ...prev,
-        [moduleId]: {
-          ...prev[moduleId],
-          lessons: updatedLessons,
-        },
-      };
-    });
+    setModuleList((prev) =>
+      prev.map((module) =>
+        module.id === moduleId
+          ? {
+              ...module,
+              lessons: module.lessons.map((lesson, index) =>
+                index === lessonIndex
+                  ? {
+                      ...lesson,
+                      [field]: field === 'videoTime' ? Number(value) : value,
+                    }
+                  : lesson,
+              ),
+            }
+          : module,
+      ),
+    );
   };
 
   // Удаление модуля
   const removeModule = (moduleId) => {
-    setModules((prev) => {
-      const newModules = { ...prev };
-      delete newModules[moduleId];
-      return newModules;
-    });
+    setModuleList((prev) => prev.filter((module) => module.id !== moduleId));
   };
 
   // Удаление урока
   const removeLesson = (moduleId, lessonIndex) => {
-    setModules((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        lessons: prev[moduleId].lessons.filter((_, index) => index !== lessonIndex),
-      },
-    }));
+    setModuleList((prev) =>
+      prev.map((module) =>
+        module.id === moduleId
+          ? {
+              ...module,
+              lessons: module.lessons.filter((_, index) => index !== lessonIndex),
+            }
+          : module,
+      ),
+    );
   };
 
   // Обработчик отправки формы
@@ -205,19 +204,21 @@ export default function EditCourse({ courseId, onBack }) {
       return;
     }
     try {
+      // Преобразуем moduleList обратно в объект modules для сохранения в Firestore
+      const modulesObject = moduleList.reduce((acc, module) => {
+        acc[module.id] = {
+          title: module.title,
+          unlockDate: module.unlockDate
+            ? new Date(module.unlockDate).toISOString()
+            : new Date().toISOString(),
+          lessons: module.lessons,
+        };
+        return acc;
+      }, {});
+
       const updatedCourseData = {
         ...courseData,
-        modules: Object.keys(modules).reduce((acc, moduleId) => {
-          const module = modules[moduleId];
-          acc[moduleId] = {
-            title: module.title,
-            unlockDate: module.unlockDate
-              ? new Date(module.unlockDate).toISOString()
-              : new Date().toISOString(),
-            lessons: module.lessons,
-          };
-          return acc;
-        }, {}),
+        modules: modulesObject,
       };
 
       await updateCourse(courseData.id, updatedCourseData);
@@ -228,6 +229,20 @@ export default function EditCourse({ courseId, onBack }) {
       toast.error('Ошибка при обновлении: ' + err.message);
     }
   };
+
+  useEffect(() => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: moduleList.reduce((acc, module) => {
+        acc[module.id] = {
+          title: module.title,
+          unlockDate: module.unlockDate ? new Date(module.unlockDate).toISOString() : '',
+          lessons: module.lessons,
+        };
+        return acc;
+      }, {}),
+    }));
+  }, [moduleList]);
 
   if (!courseToEdit) {
     return <div>Загрузка...</div>;
@@ -370,44 +385,46 @@ export default function EditCourse({ courseId, onBack }) {
         {/* Модули и уроки */}
         <div className={scss.modulesSection}>
           <h3>Модули</h3>
-          {Object.keys(modules).map((moduleId) => (
-            <div key={moduleId} className={scss.module}>
+          {moduleList.map((module, moduleIndex) => (
+            <div key={module.id} className={scss.module}>
               <div className={scss.moduleHeader}>
                 <input
                   type='text'
-                  value={modules[moduleId].title}
-                  onChange={(e) => handleModuleChange(moduleId, 'title', e.target.value)}
-                  placeholder={`Название модуля ${moduleId.replace('module', '')}`}
+                  value={module.title}
+                  onChange={(e) => handleModuleChange(module.id, 'title', e.target.value)}
+                  placeholder={`Модуль ${moduleIndex + 1}`}
                   required
                 />
                 <input
                   type='datetime-local'
-                  value={modules[moduleId].unlockDate}
-                  onChange={(e) => handleModuleChange(moduleId, 'unlockDate', e.target.value)}
+                  value={module.unlockDate}
+                  onChange={(e) => handleModuleChange(module.id, 'unlockDate', e.target.value)}
                   placeholder='Дата разблокировки модуля...'
                 />
                 <button
                   type='button'
                   className={scss.deleteButton}
-                  onClick={() => removeModule(moduleId)}>
+                  onClick={() => removeModule(module.id)}>
                   <BsTrash />
                 </button>
               </div>
               <div className={scss.lessons}>
-                {modules[moduleId].lessons.map((lesson, index) => (
-                  <div key={index} className={scss.lesson}>
+                {module.lessons.map((lesson, lessonIndex) => (
+                  <div key={lessonIndex} className={scss.lesson}>
                     <input
                       type='text'
                       value={lesson.title}
-                      onChange={(e) => handleLessonChange(moduleId, index, 'title', e.target.value)}
-                      placeholder={`Название урока ${index}`}
+                      onChange={(e) =>
+                        handleLessonChange(module.id, lessonIndex, 'title', e.target.value)
+                      }
+                      placeholder={`Урок ${lessonIndex + 1}`}
                       required
                     />
                     <input
                       type='text'
                       value={lesson.videoUrl}
                       onChange={(e) =>
-                        handleLessonChange(moduleId, index, 'videoUrl', e.target.value)
+                        handleLessonChange(module.id, lessonIndex, 'videoUrl', e.target.value)
                       }
                       placeholder='Токен видео урока (например, ac1f5fa0-2dd2-68d0-ebaf-ba5967d0e07d/a909a0c3-2224-70ae-f4c9-ee26818cb414)'
                       required
@@ -417,7 +434,7 @@ export default function EditCourse({ courseId, onBack }) {
                       min='0'
                       value={lesson.videoTime}
                       onChange={(e) =>
-                        handleLessonChange(moduleId, index, 'videoTime', e.target.value)
+                        handleLessonChange(module.id, lessonIndex, 'videoTime', e.target.value)
                       }
                       placeholder='Длительность урока (в минутах)'
                       required
@@ -425,7 +442,7 @@ export default function EditCourse({ courseId, onBack }) {
                     <button
                       type='button'
                       className={scss.deleteButton}
-                      onClick={() => removeLesson(moduleId, index)}>
+                      onClick={() => removeLesson(module.id, lessonIndex)}>
                       <BsTrash />
                     </button>
                   </div>
@@ -433,7 +450,7 @@ export default function EditCourse({ courseId, onBack }) {
                 <button
                   type='button'
                   className={scss.addLessonButton}
-                  onClick={() => addLesson(moduleId)}>
+                  onClick={() => addLesson(module.id)}>
                   <BsPlus /> Добавить урок
                 </button>
               </div>
