@@ -17,6 +17,7 @@ export default function FilterProducts({
   sortOption,
   setSortOption,
   debouncedSetSearchQuery,
+  accessLevels, // Добавляем accessLevels
 }) {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isAccessOpen, setIsAccessOpen] = useState(false);
@@ -28,10 +29,13 @@ export default function FilterProducts({
     { value: 'Master class', label: `Master class (${categoryCounts['Master class']})` },
   ];
 
+  // Динамически формируем accessOptions на основе accessLevels
   const accessOptions = [
     { value: 'all', label: `Все (${accessCounts.all})` },
-    { value: 'vanilla', label: `Vanilla (${accessCounts.vanilla})` },
-    { value: 'standard', label: `Standard (${accessCounts.standard})` },
+    ...accessLevels.map((level) => ({
+      value: level.id,
+      label: `${level.name} (${accessCounts[level.id] || 0})`,
+    })),
   ];
 
   const availableOptions = [
@@ -91,14 +95,21 @@ export default function FilterProducts({
           </div>
           {isAccessOpen && (
             <ul className={scss.accessDropdown}>
-              {accessOptions.map((option) => (
-                <li
-                  key={option.value}
-                  className={clsx(scss.accessOption, accessFilter === option.value && scss.active)}
-                  onClick={() => handleAccessSelect(option.value)}>
-                  {option.label}
-                </li>
-              ))}
+              {accessOptions.length > 1 ? ( // Проверяем, есть ли уровни доступа
+                accessOptions.map((option) => (
+                  <li
+                    key={option.value}
+                    className={clsx(
+                      scss.accessOption,
+                      accessFilter === option.value && scss.active,
+                    )}
+                    onClick={() => handleAccessSelect(option.value)}>
+                    {option.label}
+                  </li>
+                ))
+              ) : (
+                <li className={scss.accessOption}>Загрузка уровней доступа...</li>
+              )}
             </ul>
           )}
         </div>

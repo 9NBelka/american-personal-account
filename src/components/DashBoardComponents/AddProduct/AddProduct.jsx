@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function AddProduct() {
-  const { addProduct, error, setError } = useAdmin();
+  const { addProduct, error, setError, accessLevels } = useAdmin();
 
   // Состояние для данных продукта
   const [productData, setProductData] = useState({
@@ -14,7 +14,7 @@ export default function AddProduct() {
     nameProduct: '',
     imageProduct: '',
     priceProduct: 0,
-    access: 'vanilla',
+    access: accessLevels[0]?.id || '', // Устанавливаем первый уровень доступа по умолчанию
     available: true,
     categoryProduct: 'Course',
     descriptionProduct: [],
@@ -30,10 +30,17 @@ export default function AddProduct() {
     { value: 'Master class', label: 'Master class' },
   ];
 
-  const accessOptions = [
-    { value: 'vanilla', label: 'Vanilla' },
-    { value: 'standard', label: 'Standard' },
-  ];
+  // Динамические опции для типов доступа
+  const accessOptions = accessLevels.map((level) => ({
+    value: level.id,
+    label: level.name,
+  }));
+
+  // Функция для получения названия уровня доступа
+  const getAccessLevelName = (accessId) => {
+    const accessLevel = accessLevels.find((level) => level.id === accessId);
+    return accessLevel ? accessLevel.name : accessId || 'Не указан';
+  };
 
   // Обработчик изменения полей продукта
   const handleInputChange = (e) => {
@@ -124,7 +131,7 @@ export default function AddProduct() {
         nameProduct: '',
         imageProduct: '',
         priceProduct: 0,
-        access: 'vanilla',
+        access: accessLevels[0]?.id || '', // Сбрасываем на первый уровень доступа
         available: true,
         categoryProduct: 'Course',
         descriptionProduct: [],
@@ -193,23 +200,36 @@ export default function AddProduct() {
         <div className={scss.field}>
           <label>Тип доступа</label>
           <div className={scss.accessContainer}>
-            <div className={scss.accessButton} onClick={() => setIsAccessOpen(!isAccessOpen)}>
-              {productData.access || 'Выберите тип доступа'}
+            <div
+              className={clsx(
+                scss.accessButton,
+                accessLevels.length === 0 && scss.disabled, // Добавляем класс disabled, если accessLevels пуст
+              )}
+              onClick={() => {
+                if (accessLevels.length > 0) {
+                  setIsAccessOpen(!isAccessOpen);
+                }
+              }}>
+              {getAccessLevelName(productData.access) || 'Выберите тип доступа'}
               <BsChevronDown className={clsx(scss.chevron, isAccessOpen && scss.chevronOpen)} />
             </div>
             {isAccessOpen && (
               <ul className={scss.accessDropdown}>
-                {accessOptions.map((option) => (
-                  <li
-                    key={option.value}
-                    className={clsx(
-                      scss.accessOption,
-                      productData.access === option.value && scss.active,
-                    )}
-                    onClick={() => handleAccessSelect(option.value)}>
-                    {option.label}
-                  </li>
-                ))}
+                {accessOptions.length > 0 ? (
+                  accessOptions.map((option) => (
+                    <li
+                      key={option.value}
+                      className={clsx(
+                        scss.accessOption,
+                        productData.access === option.value && scss.active,
+                      )}
+                      onClick={() => handleAccessSelect(option.value)}>
+                      {option.label}
+                    </li>
+                  ))
+                ) : (
+                  <li className={scss.accessOption}>Загрузка уровней доступа...</li>
+                )}
               </ul>
             )}
           </div>

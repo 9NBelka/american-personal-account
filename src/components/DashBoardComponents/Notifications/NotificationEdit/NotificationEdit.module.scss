@@ -1,25 +1,38 @@
-// components/DashBoardComponents/Notifications/NotificationsCreate.module.scss
-.notificationsCreate {
+// components/DashBoardComponents/Notifications/EditNotificationModal/EditNotificationModal.module.scss
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
-  flex-direction: column;
-  background-color: #252525;
-  padding: 1vw;
-  border-radius: 0.5vw;
-  width: 25%;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-  & .titleNotificationsCreate {
+.modal {
+  background-color: #252525;
+  padding: 1.5vw;
+  border-radius: 0.5vw;
+  width: 30vw;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  & .modalTitle {
     font-size: 1.4vw;
     color: var(--color-white);
     font-family: var(--font-main-for-account);
     font-weight: var(--font-weight-normal);
     line-height: var(--font-lineh-normal);
+    margin-bottom: 1vw;
   }
 
   .form {
     display: flex;
     flex-direction: column;
     gap: 1vw;
-    margin-top: 1vw;
 
     .accessLevelsContainer {
       display: flex;
@@ -149,21 +162,20 @@
       }
 
       textarea {
-        min-height: 20vw;
+        min-height: 10vw;
         resize: vertical;
       }
     }
 
-    & .blockCenter {
+    .buttonGroup {
       display: flex;
-      justify-content: center;
-      width: 100%;
+      justify-content: space-between;
+      gap: 1vw;
+      margin-top: 1vw;
 
-      & .submitButton {
-        display: flex;
-        justify-content: center;
-        width: 15vw;
-        padding: 0.5vw 1vw;
+      .saveButton {
+        flex: 1;
+        padding: 0.5vw;
         background-color: var(--color-green-opacity20);
         border: 0.1vw solid var(--color-lightGreen);
         border-radius: 0.25vw;
@@ -177,6 +189,26 @@
 
         &:hover {
           background-color: #053a1b;
+          border: 0.1vw solid transparent;
+        }
+      }
+
+      .cancelButton {
+        flex: 1;
+        padding: 0.5vw;
+        background-color: var(--color-red-opacity20);
+        border: 0.1vw solid var(--color-red);
+        border-radius: 0.25vw;
+        font-size: 0.8vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-normal);
+        line-height: var(--font-lineh-normal);
+        cursor: pointer;
+        transition: 0.3s ease-in-out;
+
+        &:hover {
+          background-color: #3f0d07;
           border: 0.1vw solid transparent;
         }
       }

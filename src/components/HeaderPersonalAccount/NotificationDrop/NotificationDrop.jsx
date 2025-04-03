@@ -4,7 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import scss from './NotificationDrop.module.scss';
 
 export default function NotificationDrop({ sortedNotifications, formatDate }) {
-  const { markNotificationAsRead } = useAuth();
+  const { markNotificationAsRead, accessLevels } = useAuth();
 
   const handleMarkAsRead = async (notificationId) => {
     try {
@@ -24,6 +24,11 @@ export default function NotificationDrop({ sortedNotifications, formatDate }) {
     }
   };
 
+  const getAccessLevelName = (levelId) => {
+    const accessLevel = accessLevels.find((level) => level.id === levelId);
+    return accessLevel ? accessLevel.name : levelId;
+  };
+
   return (
     <div className={scss.notificationsDropdown}>
       <h3 className={scss.notificationsTitle}>Notifications</h3>
@@ -38,6 +43,24 @@ export default function NotificationDrop({ sortedNotifications, formatDate }) {
                 <div className={scss.notificationContent}>
                   <p className={scss.notificationTitle}>{notification.title}</p>
                   <p className={scss.notificationMessage}>{notification.message}</p>
+                  {notification.accessLevels && notification.accessLevels.length > 0 ? (
+                    <div className={scss.accessTags}>
+                      {notification.accessLevels.map((level) => (
+                        <span
+                          key={level}
+                          className={scss.accessTag}
+                          data-level={level.toLowerCase()}>
+                          {getAccessLevelName(level)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={scss.accessTags}>
+                      <span className={scss.accessTag} data-level='all'>
+                        All
+                      </span>
+                    </div>
+                  )}
                   <p className={scss.notificationDate}>{formatDate(notification.createdAt)}</p>
                   <button
                     className={scss.markAsReadButton}

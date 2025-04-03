@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function EditProduct({ productId, onBack }) {
-  const { products, updateProduct, error, setError } = useAdmin();
+  const { products, updateProduct, error, setError, accessLevels } = useAdmin();
 
   // Находим продукт для редактирования
   const productToEdit = products.find((product) => product.id === productId);
@@ -17,7 +17,7 @@ export default function EditProduct({ productId, onBack }) {
     nameProduct: '',
     imageProduct: '',
     priceProduct: 0,
-    access: 'vanilla',
+    access: '',
     available: true,
     categoryProduct: 'Course',
     descriptionProduct: [],
@@ -33,16 +33,23 @@ export default function EditProduct({ productId, onBack }) {
     { value: 'Master class', label: 'Master class' },
   ];
 
-  const accessOptions = [
-    { value: 'vanilla', label: 'Vanilla' },
-    { value: 'standard', label: 'Standard' },
-  ];
+  // Динамические опции для типов доступа
+  const accessOptions = accessLevels.map((level) => ({
+    value: level.id,
+    label: level.name,
+  }));
+
+  // Функция для получения названия уровня доступа
+  const getAccessLevelName = (accessId) => {
+    const accessLevel = accessLevels.find((level) => level.id === accessId);
+    return accessLevel ? accessLevel.name : accessId || 'Не указан';
+  };
 
   // Инициализация данных продукта при загрузке компонента
   useEffect(() => {
     if (!productToEdit) {
       setError('Продукт не найден');
-      onBack(); // Возвращаемся назад, если продукт не найден
+      onBack();
       return;
     }
 
@@ -51,13 +58,13 @@ export default function EditProduct({ productId, onBack }) {
       nameProduct: productToEdit.nameProduct || '',
       imageProduct: productToEdit.imageProduct || '',
       priceProduct: productToEdit.priceProduct || 0,
-      access: productToEdit.access || 'vanilla',
+      access: productToEdit.access || accessLevels[0]?.id || '', // Устанавливаем первый уровень доступа по умолчанию
       available: productToEdit.available !== undefined ? productToEdit.available : true,
       categoryProduct: productToEdit.categoryProduct || 'Course',
       descriptionProduct: productToEdit.descriptionProduct || [],
       speakersProduct: productToEdit.speakersProduct || [],
     });
-  }, [productToEdit, setError, onBack]);
+  }, [productToEdit, setError, onBack, accessLevels]);
 
   // Обработчик изменения полей продукта
   const handleInputChange = (e) => {
@@ -141,7 +148,7 @@ export default function EditProduct({ productId, onBack }) {
 
       await updateProduct(productData.id, updatedProductData);
       toast.success('Продукт успешно обновлен!');
-      onBack(); // Возвращаемся к списку после сохранения
+      onBack();
     } catch (err) {
       setError('Ошибка при обновлении продукта: ' + err.message);
       toast.error('Ошибка при обновлении: ' + err.message);
@@ -216,7 +223,7 @@ export default function EditProduct({ productId, onBack }) {
           <label>Тип доступа</label>
           <div className={scss.accessContainer}>
             <div className={scss.accessButton} onClick={() => setIsAccessOpen(!isAccessOpen)}>
-              {productData.access || 'Выберите тип доступа'}
+              {getAccessLevelName(productData.access) || 'Выберите тип доступа'}
               <BsChevronDown className={clsx(scss.chevron, isAccessOpen && scss.chevronOpen)} />
             </div>
             {isAccessOpen && (

@@ -24,8 +24,8 @@
   }
 
   .tableWrapper {
-    max-height: 30vw; /* Ограничиваем высоту таблицы */
-    overflow-y: auto; /* Добавляем прокрутку */
+    max-height: 30vw;
+    overflow-y: auto;
     margin-top: 1vw;
     border-radius: 0.3vw;
   }
@@ -49,19 +49,19 @@
         text-transform: uppercase;
 
         &:nth-child(1) {
-          width: 5%; // №
+          width: 5%;
         }
         &:nth-child(2) {
-          width: 30%; // Заголовок
+          width: 30%;
         }
         &:nth-child(3) {
-          width: 45%; // Текст
+          width: 45%;
         }
         &:nth-child(4) {
-          width: 10%; // Дата
+          width: 10%;
         }
         &:nth-child(5) {
-          width: 10%; // Действия
+          width: 10%;
         }
       }
     }
@@ -86,27 +86,48 @@
           vertical-align: middle;
 
           &:nth-child(1) {
-            width: 5%; // №
+            width: 5%;
           }
           &:nth-child(2) {
-            width: 30%; // Заголовок
-            white-space: normal; // Разрешаем перенос текста
-            word-break: break-word; // Переносим слова, если они не помещаются
-            overflow-wrap: break-word; // Дополнительно для поддержки переносов
+            width: 30%;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
             line-height: var(--font-lineh-small);
           }
           &:nth-child(3) {
-            width: 45%; // Текст
-            white-space: normal; // Разрешаем перенос текста
-            word-break: break-word; // Переносим слова, если они не помещаются
-            overflow-wrap: break-word; // Дополнительно для поддержки переносов
+            width: 45%;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
             line-height: var(--font-lineh-small);
           }
           &:nth-child(4) {
-            width: 10%; // Дата
+            width: 10%;
           }
           &:nth-child(5) {
-            width: 10%; // Действия
+            width: 10%;
+            display: flex;
+            gap: 0.5vw;
+          }
+        }
+
+        .editButton {
+          padding: 0.3vw 0.75vw;
+          background-color: var(--color-blue-opacity20);
+          border: 0.1vw solid var(--color-blue);
+          border-radius: 0.3vw;
+          font-size: 0.7vw;
+          color: var(--color-white);
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+          cursor: pointer;
+          transition: 0.3s ease-in-out;
+
+          &:hover {
+            background-color: #0d2a3f;
+            border: 0.1vw solid transparent;
           }
         }
 

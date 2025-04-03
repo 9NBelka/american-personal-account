@@ -1,6 +1,11 @@
 import scss from './TextListProducts.module.scss';
 
-export default function TextListProducts({ products, handleEdit, handleDelete }) {
+export default function TextListProducts({
+  products,
+  handleEdit,
+  handleDelete,
+  getAccessLevelName,
+}) {
   // Функция для форматирования даты в формат DD.MM.YYYY
   const formatDate = (dateString) => {
     if (!dateString) return 'Нет даты';
@@ -37,6 +42,7 @@ export default function TextListProducts({ products, handleEdit, handleDelete })
           <td>{product.nameProduct || 'Без названия'}</td>
           <td>{product.categoryProduct || 'Нет категории'}</td>
           <td>{product.priceProduct ? `${product.priceProduct} $` : 'Нет цены'}</td>
+          <td>{getAccessLevelName(product.access)}</td> {/* Новый столбец */}
           <td>{product.available ? 'В продаже' : 'Не в продаже'}</td>
           <td>{formatDate(product.createdAtProduct)}</td>
           <td className={scss.actions}>

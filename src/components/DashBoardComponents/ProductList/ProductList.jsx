@@ -9,7 +9,7 @@ import FilterProducts from './FilterProducts/FilterProducts';
 import clsx from 'clsx';
 
 export default function ProductList() {
-  const { products, fetchAllProducts, deleteProduct } = useAdmin();
+  const { products, fetchAllProducts, deleteProduct, accessLevels } = useAdmin();
   const [editingProductId, setEditingProductId] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -42,19 +42,19 @@ export default function ProductList() {
   }, [products]);
 
   const accessCounts = useCallback(() => {
-    const counts = {
-      all: products.length,
-      vanilla: 0,
-      standard: 0,
-    };
+    const counts = { all: products.length };
+    accessLevels.forEach((level) => {
+      counts[level.id] = 0;
+    });
 
     products.forEach((product) => {
-      if (product.access === 'vanilla') counts.vanilla += 1;
-      if (product.access === 'standard') counts.standard += 1;
+      if (product.access && counts[product.access] !== undefined) {
+        counts[product.access] += 1;
+      }
     });
 
     return counts;
-  }, [products]);
+  }, [products, accessLevels]);
 
   const availableCounts = useCallback(() => {
     const counts = {
@@ -84,6 +84,12 @@ export default function ProductList() {
     setSearchQuery(value);
     setCurrentPage(1);
   }, 300);
+
+  // Функция для получения названия уровня доступа
+  const getAccessLevelName = (accessId) => {
+    const accessLevel = accessLevels.find((level) => level.id === accessId);
+    return accessLevel ? accessLevel.name : accessId || 'Не указан';
+  };
 
   // Фильтрация и сортировка продуктов
   useEffect(() => {
@@ -194,6 +200,7 @@ export default function ProductList() {
         sortOption={sortOption}
         setSortOption={setSortOption}
         debouncedSetSearchQuery={debouncedSetSearchQuery}
+        accessLevels={accessLevels} // Передаем accessLevels
       />
 
       {/* Таблица продуктов */}
@@ -205,6 +212,7 @@ export default function ProductList() {
               products={currentProducts}
               handleEdit={handleEdit}
               handleDelete={handleDelete}
+              getAccessLevelName={getAccessLevelName} // Передаем функцию
             />
           ) : (
             <tbody>

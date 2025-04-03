@@ -42,3 +42,37 @@
     border: 0.1vw solid transparent;
   }
 }
+
+.addedCourseItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3vw 0.5vw;
+  background-color: #333;
+  border: 0.1vw solid #555;
+  border-radius: 0.2vw;
+  margin-bottom: 0.3vw;
+  font-size: 0.7vw;
+  color: #fff;
+}
+
+.courseActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5vw;
+}
+
+.packageSelect {
+  padding: 0.2vw;
+  background-color: #444;
+  border: 0.1vw solid #555;
+  border-radius: 0.2vw;
+  color: #fff;
+  font-size: 0.65vw;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #777;
+  }
+}

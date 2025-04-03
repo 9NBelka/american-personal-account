@@ -39,8 +39,10 @@ export function AuthProvider({ children }) {
   });
   const [courses, setCourses] = useState([]);
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [readNotifications, setReadNotifications] = useState([]); // Новое состояние для прочитанных уведомлений
+  const [readNotifications, setReadNotifications] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [userAccessLevels, setUserAccessLevels] = useState([]);
+  const [accessLevels, setAccessLevels] = useState([]); // Новое состояние для всех уровней доступа
 
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
@@ -50,12 +52,19 @@ export function AuthProvider({ children }) {
       setUserRole(data.role || 'guest');
       setRegistrationDate(data.registrationDate || '');
       setAvatarUrl(data.avatarUrl || null);
-      setReadNotifications(data.readNotifications || []); // Получаем прочитанные уведомления
+      setReadNotifications(data.readNotifications || []);
       const purchasedCourses = data.purchasedCourses || {};
+
+      const accessLevels = Object.values(purchasedCourses)
+        .map((course) => course.access)
+        .filter((access, index, self) => access && self.indexOf(access) === index);
+      setUserAccessLevels(accessLevels);
+
       return { purchasedCourses, role: data.role };
     }
     setAvatarUrl(null);
-    setReadNotifications([]); // Если данных нет, сбрасываем
+    setReadNotifications([]);
+    setUserAccessLevels([]);
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
@@ -163,7 +172,7 @@ export function AuthProvider({ children }) {
         role: 'guest',
         registrationDate,
         avatarUrl: null,
-        readNotifications: [], // Добавляем пустой массив при регистрации
+        readNotifications: [],
       });
 
       await updateProfile(user, {
@@ -283,7 +292,6 @@ export function AuthProvider({ children }) {
     [user, completedLessons],
   );
 
-  // Добавляем функцию resetPassword
   const resetPassword = useCallback(
     async (email) => {
       try {
@@ -315,7 +323,6 @@ export function AuthProvider({ children }) {
     [auth],
   );
 
-  // Новая функция для отметки уведомления как прочитанного
   const markNotificationAsRead = useCallback(
     async (notificationId) => {
       if (!user || !user.uid) return;
@@ -336,9 +343,29 @@ export function AuthProvider({ children }) {
     [user],
   );
 
+  // Загружаем все уровни доступа
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, 'accessLevels'),
+      (snapshot) => {
+        const accessLevelList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAccessLevels(accessLevelList);
+      },
+      (error) => {
+        console.error('Ошибка при загрузке уровней доступа:', error);
+      },
+    );
+
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     if (!user) {
       setNotifications([]);
+      setUserAccessLevels([]);
       return;
     }
 
@@ -349,7 +376,15 @@ export function AuthProvider({ children }) {
           id: doc.id,
           ...doc.data(),
         }));
-        setNotifications(notificationList);
+
+        const filteredNotifications = notificationList.filter((notification) => {
+          if (!notification.accessLevels || notification.accessLevels.length === 0) {
+            return true;
+          }
+          return notification.accessLevels.some((level) => userAccessLevels.includes(level));
+        });
+
+        setNotifications(filteredNotifications);
       },
       (error) => {
         console.error('Ошибка при загрузке уведомлений:', error);
@@ -357,7 +392,7 @@ export function AuthProvider({ children }) {
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, userAccessLevels]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -408,7 +443,9 @@ export function AuthProvider({ children }) {
         setCourses([]);
         setLastCourseId(null);
         setAvatarUrl(null);
-        setReadNotifications([]); // Сбрасываем прочитанные уведомления
+        setReadNotifications([]);
+        setUserAccessLevels([]);
+        setAccessLevels([]); // Сбрасываем уровни доступа
         localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
@@ -442,8 +479,10 @@ export function AuthProvider({ children }) {
     avatarUrl,
     updateUserAvatar,
     resetPassword,
-    readNotifications, // Добавляем в контекст
-    markNotificationAsRead, // Добавляем в контекст
+    readNotifications,
+    markNotificationAsRead,
+    userAccessLevels,
+    accessLevels, // Добавляем в контекст
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
