@@ -1,0 +1,59 @@
+// components/AccountTimer/AccountTimer.module.scss
+.timerContainer {
+  background-color: #1e1e1e;
+  padding: 1vw;
+  border-radius: 0.5vw;
+  margin-bottom: 1vw;
+  text-align: center;
+
+  & .timerTitle {
+    font-size: 1vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    margin-bottom: 0.5vw;
+  }
+
+  & .timer {
+    display: flex;
+    justify-content: center;
+    gap: 1vw;
+    margin-bottom: 0.5vw;
+
+    & .timeBlock {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      & .timeValue {
+        font-size: 1.5vw;
+        color: #2ecc71;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--font-lineh-normal);
+      }
+
+      & .timeLabel {
+        font-size: 0.75vw;
+        color: #888;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+      }
+    }
+  }
+
+  & .moduleInfo {
+    font-size: 0.8vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+
+    & span {
+      color: #2ecc71;
+      font-weight: var(--font-weight-normal);
+    }
+  }
+}

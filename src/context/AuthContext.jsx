@@ -42,7 +42,8 @@ export function AuthProvider({ children }) {
   const [readNotifications, setReadNotifications] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [userAccessLevels, setUserAccessLevels] = useState([]);
-  const [accessLevels, setAccessLevels] = useState([]); // Новое состояние для всех уровней доступа
+  const [accessLevels, setAccessLevels] = useState([]);
+  const [timers, setTimers] = useState([]);
 
   const fetchUserData = useCallback(async (uid) => {
     const userDoc = await getDoc(doc(db, 'users', uid));
@@ -68,63 +69,71 @@ export function AuthProvider({ children }) {
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
-  const fetchCourses = useCallback(async (purchasedCourses) => {
-    const courseDocs = await getDocs(collection(db, 'courses'));
-    if (courseDocs.empty) return [];
+  const fetchCourses = useCallback((purchasedCourses) => {
+    const unsubscribe = onSnapshot(
+      collection(db, 'courses'),
+      (snapshot) => {
+        const courseList = snapshot.docs.map((doc) => {
+          const courseData = doc.data();
+          const hasModules = courseData.modules && Object.keys(courseData.modules).length > 0;
+          const courseAccess = purchasedCourses[doc.id]?.access || 'denied';
+          const isAccessible = courseAccess !== 'denied' && hasModules;
 
-    const courseList = await Promise.all(
-      courseDocs.docs.map(async (doc) => {
-        const courseData = doc.data();
-        const hasModules = courseData.modules && Object.keys(courseData.modules).length > 0;
-        const courseAccess = purchasedCourses[doc.id]?.access || 'denied';
-        const isAccessible = courseAccess !== 'denied' && hasModules;
+          const modulesData = courseData.modules || {};
+          const sortedModuleKeys = Object.keys(modulesData).sort((a, b) => {
+            const aNumber = parseInt(a.replace('module', ''), 10);
+            const bNumber = parseInt(b.replace('module', ''), 10);
+            return aNumber - bNumber;
+          });
+          const modulesArray = sortedModuleKeys.map((moduleId) => ({
+            id: moduleId,
+            moduleTitle: modulesData[moduleId].title,
+            links: modulesData[moduleId].lessons || [],
+            unlockDate: modulesData[moduleId].unlockDate || null,
+          }));
 
-        const modulesData = courseData.modules || {};
-        const sortedModuleKeys = Object.keys(modulesData).sort((a, b) => {
-          const aNumber = parseInt(a.replace('module', ''), 10);
-          const bNumber = parseInt(b.replace('module', ''), 10);
-          return aNumber - bNumber;
+          const totalLessons = modulesArray.reduce((sum, module) => sum + module.links.length, 0);
+          const courseCompletedLessons = purchasedCourses[doc.id]?.completedLessons || {};
+          const completedLessonsCount = Object.values(courseCompletedLessons).reduce(
+            (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
+            0,
+          );
+
+          const allLessons = modulesArray.flatMap((module) => module.links);
+          const totalMinutes = allLessons.reduce((sum, lesson) => {
+            const time = parseInt(lesson.videoTime, 10) || 0;
+            return sum + (isNaN(time) ? 0 : time);
+          }, 0);
+          const totalDuration =
+            totalMinutes >= 60
+              ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+              : `${totalMinutes}m`;
+
+          return {
+            id: doc.id,
+            title:
+              courseData.title ||
+              doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+            category: courseData.category || 'Uncategorized',
+            gitHubRepLink: courseData.gitHubRepLink,
+            description: courseData.description || ' ',
+            available: isAccessible,
+            access: courseAccess,
+            modules: modulesArray,
+            totalLessons,
+            completedLessonsCount,
+            totalDuration,
+          };
         });
-        const modulesArray = sortedModuleKeys.map((moduleId) => ({
-          id: moduleId,
-          moduleTitle: modulesData[moduleId].title,
-          links: modulesData[moduleId].lessons || [],
-        }));
 
-        const totalLessons = modulesArray.reduce((sum, module) => sum + module.links.length, 0);
-        const courseCompletedLessons = purchasedCourses[doc.id]?.completedLessons || {};
-        const completedLessonsCount = Object.values(courseCompletedLessons).reduce(
-          (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
-          0,
-        );
-
-        const allLessons = modulesArray.flatMap((module) => module.links);
-        const totalMinutes = allLessons.reduce((sum, lesson) => {
-          const time = parseInt(lesson.videoTime, 10) || 0;
-          return sum + (isNaN(time) ? 0 : time);
-        }, 0);
-        const totalDuration =
-          totalMinutes >= 60
-            ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
-            : `${totalMinutes}m`;
-
-        return {
-          id: doc.id,
-          title:
-            courseData.title || doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-          category: courseData.category || 'Uncategorized',
-          gitHubRepLink: courseData.gitHubRepLink,
-          description: courseData.description || ' ',
-          available: isAccessible,
-          access: courseAccess,
-          modules: modulesArray,
-          totalLessons,
-          completedLessonsCount,
-          totalDuration,
-        };
-      }),
+        setCourses(courseList);
+      },
+      (error) => {
+        console.error('Ошибка при загрузке курсов:', error);
+      },
     );
-    return courseList;
+
+    return unsubscribe;
   }, []);
 
   const fetchCourseUserCount = useCallback(
@@ -362,6 +371,35 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
+  // Загружаем таймеры и фильтруем их по уровням доступа пользователя
+  useEffect(() => {
+    if (!user || !userAccessLevels.length) {
+      setTimers([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'timers'),
+      (snapshot) => {
+        const timerList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Фильтруем таймеры по уровням доступа пользователя
+        const filteredTimers = timerList.filter((timer) =>
+          userAccessLevels.includes(timer.accessLevel),
+        );
+        setTimers(filteredTimers);
+      },
+      (error) => {
+        console.error('Ошибка при загрузке таймеров:', error);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user, userAccessLevels]);
+
   useEffect(() => {
     if (!user) {
       setNotifications([]);
@@ -420,8 +458,8 @@ export function AuthProvider({ children }) {
           setProgress(initialProgress);
           setCompletedLessons(initialCompletedLessons);
 
-          const courseList = await fetchCourses(purchasedCourses);
-          setCourses(courseList);
+          // Загружаем курсы с подпиской на изменения
+          const unsubscribeCourses = fetchCourses(purchasedCourses);
 
           const defaultCourseId =
             localStorage.getItem('lastCourseId') ||
@@ -429,6 +467,9 @@ export function AuthProvider({ children }) {
             'architecture';
           setLastCourseId(defaultCourseId);
           localStorage.setItem('lastCourseId', defaultCourseId);
+
+          // Очищаем подписку на курсы при выходе пользователя
+          return () => unsubscribeCourses();
         } catch (error) {
           console.error('Ошибка при загрузке данных пользователя:', error);
           setError(error.message);
@@ -445,7 +486,8 @@ export function AuthProvider({ children }) {
         setAvatarUrl(null);
         setReadNotifications([]);
         setUserAccessLevels([]);
-        setAccessLevels([]); // Сбрасываем уровни доступа
+        setAccessLevels([]);
+        setTimers([]);
         localStorage.removeItem('lastCourseId');
       }
       setIsLoading(false);
@@ -482,7 +524,8 @@ export function AuthProvider({ children }) {
     readNotifications,
     markNotificationAsRead,
     userAccessLevels,
-    accessLevels, // Добавляем в контекст
+    accessLevels,
+    timers,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

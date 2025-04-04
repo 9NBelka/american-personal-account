@@ -1,3 +1,4 @@
+// pages/PersonalAccount/PersonalAccount.jsx
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -7,6 +8,7 @@ import AccountCoursesBlock from '../../components/AccountCoursesBlock/AccountCou
 import AccountUserProfileInfo from '../../components/AccountUserProfileInfo/AccountUserProfileInfo';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
 import AccountCourseLessons from '../../components/AccountCourseLessons/AccountCourseLessons';
+import AccountTimer from '../../components/AccountTimer/AccountTimer'; // Импортируем новый компонент
 import scss from './PersonalAccount.module.scss';
 import AccountInfoForCompany from '../../components/AccountInfoForCompany/AccountInfoForCompany';
 import AccountCompanyAndQuestions from '../../components/AccountCompanyAndQuestions/AccountCompanyAndQuestions';
@@ -25,6 +27,7 @@ export default function PersonalAccount() {
     toggleLessonCompletion,
     lastCourseId,
     fetchCourseUserCount,
+    timers, // Добавляем timers из контекста
   } = useAuth();
 
   const [userCount, setUserCount] = useState(0);
@@ -50,7 +53,10 @@ export default function PersonalAccount() {
 
   const activeCourse = courses.find((course) => course.id === lastCourseId && course.available);
 
-  // console.log(activeCourse.totalDuration);
+  // Проверяем, есть ли таймер для уровня доступа активного курса
+  const activeTimer = activeCourse
+    ? timers.find((timer) => timer.courseId === activeCourse.id)
+    : null;
 
   return (
     <div className={scss.personalAccountBackground}>
@@ -64,6 +70,10 @@ export default function PersonalAccount() {
           <div className={scss.mainHalfToHalfBlock}>
             {activeCourse && (
               <div key={activeCourse.id} className={scss.courseLessonsContainer}>
+                {/* Добавляем таймер перед списком уроков */}
+                {activeTimer && (
+                  <AccountTimer courseId={activeCourse.id} modules={activeCourse.modules} />
+                )}
                 <AccountCourseLessons
                   courseId={activeCourse.id}
                   courses={courses}
