@@ -13,6 +13,10 @@ export default function AccountTimer({ courseId, modules }) {
       .filter((module) => {
         if (!module.unlockDate) return false;
         const unlockDate = new Date(module.unlockDate);
+        if (isNaN(unlockDate.getTime())) {
+          console.warn(`Некорректная дата unlockDate в модуле ${module.id}: ${module.unlockDate}`);
+          return false;
+        }
         return unlockDate > now;
       })
       .sort((a, b) => new Date(a.unlockDate) - new Date(b.unlockDate));
@@ -20,55 +24,59 @@ export default function AccountTimer({ courseId, modules }) {
     return futureModules.length > 0 ? futureModules[0] : null;
   }, [modules]);
 
-  // Функция для расчёта оставшегося времени
-  const calculateTimeLeft = useCallback(() => {
-    if (!currentModule) {
-      const nextModule = findNextModule();
-      setCurrentModule(nextModule);
-      if (!nextModule) {
-        setTimeLeft(null);
-        return;
-      }
-      return calculateTimeLeft(); // Рекурсивно вызываем для нового модуля
-    }
-
-    const now = new Date();
-    const unlockDate = new Date(currentModule.unlockDate);
-    const difference = unlockDate - now;
-
-    if (difference <= 0) {
-      // Если время истекло, ищем следующий модуль
-      const nextModule = findNextModule();
-      setCurrentModule(nextModule);
-      if (!nextModule) {
-        setTimeLeft(null);
-        return;
-      }
-      return calculateTimeLeft(); // Рекурсивно вызываем для нового модуля
-    }
-
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-    setTimeLeft({ days, hours, minutes, seconds });
-  }, [currentModule, findNextModule]);
-
-  // Инициализация таймера и обновление при изменении модулей
+  // Инициализация и обновление таймера
   useEffect(() => {
-    // Сбрасываем текущий модуль при изменении modules
-    setCurrentModule(null);
-    setTimeLeft(null);
+    let interval;
 
-    calculateTimeLeft();
+    const updateTimer = () => {
+      const now = new Date();
+      let nextModule = currentModule;
 
-    const interval = setInterval(() => {
-      calculateTimeLeft();
-    }, 1000);
+      // Если текущий модуль не установлен или время истекло, ищем следующий
+      if (!nextModule) {
+        nextModule = findNextModule();
+        setCurrentModule(nextModule);
+      } else {
+        const unlockDate = new Date(nextModule.unlockDate);
+        if (isNaN(unlockDate.getTime())) {
+          console.warn(
+            `Некорректная дата unlockDate в текущем модуле ${nextModule.id}: ${nextModule.unlockDate}`,
+          );
+          nextModule = findNextModule();
+          setCurrentModule(nextModule);
+        } else if (unlockDate <= now) {
+          nextModule = findNextModule();
+          setCurrentModule(nextModule);
+        }
+      }
 
+      // Если модуль не найден, сбрасываем время
+      if (!nextModule) {
+        setTimeLeft(null);
+        return;
+      }
+
+      // Рассчитываем оставшееся время
+      const unlockDate = new Date(nextModule.unlockDate);
+      const difference = unlockDate - now;
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+
+    // Первоначальный расчёт
+    updateTimer();
+
+    // Устанавливаем интервал для обновления каждую секунду
+    interval = setInterval(updateTimer, 1000);
+
+    // Очищаем интервал при размонтировании или изменении modules
     return () => clearInterval(interval);
-  }, [modules, calculateTimeLeft]);
+  }, [modules, currentModule, findNextModule]);
 
   if (!currentModule || !timeLeft) {
     return null; // Если нет модулей с будущей датой открытия, скрываем таймер

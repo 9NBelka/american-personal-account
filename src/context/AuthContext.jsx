@@ -1,4 +1,3 @@
-// context/AuthContext.js
 import { createContext, useContext, useEffect, useCallback, useState } from 'react';
 import { auth, db, storage } from '../firebase';
 import {
@@ -33,6 +32,7 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState({});
   const [completedLessons, setCompletedLessons] = useState({});
+  const [lastModules, setLastModules] = useState({}); // Состояние для lastModule
   const [error, setError] = useState(null);
   const [lastCourseId, setLastCourseId] = useState(() => {
     return localStorage.getItem('lastCourseId') || null;
@@ -61,79 +61,72 @@ export function AuthProvider({ children }) {
         .filter((access, index, self) => access && self.indexOf(access) === index);
       setUserAccessLevels(accessLevels);
 
+      // Больше не считываем lastModule из базы, инициализируем пустым
+      setLastModules({});
+
       return { purchasedCourses, role: data.role };
     }
     setAvatarUrl(null);
     setReadNotifications([]);
     setUserAccessLevels([]);
+    setLastModules({});
     return { purchasedCourses: {}, role: 'guest' };
   }, []);
 
-  const fetchCourses = useCallback((purchasedCourses) => {
-    const unsubscribe = onSnapshot(
-      collection(db, 'courses'),
-      (snapshot) => {
-        const courseList = snapshot.docs.map((doc) => {
-          const courseData = doc.data();
-          const hasModules = courseData.modules && Object.keys(courseData.modules).length > 0;
-          const courseAccess = purchasedCourses[doc.id]?.access || 'denied';
-          const isAccessible = courseAccess !== 'denied' && hasModules;
+  const fetchCourses = useCallback(async (purchasedCourses) => {
+    const courseDocs = await getDocs(collection(db, 'courses'));
+    if (courseDocs.empty) return [];
 
-          const modulesData = courseData.modules || {};
-          const sortedModuleKeys = Object.keys(modulesData).sort((a, b) => {
-            const aNumber = parseInt(a.replace('module', ''), 10);
-            const bNumber = parseInt(b.replace('module', ''), 10);
-            return aNumber - bNumber;
-          });
-          const modulesArray = sortedModuleKeys.map((moduleId) => ({
-            id: moduleId,
-            moduleTitle: modulesData[moduleId].title,
-            links: modulesData[moduleId].lessons || [],
-            unlockDate: modulesData[moduleId].unlockDate || null,
-          }));
+    const courseList = await Promise.all(
+      courseDocs.docs.map(async (doc) => {
+        const courseData = doc.data();
+        const hasModules = courseData.modules && Object.keys(courseData.modules).length > 0;
+        const courseAccess = purchasedCourses[doc.id]?.access || 'denied';
+        const isAccessible = courseAccess !== 'denied' && hasModules;
 
-          const totalLessons = modulesArray.reduce((sum, module) => sum + module.links.length, 0);
-          const courseCompletedLessons = purchasedCourses[doc.id]?.completedLessons || {};
-          const completedLessonsCount = Object.values(courseCompletedLessons).reduce(
-            (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
-            0,
-          );
+        const modulesData = courseData.modules || {};
+        const sortedModuleKeys = Object.keys(modulesData).sort((a, b) => a.localeCompare(b));
 
-          const allLessons = modulesArray.flatMap((module) => module.links);
-          const totalMinutes = allLessons.reduce((sum, lesson) => {
-            const time = parseInt(lesson.videoTime, 10) || 0;
-            return sum + (isNaN(time) ? 0 : time);
-          }, 0);
-          const totalDuration =
-            totalMinutes >= 60
-              ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
-              : `${totalMinutes}m`;
+        const modulesArray = sortedModuleKeys.map((moduleId) => ({
+          id: moduleId,
+          moduleTitle: modulesData[moduleId].title,
+          links: modulesData[moduleId].lessons || [],
+        }));
 
-          return {
-            id: doc.id,
-            title:
-              courseData.title ||
-              doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-            category: courseData.category || 'Uncategorized',
-            gitHubRepLink: courseData.gitHubRepLink,
-            description: courseData.description || ' ',
-            available: isAccessible,
-            access: courseAccess,
-            modules: modulesArray,
-            totalLessons,
-            completedLessonsCount,
-            totalDuration,
-          };
-        });
+        const totalLessons = modulesArray.reduce((sum, module) => sum + module.links.length, 0);
+        const courseCompletedLessons = purchasedCourses[doc.id]?.completedLessons || {};
+        const completedLessonsCount = Object.values(courseCompletedLessons).reduce(
+          (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
+          0,
+        );
 
-        setCourses(courseList);
-      },
-      (error) => {
-        console.error('Ошибка при загрузке курсов:', error);
-      },
+        const allLessons = modulesArray.flatMap((module) => module.links);
+        const totalMinutes = allLessons.reduce((sum, lesson) => {
+          const time = parseInt(lesson.videoTime, 10) || 0;
+          return sum + (isNaN(time) ? 0 : time);
+        }, 0);
+        const totalDuration =
+          totalMinutes >= 60
+            ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+            : `${totalMinutes}m`;
+
+        return {
+          id: doc.id,
+          title:
+            courseData.title || doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          category: courseData.category || 'Uncategorized',
+          gitHubRepLink: courseData.gitHubRepLink,
+          description: courseData.description || ' ',
+          available: isAccessible,
+          access: courseAccess,
+          modules: modulesArray,
+          totalLessons,
+          completedLessonsCount,
+          totalDuration,
+        };
+      }),
     );
-
-    return unsubscribe;
+    return courseList;
   }, []);
 
   const fetchCourseUserCount = useCallback(
@@ -202,19 +195,32 @@ export function AuthProvider({ children }) {
           completedLessons: {},
           progress: 0,
         };
-        setCompletedLessons((prev) => ({
-          ...prev,
-          [courseId]: courseData.completedLessons || {},
-        }));
-        setProgress((prev) => ({
-          ...prev,
-          [courseId]: courseData.progress || 0,
-        }));
-        setLastCourseId(courseId);
-        localStorage.setItem('lastCourseId', courseId);
+
+        const course = courses.find((c) => c.id === courseId);
+        if (course) {
+          const validCompletedLessons = {};
+          course.modules.forEach((module) => {
+            if (courseData.completedLessons[module.id]) {
+              validCompletedLessons[module.id] = courseData.completedLessons[module.id].filter(
+                (index) => index < module.links.length,
+              );
+            }
+          });
+
+          setCompletedLessons((prev) => ({
+            ...prev,
+            [courseId]: validCompletedLessons,
+          }));
+          setProgress((prev) => ({
+            ...prev,
+            [courseId]: courseData.progress || 0,
+          }));
+          setLastCourseId(courseId);
+          localStorage.setItem('lastCourseId', courseId);
+        }
       }
     },
-    [user],
+    [user, courses],
   );
 
   const updateUserName = useCallback(
@@ -263,6 +269,12 @@ export function AuthProvider({ children }) {
     async (courseId, moduleId, lessonIndex, totalLessons) => {
       if (!user || !user.uid) return;
 
+      const course = courses.find((c) => c.id === courseId);
+      if (!course) return;
+
+      const module = course.modules.find((m) => m.id === moduleId);
+      if (!module) return;
+
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
       if (userDoc.exists()) {
@@ -283,6 +295,7 @@ export function AuthProvider({ children }) {
         );
         const newProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
 
+        // Обновляем только completedLessons и progress
         await updateDoc(userRef, {
           [`purchasedCourses.${courseId}.completedLessons`]: updatedCompletedLessons,
           [`purchasedCourses.${courseId}.progress`]: Math.round(newProgress),
@@ -296,9 +309,27 @@ export function AuthProvider({ children }) {
           ...prev,
           [courseId]: newProgress,
         }));
+        // Обновляем lastModules в состоянии
+        setLastModules((prev) => ({
+          ...prev,
+          [courseId]: moduleId,
+        }));
       }
     },
-    [user, completedLessons],
+    [user, completedLessons, courses],
+  );
+
+  const updateLastModule = useCallback(
+    async (courseId, moduleId) => {
+      if (!user || !user.uid || !courseId) return;
+
+      // Больше не обновляем базу данных, только состояние
+      setLastModules((prev) => ({
+        ...prev,
+        [courseId]: moduleId,
+      }));
+    },
+    [user],
   );
 
   const resetPassword = useCallback(
@@ -352,7 +383,6 @@ export function AuthProvider({ children }) {
     [user],
   );
 
-  // Загружаем все уровни доступа
   useEffect(() => {
     const unsubscribe = onSnapshot(
       collection(db, 'accessLevels'),
@@ -371,7 +401,6 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // Загружаем таймеры и фильтруем их по уровням доступа пользователя
   useEffect(() => {
     if (!user || !userAccessLevels.length) {
       setTimers([]);
@@ -386,7 +415,6 @@ export function AuthProvider({ children }) {
           ...doc.data(),
         }));
 
-        // Фильтруем таймеры по уровням доступа пользователя
         const filteredTimers = timerList.filter((timer) =>
           userAccessLevels.includes(timer.accessLevel),
         );
@@ -457,9 +485,10 @@ export function AuthProvider({ children }) {
           });
           setProgress(initialProgress);
           setCompletedLessons(initialCompletedLessons);
+          setLastModules({}); // Инициализируем пустым
 
-          // Загружаем курсы с подпиской на изменения
-          const unsubscribeCourses = fetchCourses(purchasedCourses);
+          const courseList = await fetchCourses(purchasedCourses);
+          setCourses(courseList);
 
           const defaultCourseId =
             localStorage.getItem('lastCourseId') ||
@@ -467,9 +496,6 @@ export function AuthProvider({ children }) {
             'architecture';
           setLastCourseId(defaultCourseId);
           localStorage.setItem('lastCourseId', defaultCourseId);
-
-          // Очищаем подписку на курсы при выходе пользователя
-          return () => unsubscribeCourses();
         } catch (error) {
           console.error('Ошибка при загрузке данных пользователя:', error);
           setError(error.message);
@@ -481,6 +507,7 @@ export function AuthProvider({ children }) {
         setRegistrationDate('');
         setCompletedLessons({});
         setProgress({});
+        setLastModules({});
         setCourses([]);
         setLastCourseId(null);
         setAvatarUrl(null);
@@ -504,6 +531,7 @@ export function AuthProvider({ children }) {
     isLoading,
     progress,
     completedLessons,
+    lastModules,
     courses,
     notifications,
     setProgress,
@@ -526,6 +554,7 @@ export function AuthProvider({ children }) {
     userAccessLevels,
     accessLevels,
     timers,
+    updateLastModule,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

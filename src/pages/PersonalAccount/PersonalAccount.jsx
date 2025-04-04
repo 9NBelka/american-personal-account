@@ -8,10 +8,12 @@ import AccountCoursesBlock from '../../components/AccountCoursesBlock/AccountCou
 import AccountUserProfileInfo from '../../components/AccountUserProfileInfo/AccountUserProfileInfo';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
 import AccountCourseLessons from '../../components/AccountCourseLessons/AccountCourseLessons';
-import AccountTimer from '../../components/AccountTimer/AccountTimer'; // Импортируем новый компонент
+import AccountTimer from '../../components/AccountTimer/AccountTimer';
 import scss from './PersonalAccount.module.scss';
 import AccountInfoForCompany from '../../components/AccountInfoForCompany/AccountInfoForCompany';
 import AccountCompanyAndQuestions from '../../components/AccountCompanyAndQuestions/AccountCompanyAndQuestions';
+import { doc, onSnapshot, getDoc } from 'firebase/firestore'; // Импортируем onSnapshot
+import { db } from '../../firebase'; // Импортируем db
 
 export default function PersonalAccount() {
   const navigate = useNavigate();
@@ -27,15 +29,101 @@ export default function PersonalAccount() {
     toggleLessonCompletion,
     lastCourseId,
     fetchCourseUserCount,
-    timers, // Добавляем timers из контекста
+    timers,
   } = useAuth();
 
   const [userCount, setUserCount] = useState(0);
+  const [activeCourse, setActiveCourse] = useState(null); // Состояние для активного курса
+
+  // Загружаем количество пользователей для курса
   useEffect(() => {
     if (lastCourseId) {
       fetchCourseUserCount(lastCourseId).then(setUserCount);
     }
   }, [lastCourseId, fetchCourseUserCount]);
+
+  // Инициализируем activeCourse из courses и подписываемся на изменения
+  useEffect(() => {
+    // Ищем начальный activeCourse из courses
+    const initialActiveCourse = courses.find(
+      (course) => course.id === lastCourseId && course.available,
+    );
+    setActiveCourse(initialActiveCourse);
+
+    if (!lastCourseId || !initialActiveCourse) return;
+
+    // Подписываемся на изменения в документе курса
+    const courseRef = doc(db, 'courses', lastCourseId);
+    const unsubscribe = onSnapshot(
+      courseRef,
+      (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const courseData = docSnapshot.data();
+          const hasModules = courseData.modules && Object.keys(courseData.modules).length > 0;
+          const purchasedCourses = user
+            ? getDoc(doc(db, 'users', user.uid)).then((doc) => doc.data().purchasedCourses) || {}
+            : {};
+          const courseAccess = purchasedCourses[lastCourseId]?.access || 'denied';
+          const isAccessible = courseAccess !== 'denied' && hasModules;
+
+          const modulesData = courseData.modules || {};
+          const sortedModuleKeys = Object.keys(modulesData).sort((a, b) => {
+            const aNumber = parseInt(a.replace('module', ''), 10);
+            const bNumber = parseInt(b.replace('module', ''), 10);
+            return aNumber - bNumber;
+          });
+          const modulesArray = sortedModuleKeys.map((moduleId) => ({
+            id: moduleId,
+            moduleTitle: modulesData[moduleId].title,
+            links: modulesData[moduleId].lessons || [],
+            unlockDate: modulesData[moduleId].unlockDate || null,
+          }));
+
+          const totalLessons = modulesArray.reduce((sum, module) => sum + module.links.length, 0);
+          const courseCompletedLessons = purchasedCourses[lastCourseId]?.completedLessons || {};
+          const completedLessonsCount = Object.values(courseCompletedLessons).reduce(
+            (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
+            0,
+          );
+
+          const allLessons = modulesArray.flatMap((module) => module.links);
+          const totalMinutes = allLessons.reduce((sum, lesson) => {
+            const time = parseInt(lesson.videoTime, 10) || 0;
+            return sum + (isNaN(time) ? 0 : time);
+          }, 0);
+          const totalDuration =
+            totalMinutes >= 60
+              ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+              : `${totalMinutes}m`;
+
+          const updatedCourse = {
+            id: docSnapshot.id,
+            title:
+              courseData.title ||
+              docSnapshot.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+            category: courseData.category || 'Uncategorized',
+            gitHubRepLink: courseData.gitHubRepLink,
+            description: courseData.description || ' ',
+            available: isAccessible,
+            access: courseAccess,
+            modules: modulesArray,
+            totalLessons,
+            completedLessonsCount,
+            totalDuration,
+          };
+
+          setActiveCourse(updatedCourse);
+        } else {
+          setActiveCourse(null);
+        }
+      },
+      (error) => {
+        console.error('Ошибка при подписке на курс:', error);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [lastCourseId, courses, user]);
 
   if (authLoading) {
     return <AccountLoadingIndicator />;
@@ -50,8 +138,6 @@ export default function PersonalAccount() {
   const handleLessonClick = (courseId, videoUrl) => {
     console.log(`Selected video for course ${courseId}: ${videoUrl}`);
   };
-
-  const activeCourse = courses.find((course) => course.id === lastCourseId && course.available);
 
   // Проверяем, есть ли таймер для уровня доступа активного курса
   const activeTimer = activeCourse

@@ -1,10 +1,11 @@
 import React from 'react';
-import scss from './PlayListModuleBlock.module.scss'; // Убедись, что путь правильный
+import scss from './PlayListModuleBlock.module.scss';
 import PlayListModuleHeader from '../PlayListModuleHeader/PlayListModuleHeader';
 import CourseLessonsList from '../CourseLessonsList/CourseLessonsList';
 
 export default function PlayListModuleBlock({
   courseTitle,
+  courseId,
   modules,
   completedLessonsCount,
   totalLessons,
@@ -17,8 +18,7 @@ export default function PlayListModuleBlock({
   getTotalDuration,
   totalDuration,
 }) {
-  // Сортируем перед рендерингом
-  const sortedModules = [...modules].sort((a, b) => a.id.localeCompare(b.id)); // Сортировка по строковым ID
+  const sortedModules = [...modules].sort((a, b) => a.id.localeCompare(b.id));
 
   return (
     <div className={scss.moduleBlock}>
@@ -31,6 +31,7 @@ export default function PlayListModuleBlock({
       {sortedModules.map((module, index) => (
         <CourseLessonsList
           key={module.id}
+          courseId={courseId}
           module={module}
           index={index}
           expandedModule={expandedModule}

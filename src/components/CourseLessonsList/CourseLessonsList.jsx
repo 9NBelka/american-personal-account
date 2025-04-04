@@ -2,8 +2,10 @@ import React, { useEffect } from 'react';
 import scss from './CourseLessonsList.module.scss';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import clsx from 'clsx';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CourseLessonsList({
+  courseId,
   module,
   index,
   expandedModule,
@@ -14,6 +16,7 @@ export default function CourseLessonsList({
   getCompletedCount,
   getTotalDuration,
 }) {
+  const { updateLastModule } = useAuth();
   const { completed, total } = getCompletedCount(module.id, module.links);
   const totalDuration = getTotalDuration(module.links);
 
@@ -27,8 +30,18 @@ export default function CourseLessonsList({
     return `${minutes}m`;
   };
 
-  const handleToggle = () => {
+  const handleToggle = (e) => {
+    e.stopPropagation();
+    console.log('Handle toggle called for module index:', index);
     toggleModule(index);
+  };
+
+  const handleLessonClickWithUpdate = (videoUrl) => {
+    console.log('Lesson selected, videoUrl:', videoUrl);
+    if (courseId) {
+      updateLastModule(courseId, module.id);
+    }
+    handleLessonClick(videoUrl);
   };
 
   return (
@@ -57,14 +70,19 @@ export default function CourseLessonsList({
             return (
               <li
                 key={lessonIndex}
-                onClick={() => handleLessonClick(lesson.videoUrl)}
+                onClick={() => handleLessonClickWithUpdate(lesson.videoUrl)}
                 className={clsx(scss.lesson, isCompleted && scss.completed)}>
                 <div className={scss.checkboxAndTitleLesson}>
-                  <label>
+                  <label
+                    onClick={(e) => e.stopPropagation()} // Предотвращаем всплытие события от чекбокса
+                  >
                     <input
                       type='checkbox'
                       checked={isCompleted}
-                      onChange={() => toggleLessonCompletion(module.id, lessonIndex)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleLessonCompletion(module.id, lessonIndex);
+                      }}
                       className={scss.checkbox}
                     />
                     <span className={scss.checkmark}></span>
