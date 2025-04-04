@@ -1,13 +1,19 @@
 .moduleMainBlock {
   display: flex;
   flex-direction: column;
+  cursor: pointer;
+  &.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f0f0f0; // Серый фон для заблокированного модуля
+  }
 }
 
 .moduleTitleAndIconBlock {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  cursor: pointer;
+
   padding: 0.8vw 0.75vw;
   padding-left: 1.5vw;
   border-top: 0.1vw solid var(--color-lightGrey);

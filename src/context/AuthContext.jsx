@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState({});
   const [completedLessons, setCompletedLessons] = useState({});
-  const [lastModules, setLastModules] = useState({}); // Состояние для lastModule
+  const [lastModules, setLastModules] = useState({});
   const [error, setError] = useState(null);
   const [lastCourseId, setLastCourseId] = useState(() => {
     return localStorage.getItem('lastCourseId') || null;
@@ -61,7 +61,6 @@ export function AuthProvider({ children }) {
         .filter((access, index, self) => access && self.indexOf(access) === index);
       setUserAccessLevels(accessLevels);
 
-      // Больше не считываем lastModule из базы, инициализируем пустым
       setLastModules({});
 
       return { purchasedCourses, role: data.role };
@@ -91,6 +90,7 @@ export function AuthProvider({ children }) {
           id: moduleId,
           moduleTitle: modulesData[moduleId].title,
           links: modulesData[moduleId].lessons || [],
+          unlockDate: modulesData[moduleId].unlockDate || null, // Добавляем unlockDate
         }));
 
         const totalLessons = modulesArray.reduce((sum, module) => sum + module.links.length, 0);
@@ -295,7 +295,6 @@ export function AuthProvider({ children }) {
         );
         const newProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
 
-        // Обновляем только completedLessons и progress
         await updateDoc(userRef, {
           [`purchasedCourses.${courseId}.completedLessons`]: updatedCompletedLessons,
           [`purchasedCourses.${courseId}.progress`]: Math.round(newProgress),
@@ -309,7 +308,6 @@ export function AuthProvider({ children }) {
           ...prev,
           [courseId]: newProgress,
         }));
-        // Обновляем lastModules в состоянии
         setLastModules((prev) => ({
           ...prev,
           [courseId]: moduleId,
@@ -323,7 +321,6 @@ export function AuthProvider({ children }) {
     async (courseId, moduleId) => {
       if (!user || !user.uid || !courseId) return;
 
-      // Больше не обновляем базу данных, только состояние
       setLastModules((prev) => ({
         ...prev,
         [courseId]: moduleId,
@@ -485,7 +482,7 @@ export function AuthProvider({ children }) {
           });
           setProgress(initialProgress);
           setCompletedLessons(initialCompletedLessons);
-          setLastModules({}); // Инициализируем пустым
+          setLastModules({});
 
           const courseList = await fetchCourses(purchasedCourses);
           setCourses(courseList);

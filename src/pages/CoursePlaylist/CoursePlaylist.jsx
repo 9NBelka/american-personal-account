@@ -43,79 +43,128 @@ export default function CoursePlaylist() {
   const [videoUrl, setVideoUrl] = useState('');
   const [expandedModule, setExpandedModule] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isManualSelection, setIsManualSelection] = useState(false); // Флаг для ручного выбора урока
+  const [isManualSelection, setIsManualSelection] = useState(false);
   const [activeTab, setActiveTab] = useState('Overview');
+  const [lockMessage, setLockMessage] = useState(''); // Сообщение о блокировке
 
-  // Функция для поиска следующего непросмотренного урока
-  const findNextUncompletedLesson = useCallback((course, courseCompletedLessons, lastModuleId) => {
-    let nextLessonUrl = '';
-    let nextModuleIndex = null;
-    let allCompleted = true;
+  // Функция для проверки, заблокирован ли модуль
+  const isModuleLocked = useCallback((module) => {
+    if (!module.unlockDate) return false;
+    const unlockDate = new Date(module.unlockDate);
+    const now = new Date();
+    return now < unlockDate;
+  }, []);
 
-    if (lastModuleId) {
-      const lastModuleIndex = course.modules.findIndex((m) => m.id === lastModuleId);
-      if (lastModuleIndex !== -1) {
-        const module = course.modules[lastModuleIndex];
-        const moduleCompletedLessons = courseCompletedLessons[module.id] || [];
+  // Форматирование даты для сообщения
+  const formatUnlockDate = useCallback((unlockDate) => {
+    if (!unlockDate) return '';
+    const date = new Date(unlockDate);
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }, []);
 
-        for (let j = 0; j < module.links.length; j++) {
-          if (!moduleCompletedLessons.includes(j)) {
-            nextLessonUrl = module.links[j].videoUrl;
-            nextModuleIndex = lastModuleIndex;
-            allCompleted = false;
-            break;
-          }
-        }
+  // Функция для поиска следующего непросмотренного урока с учетом блокировки
+  const findNextUncompletedLesson = useCallback(
+    (course, courseCompletedLessons, lastModuleId) => {
+      let nextLessonUrl = '';
+      let nextModuleIndex = null;
+      let allCompleted = true;
 
-        if (!nextLessonUrl) {
-          for (let i = lastModuleIndex + 1; i < course.modules.length; i++) {
-            const nextModule = course.modules[i];
-            const nextModuleCompletedLessons = courseCompletedLessons[nextModule.id] || [];
+      if (lastModuleId) {
+        const lastModuleIndex = course.modules.findIndex((m) => m.id === lastModuleId);
+        if (lastModuleIndex !== -1) {
+          const module = course.modules[lastModuleIndex];
+          if (!isModuleLocked(module)) {
+            // Проверяем, не заблокирован ли модуль
+            const moduleCompletedLessons = courseCompletedLessons[module.id] || [];
 
-            for (let j = 0; j < nextModule.links.length; j++) {
-              if (!nextModuleCompletedLessons.includes(j)) {
-                nextLessonUrl = nextModule.links[j].videoUrl;
-                nextModuleIndex = i;
+            for (let j = 0; j < module.links.length; j++) {
+              if (!moduleCompletedLessons.includes(j)) {
+                nextLessonUrl = module.links[j].videoUrl;
+                nextModuleIndex = lastModuleIndex;
                 allCompleted = false;
                 break;
               }
             }
-            if (nextLessonUrl) break;
+
+            if (!nextLessonUrl) {
+              for (let i = lastModuleIndex + 1; i < course.modules.length; i++) {
+                const nextModule = course.modules[i];
+                if (isModuleLocked(nextModule)) continue; // Пропускаем заблокированные модули
+                const nextModuleCompletedLessons = courseCompletedLessons[nextModule.id] || [];
+
+                for (let j = 0; j < nextModule.links.length; j++) {
+                  if (!nextModuleCompletedLessons.includes(j)) {
+                    nextLessonUrl = nextModule.links[j].videoUrl;
+                    nextModuleIndex = i;
+                    allCompleted = false;
+                    break;
+                  }
+                }
+                if (nextLessonUrl) break;
+              }
+            }
           }
         }
       }
-    }
 
-    if (!nextLessonUrl) {
-      for (let i = course.modules.length - 1; i >= 0; i--) {
-        const module = course.modules[i];
-        const moduleCompletedLessons = courseCompletedLessons[module.id] || [];
+      if (!nextLessonUrl) {
+        for (let i = course.modules.length - 1; i >= 0; i--) {
+          const module = course.modules[i];
+          if (isModuleLocked(module)) continue; // Пропускаем заблокированные модули
+          const moduleCompletedLessons = courseCompletedLessons[module.id] || [];
 
-        for (let j = module.links.length - 1; j >= 0; j--) {
-          if (!moduleCompletedLessons.includes(j)) {
-            nextLessonUrl = module.links[j].videoUrl;
-            nextModuleIndex = i;
-            allCompleted = false;
-            break;
+          for (let j = module.links.length - 1; j >= 0; j--) {
+            if (!moduleCompletedLessons.includes(j)) {
+              nextLessonUrl = module.links[j].videoUrl;
+              nextModuleIndex = i;
+              allCompleted = false;
+              break;
+            }
           }
+          if (nextLessonUrl) break;
         }
-        if (nextLessonUrl) break;
       }
-    }
 
-    if (allCompleted && course.modules.length > 0) {
-      const lastModule = course.modules[course.modules.length - 1];
-      nextLessonUrl = lastModule.links[lastModule.links.length - 1].videoUrl;
-      nextModuleIndex = course.modules.length - 1;
-    }
+      if (allCompleted && course.modules.length > 0) {
+        for (let i = course.modules.length - 1; i >= 0; i--) {
+          const module = course.modules[i];
+          if (isModuleLocked(module)) continue; // Пропускаем заблокированные модули
+          nextLessonUrl = module.links[module.links.length - 1].videoUrl;
+          nextModuleIndex = i;
+          break;
+        }
+      }
 
-    if (!nextLessonUrl && course.modules.length > 0) {
-      nextLessonUrl = course.modules[0]?.links[0]?.videoUrl || '';
-      nextModuleIndex = 0;
-    }
+      if (!nextLessonUrl && course.modules.length > 0) {
+        for (let i = 0; i < course.modules.length; i++) {
+          const module = course.modules[i];
+          if (isModuleLocked(module)) continue; // Пропускаем заблокированные модули
+          nextLessonUrl = module.links[0]?.videoUrl || '';
+          nextModuleIndex = i;
+          break;
+        }
+      }
 
-    return { nextLessonUrl, nextModuleIndex };
-  }, []);
+      // Если урок не найден из-за блокировки, устанавливаем сообщение
+      if (!nextLessonUrl) {
+        const firstLockedModule = course.modules.find((module) => isModuleLocked(module));
+        if (firstLockedModule) {
+          setLockMessage(
+            `Этот урок заблокирован до ${formatUnlockDate(firstLockedModule.unlockDate)}`,
+          );
+        }
+      } else {
+        setLockMessage('');
+      }
+
+      return { nextLessonUrl, nextModuleIndex };
+    },
+    [isModuleLocked, formatUnlockDate],
+  );
 
   // Начальная загрузка данных
   useEffect(() => {
@@ -154,16 +203,16 @@ export default function CoursePlaylist() {
 
       setVideoUrl(nextLessonUrl);
       setExpandedModule((prev) => (prev === null ? nextModuleIndex : prev));
-      setIsManualSelection(false); // Сбрасываем флаг при загрузке нового курса
+      setIsManualSelection(false);
       setLoading(false);
     };
 
     loadData();
-  }, [user, userRole, authLoading, courseId, courses, navigate]);
+  }, [user, userRole, authLoading, courseId, courses, navigate, findNextUncompletedLesson]);
 
   // Отслеживание изменений completedLessons и lastModules для обновления videoUrl
   useEffect(() => {
-    if (loading || isManualSelection) return; // Пропускаем, если данные еще загружаются или пользователь вручную выбрал урок
+    if (loading || isManualSelection) return;
 
     const course = courses.find((c) => c.id === courseId);
     if (!course) return;
@@ -189,11 +238,33 @@ export default function CoursePlaylist() {
     findNextUncompletedLesson,
   ]);
 
-  const handleLessonClick = useCallback((videoUrl) => {
-    console.log('Lesson clicked, setting videoUrl:', videoUrl);
-    setVideoUrl(videoUrl);
-    setIsManualSelection(true); // Устанавливаем флаг ручного выбора
-  }, []);
+  const handleLessonClick = useCallback(
+    (videoUrl) => {
+      const course = courses.find((c) => c.id === courseId);
+      if (!course) return;
+
+      // Находим модуль, содержащий урок
+      let lessonModule = null;
+      for (const module of course.modules) {
+        if (module.links.some((lesson) => lesson.videoUrl === videoUrl)) {
+          lessonModule = module;
+          break;
+        }
+      }
+
+      if (lessonModule && isModuleLocked(lessonModule)) {
+        setLockMessage(`Этот урок заблокирован до ${formatUnlockDate(lessonModule.unlockDate)}`);
+        setVideoUrl(''); // Сбрасываем videoUrl, чтобы видео не воспроизводилось
+        return;
+      }
+
+      console.log('Lesson clicked, setting videoUrl:', videoUrl);
+      setVideoUrl(videoUrl);
+      setLockMessage(''); // Сбрасываем сообщение о блокировке
+      setIsManualSelection(true);
+    },
+    [courseId, courses, isModuleLocked, formatUnlockDate],
+  );
 
   const toggleModule = useCallback(
     (moduleIndex) => {
@@ -226,7 +297,7 @@ export default function CoursePlaylist() {
       <div className={scss.container}>
         <div className={scss.playlistContainer}>
           <div className={scss.videoSection}>
-            <PlayListVideoSection videoUrl={videoUrl} />
+            <PlayListVideoSection videoUrl={videoUrl} lockMessage={lockMessage} />
             <div className={scss.videoSectionMenu}>
               <button
                 className={clsx(scss.tabButton, activeTab === 'Overview' && scss.active)}

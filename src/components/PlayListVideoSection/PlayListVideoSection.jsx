@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import scss from './PlayListVideoSection.module.scss';
 import PlayListLoadingIndicator from '../PlayListLoadingIndicator/PlayListLoadingIndicator';
 
-export default function PlayListVideoSection({ videoUrl }) {
+export default function PlayListVideoSection({ videoUrl, lockMessage }) {
   // Добавляем параметр autoplay к URL
   const src = `https://iframe.dacast.com/vod/${videoUrl}?autoplay=1&muted=1`;
-  const [isLoading, setIsLoading] = useState(true); // Состояние загрузки
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Функция, которая срабатывает, когда iframe загрузился
   const handleLoad = () => {
     setIsLoading(false);
   };
@@ -15,14 +14,16 @@ export default function PlayListVideoSection({ videoUrl }) {
   return (
     <div className={scss.videoSection}>
       {isLoading && videoUrl && <PlayListLoadingIndicator />}
-      {videoUrl ? (
+      {lockMessage ? (
+        <p className={scss.lockMessage}>{lockMessage}</p>
+      ) : videoUrl ? (
         <iframe
           src={src}
           title='Course Video'
           allowFullScreen
-          allow='autoplay' // Разрешаем автоплей
-          onLoad={handleLoad} // Событие загрузки iframe
-          style={{ display: isLoading ? 'none' : 'block' }} // Исправлено с 'flex' на 'block'
+          allow='autoplay'
+          onLoad={handleLoad}
+          style={{ display: isLoading ? 'none' : 'block' }}
         />
       ) : (
         <p>Select a lesson to view</p>

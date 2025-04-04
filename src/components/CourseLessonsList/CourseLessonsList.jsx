@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import scss from './CourseLessonsList.module.scss';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import clsx from 'clsx';
@@ -20,6 +20,36 @@ export default function CourseLessonsList({
   const { completed, total } = getCompletedCount(module.id, module.links);
   const totalDuration = getTotalDuration(module.links);
 
+  const [isModuleLocked, setIsModuleLocked] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Проверяем, заблокирован ли модуль
+  useEffect(() => {
+    const checkUnlockDate = () => {
+      if (!module.unlockDate) {
+        setIsModuleLocked(false);
+        return;
+      }
+
+      const unlockDate = new Date(module.unlockDate);
+      const now = new Date();
+      setCurrentDate(now);
+
+      if (now < unlockDate) {
+        setIsModuleLocked(true);
+      } else {
+        setIsModuleLocked(false);
+      }
+    };
+
+    checkUnlockDate();
+
+    // Периодически проверяем текущую дату (каждые 10 секунд)
+    const interval = setInterval(checkUnlockDate, 10000);
+
+    return () => clearInterval(interval);
+  }, [module.unlockDate]);
+
   const formatVideoTime = (minutes) => {
     if (!minutes) return '';
     const hours = Math.floor(minutes / 60);
@@ -30,14 +60,26 @@ export default function CourseLessonsList({
     return `${minutes}m`;
   };
 
+  const formatUnlockDate = (unlockDate) => {
+    if (!unlockDate) return '';
+    const date = new Date(unlockDate);
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
   const handleToggle = (e) => {
     e.stopPropagation();
-    console.log('Handle toggle called for module index:', index);
+    if (isModuleLocked) return; // Не открываем модуль, если он заблокирован
+
     toggleModule(index);
   };
 
   const handleLessonClickWithUpdate = (videoUrl) => {
-    console.log('Lesson selected, videoUrl:', videoUrl);
+    if (isModuleLocked) return; // Не воспроизводим урок, если модуль заблокирован
+
     if (courseId) {
       updateLastModule(courseId, module.id);
     }
@@ -45,7 +87,7 @@ export default function CourseLessonsList({
   };
 
   return (
-    <div key={module.id} className={scss.moduleMainBlock}>
+    <div key={module.id} className={clsx(scss.moduleMainBlock, isModuleLocked && scss.locked)}>
       <div className={scss.moduleTitleAndIconBlock} onClick={handleToggle}>
         <div className={scss.moduleTitleAndCountBlock}>
           <h3 className={scss.moduleTitle}>
@@ -53,17 +95,20 @@ export default function CourseLessonsList({
             {module.moduleTitle}
           </h3>
           <span className={scss.moduleCompletionCount}>
-            {' '}
             {completed}/{total} | {totalDuration}
           </span>
         </div>
-        {expandedModule === index ? (
+        {isModuleLocked ? (
+          <span className={scss.lockMessage}>
+            Модуль откроется {formatUnlockDate(module.unlockDate)}
+          </span>
+        ) : expandedModule === index ? (
           <BsChevronDown className={scss.icon} />
         ) : (
           <BsChevronRight className={scss.icon} />
         )}
       </div>
-      {expandedModule === index && (
+      {expandedModule === index && !isModuleLocked && (
         <ul className={scss.lessonsList}>
           {module.links.map((lesson, lessonIndex) => {
             const isCompleted = (completedLessons[module.id] || []).includes(lessonIndex);
@@ -73,9 +118,7 @@ export default function CourseLessonsList({
                 onClick={() => handleLessonClickWithUpdate(lesson.videoUrl)}
                 className={clsx(scss.lesson, isCompleted && scss.completed)}>
                 <div className={scss.checkboxAndTitleLesson}>
-                  <label
-                    onClick={(e) => e.stopPropagation()} // Предотвращаем всплытие события от чекбокса
-                  >
+                  <label onClick={(e) => e.stopPropagation()}>
                     <input
                       type='checkbox'
                       checked={isCompleted}
