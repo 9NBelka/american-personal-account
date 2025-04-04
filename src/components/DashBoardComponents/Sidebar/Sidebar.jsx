@@ -102,6 +102,7 @@ export default function Sidebar({
             scss.menuItem,
             (activeSection === 'courseList' ||
               activeSection === 'addCourse' ||
+              activeSection === 'timersCourses' ||
               activeSection === 'editCourse') &&
               scss.active,
           )}>
@@ -137,6 +138,14 @@ export default function Sidebar({
                 )}
                 onClick={() => handleSectionClick('addCourse')}>
                 Добавить курс
+              </li>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'timersCourses' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('timersCourses')}>
+                Таймеры
               </li>
             </ul>
           )}

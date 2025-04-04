@@ -21,6 +21,7 @@ import AddCourse from './components/DashBoardComponents/AddCourse/AddCourse';
 import Notifications from './components/DashBoardComponents/Notifications/Notifications';
 import ProductList from './components/DashBoardComponents/ProductList/ProductList';
 import AddProduct from './components/DashBoardComponents/AddProduct/AddProduct';
+import TimersCourses from './components/DashBoardComponents/TimersCourses/TimersCourses';
 
 export default function App() {
   const navigate = useNavigate();
@@ -71,6 +72,7 @@ export default function App() {
             <Route path='addUser' element={<AddUser />} />
             <Route path='courseList' element={<CourseList />} />
             <Route path='addCourse' element={<AddCourse />} />
+            <Route path='timersCourses' element={<TimersCourses />} />
             <Route path='editCourse' element={<CourseList />} />
             <Route path='productList' element={<ProductList />} />
             <Route path='addProduct' element={<AddProduct />} />

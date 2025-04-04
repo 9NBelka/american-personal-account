@@ -24,6 +24,7 @@ export function AdminProvider({ children }) {
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [accessLevels, setAccessLevels] = useState([]);
+  const [timers, setTimers] = useState([]); // Новое состояние для таймеров
   const [error, setError] = useState(null);
 
   // Подписка на пользователей в реальном времени
@@ -92,6 +93,30 @@ export function AdminProvider({ children }) {
       },
       (error) => {
         setError('Ошибка при загрузке уровней доступа: ' + error.message);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user, userRole]);
+
+  // Подписка на таймеры в реальном времени
+  useEffect(() => {
+    if (!user || userRole !== 'admin') {
+      setTimers([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'timers'),
+      (snapshot) => {
+        const timerList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setTimers(timerList);
+      },
+      (error) => {
+        setError('Ошибка при загрузке таймеров: ' + error.message);
       },
     );
 
@@ -488,6 +513,36 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
+  // Добавление нового таймера
+  const addTimer = useCallback(
+    async (timerData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут добавлять таймеры');
+      }
+      try {
+        await addDoc(collection(db, 'timers'), timerData);
+      } catch (error) {
+        throw new Error('Ошибка при добавлении таймера: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
+  // Удаление таймера
+  const deleteTimer = useCallback(
+    async (timerId) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут удалять таймеры');
+      }
+      try {
+        await deleteDoc(doc(db, 'timers', timerId));
+      } catch (error) {
+        throw new Error('Ошибка при удалении таймера: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
   const value = {
     users,
     courses,
@@ -495,6 +550,7 @@ export function AdminProvider({ children }) {
     orders,
     notifications,
     accessLevels,
+    timers, // Добавляем timers в контекст
     fetchAllCourses,
     fetchAllProducts,
     fetchAllOrders,
@@ -510,6 +566,8 @@ export function AdminProvider({ children }) {
     addNotification,
     deleteNotification,
     addAccessLevel,
+    addTimer, // Добавляем addTimer в контекст
+    deleteTimer, // Добавляем deleteTimer в контекст
     error,
     setError,
   };
