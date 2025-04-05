@@ -1,12 +1,12 @@
-// components/AccountTimer/AccountTimer.jsx
 import { useState, useEffect, useCallback } from 'react';
 import scss from './AccountTimer.module.scss';
+import { BsCalendar3WeekFill } from 'react-icons/bs';
+import clsx from 'clsx';
 
 export default function AccountTimer({ courseId, modules }) {
   const [timeLeft, setTimeLeft] = useState(null);
   const [currentModule, setCurrentModule] = useState(null);
 
-  // Функция для поиска ближайшего модуля с будущей датой открытия
   const findNextModule = useCallback(() => {
     const now = new Date();
     const futureModules = modules
@@ -24,7 +24,6 @@ export default function AccountTimer({ courseId, modules }) {
     return futureModules.length > 0 ? futureModules[0] : null;
   }, [modules]);
 
-  // Инициализация и обновление таймера
   useEffect(() => {
     let interval;
 
@@ -32,7 +31,6 @@ export default function AccountTimer({ courseId, modules }) {
       const now = new Date();
       let nextModule = currentModule;
 
-      // Если текущий модуль не установлен или время истекло, ищем следующий
       if (!nextModule) {
         nextModule = findNextModule();
         setCurrentModule(nextModule);
@@ -50,13 +48,11 @@ export default function AccountTimer({ courseId, modules }) {
         }
       }
 
-      // Если модуль не найден, сбрасываем время
       if (!nextModule) {
         setTimeLeft(null);
         return;
       }
 
-      // Рассчитываем оставшееся время
       const unlockDate = new Date(nextModule.unlockDate);
       const difference = unlockDate - now;
 
@@ -68,44 +64,97 @@ export default function AccountTimer({ courseId, modules }) {
       setTimeLeft({ days, hours, minutes, seconds });
     };
 
-    // Первоначальный расчёт
     updateTimer();
-
-    // Устанавливаем интервал для обновления каждую секунду
     interval = setInterval(updateTimer, 1000);
 
-    // Очищаем интервал при размонтировании или изменении modules
     return () => clearInterval(interval);
   }, [modules, currentModule, findNextModule]);
 
   if (!currentModule || !timeLeft) {
-    return null; // Если нет модулей с будущей датой открытия, скрываем таймер
+    return null;
   }
+
+  // Определяем, какая часть должна быть синей
+  const getBlueClass = () => {
+    if (timeLeft.days > 0) return 'days';
+    if (timeLeft.hours > 0) return 'hours';
+    if (timeLeft.minutes > 0) return 'minutes';
+    return 'seconds';
+  };
+
+  const bluePart = getBlueClass();
+
+  const addToGoogleCalendarLink = () => {
+    if (!timeLeft || !currentModule) return;
+
+    const unlockDate = new Date(currentModule.unlockDate);
+    const endDate = new Date(unlockDate.getTime() + 60 * 60 * 1000);
+    const formatDate = (date) => date.toISOString().replace(/-|:|\.\d\d\d/g, '');
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+      `Lesson: ${currentModule.moduleTitle}`,
+    )}&dates=${formatDate(unlockDate)}/${formatDate(endDate)}&details=${encodeURIComponent(
+      'Student Meet',
+    )}`;
+
+    window.open(url, '_blank');
+  };
 
   return (
     <div className={scss.timerContainer}>
-      <h3 className={scss.timerTitle}>До открытия урока осталось:</h3>
-      <div className={scss.timer}>
-        <div className={scss.timeBlock}>
-          <span className={scss.timeValue}>{timeLeft.days}</span>
-          <span className={scss.timeLabel}>дней</span>
+      <div>
+        <h4 className={scss.timerTitle}>Time left until the lesson opens:</h4>
+        <div className={scss.timer}>
+          <div className={scss.timeBlock}>
+            <span className={clsx(scss.timeValue, bluePart === 'days' && scss.timeValueBlue)}>
+              {timeLeft.days}
+            </span>
+            <span className={scss.timeLabel}>d</span>
+            <span className={scss.timeSimvol}>:</span>
+          </div>
+          <div className={scss.timeBlock}>
+            <span className={clsx(scss.timeValue, bluePart === 'hours' && scss.timeValueBlue)}>
+              {timeLeft.hours < 10 ? `0${timeLeft.hours}` : timeLeft.hours}
+            </span>
+            <span className={clsx(scss.timeLabel, bluePart === 'hours' && scss.timeValueBlue)}>
+              h
+            </span>
+            <span className={scss.timeSimvol}>:</span>
+          </div>
+          <div className={scss.timeBlock}>
+            <span className={clsx(scss.timeValue, bluePart === 'minutes' && scss.timeValueBlue)}>
+              {timeLeft.minutes < 10 ? `0${timeLeft.minutes}` : timeLeft.minutes}
+            </span>
+            <span className={clsx(scss.timeLabel, bluePart === 'minutes' && scss.timeValueBlue)}>
+              m
+            </span>
+            <span className={scss.timeSimvol}>:</span>
+          </div>
+          <div className={scss.timeBlock}>
+            <span className={clsx(scss.timeValue, bluePart === 'seconds' && scss.timeValueBlue)}>
+              {timeLeft.seconds < 10 ? `0${timeLeft.seconds}` : timeLeft.seconds}
+            </span>
+            <span className={clsx(scss.timeLabel, bluePart === 'seconds' && scss.timeValueBlue)}>
+              s
+            </span>
+          </div>
         </div>
-        <div className={scss.timeBlock}>
-          <span className={scss.timeValue}>{timeLeft.hours}</span>
-          <span className={scss.timeLabel}>часов</span>
-        </div>
-        <div className={scss.timeBlock}>
-          <span className={scss.timeValue}>{timeLeft.minutes}</span>
-          <span className={scss.timeLabel}>минут</span>
-        </div>
-        <div className={scss.timeBlock}>
-          <span className={scss.timeValue}>{timeLeft.seconds}</span>
-          <span className={scss.timeLabel}>секунд</span>
-        </div>
+        <p className={scss.moduleInfo}>
+          Next module: <span>{currentModule.moduleTitle}</span>
+        </p>
       </div>
-      <p className={scss.moduleInfo}>
-        Следующий модуль: <span>{currentModule.moduleTitle}</span>
-      </p>
+      <div className={scss.moduleInfoAboutMeet}>
+        <h3 className={scss.moduleInfoAboutMeetTitle}>STUDENT MEET</h3>
+        <p className={scss.moduleInfoAboutMeetDescription}>
+          Where?{' '}
+          <a href='#' target='_blank'>
+            Here!
+          </a>
+        </p>
+      </div>
+      <BsCalendar3WeekFill
+        className={scss.moduleInfoAboutMeetCalendar}
+        onClick={addToGoogleCalendarLink}
+      />
     </div>
   );
 }

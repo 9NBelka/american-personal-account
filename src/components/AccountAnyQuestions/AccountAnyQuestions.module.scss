@@ -1,11 +1,25 @@
 .accountAnyQuestionsBlock {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+
   background-color: var(--color-orange-opacity20);
   border: 0.05vw solid var(--color-orange);
   border-radius: 0.75vw;
   width: 32.2%;
   position: relative;
+
+  & .accountAnyQuestionsBlockImage {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 100%;
+
+    & img {
+      display: flex;
+      width: 11.9vw;
+    }
+  }
 }
 
 .titleAndButtonBlock {

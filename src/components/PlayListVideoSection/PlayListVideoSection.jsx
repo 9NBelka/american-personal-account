@@ -15,7 +15,7 @@ export default function PlayListVideoSection({ videoUrl, lockMessage }) {
     <div className={scss.videoSection}>
       {isLoading && videoUrl && <PlayListLoadingIndicator />}
       {lockMessage ? (
-        <p className={scss.lockMessage}>{lockMessage}</p>
+        <p className={scss.lockMessage}> The lesson will open on {lockMessage}</p>
       ) : videoUrl ? (
         <iframe
           src={src}

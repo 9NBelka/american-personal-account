@@ -19,6 +19,7 @@ export default function PlayListModuleBlock({
   totalDuration,
 }) {
   const sortedModules = [...modules].sort((a, b) => a.id.localeCompare(b.id));
+  const playlistPage = true;
 
   return (
     <div className={scss.moduleBlock}>
@@ -41,6 +42,7 @@ export default function PlayListModuleBlock({
           toggleLessonCompletion={toggleLessonCompletion}
           getCompletedCount={getCompletedCount}
           getTotalDuration={getTotalDuration}
+          playlistPage={playlistPage}
         />
       ))}
     </div>

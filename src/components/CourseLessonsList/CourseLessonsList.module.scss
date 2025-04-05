@@ -25,12 +25,16 @@
   & .lockMessage {
     position: absolute;
     top: 70%;
-    left: 53%;
-    font-size: 0.75vw;
+    left: 47%;
+    font-size: 0.7vw;
     color: var(--color-red);
     font-family: var(--font-main-for-account);
     font-weight: var(--font-weight-small);
     line-height: var(--font-lineh-small);
+
+    &.lockMessagePlayList {
+      left: 39%;
+    }
   }
 
   & .moduleTitleAndCountBlock {

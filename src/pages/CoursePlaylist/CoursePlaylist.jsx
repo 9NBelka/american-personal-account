@@ -63,6 +63,8 @@ export default function CoursePlaylist() {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }, []);
 
@@ -153,9 +155,7 @@ export default function CoursePlaylist() {
       if (!nextLessonUrl) {
         const firstLockedModule = course.modules.find((module) => isModuleLocked(module));
         if (firstLockedModule) {
-          setLockMessage(
-            `Этот урок заблокирован до ${formatUnlockDate(firstLockedModule.unlockDate)}`,
-          );
+          setLockMessage(`${formatUnlockDate(firstLockedModule.unlockDate)}`);
         }
       } else {
         setLockMessage('');
@@ -253,7 +253,7 @@ export default function CoursePlaylist() {
       }
 
       if (lessonModule && isModuleLocked(lessonModule)) {
-        setLockMessage(`Этот урок заблокирован до ${formatUnlockDate(lessonModule.unlockDate)}`);
+        setLockMessage(`${formatUnlockDate(lessonModule.unlockDate)}`);
         setVideoUrl(''); // Сбрасываем videoUrl, чтобы видео не воспроизводилось
         return;
       }

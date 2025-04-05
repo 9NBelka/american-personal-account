@@ -156,10 +156,6 @@ export default function PersonalAccount() {
           <div className={scss.mainHalfToHalfBlock}>
             {activeCourse && (
               <div key={activeCourse.id} className={scss.courseLessonsContainer}>
-                {/* Добавляем таймер перед списком уроков */}
-                {activeTimer && (
-                  <AccountTimer courseId={activeCourse.id} modules={activeCourse.modules} />
-                )}
                 <AccountCourseLessons
                   courseId={activeCourse.id}
                   courses={courses}
@@ -201,6 +197,10 @@ export default function PersonalAccount() {
               </div>
             )}
             <div className={scss.courseRightContainer}>
+              {/* Добавляем таймер перед списком уроков */}
+              {activeTimer && (
+                <AccountTimer courseId={activeCourse.id} modules={activeCourse.modules} />
+              )}
               <AccountCompanyAndQuestions />
               <div className={scss.courseAccessBlock}>
                 <h3 className={scss.courseAccessTitle}>Available courses:</h3>

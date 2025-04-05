@@ -15,6 +15,7 @@ export default function CourseLessonsList({
   toggleLessonCompletion,
   getCompletedCount,
   getTotalDuration,
+  playlistPage,
 }) {
   const { updateLastModule } = useAuth();
   const { completed, total } = getCompletedCount(module.id, module.links);
@@ -67,6 +68,8 @@ export default function CourseLessonsList({
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -99,7 +102,7 @@ export default function CourseLessonsList({
           </span>
         </div>
         {isModuleLocked && (
-          <span className={scss.lockMessage}>
+          <span className={clsx(scss.lockMessage, playlistPage && scss.lockMessagePlayList)}>
             The module will open on {formatUnlockDate(module.unlockDate)}
           </span>
         )}
