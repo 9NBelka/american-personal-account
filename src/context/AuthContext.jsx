@@ -427,8 +427,20 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!user) {
-      setNotifications([]);
       setUserAccessLevels([]);
+      return;
+    }
+    fetchUserData(user.uid).then(({ purchasedCourses }) => {
+      const accessLevels = Object.values(purchasedCourses)
+        .map((course) => course.access)
+        .filter((access, index, self) => access && self.indexOf(access) === index);
+      setUserAccessLevels(accessLevels);
+    });
+  }, [user, fetchUserData]);
+
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
       return;
     }
 
@@ -447,7 +459,11 @@ export function AuthProvider({ children }) {
           return notification.accessLevels.some((level) => userAccessLevels.includes(level));
         });
 
-        setNotifications(filteredNotifications);
+        setNotifications((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(filteredNotifications)
+            ? filteredNotifications
+            : prev,
+        );
       },
       (error) => {
         console.error('Ошибка при загрузке уведомлений:', error);

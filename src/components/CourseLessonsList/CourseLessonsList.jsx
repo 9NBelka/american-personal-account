@@ -98,11 +98,12 @@ export default function CourseLessonsList({
             {completed}/{total} | {totalDuration}
           </span>
         </div>
-        {isModuleLocked ? (
+        {isModuleLocked && (
           <span className={scss.lockMessage}>
-            Модуль откроется {formatUnlockDate(module.unlockDate)}
+            The module will open on {formatUnlockDate(module.unlockDate)}
           </span>
-        ) : expandedModule === index ? (
+        )}
+        {expandedModule === index ? (
           <BsChevronDown className={scss.icon} />
         ) : (
           <BsChevronRight className={scss.icon} />
