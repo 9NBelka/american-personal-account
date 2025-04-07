@@ -17,7 +17,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 'firebase/auth';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable, getFunctions } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AuthContext = createContext();
@@ -132,14 +132,26 @@ export function AuthProvider({ children }) {
   const fetchCourseUserCount = useCallback(
     async (courseId) => {
       try {
-        const result = await getCourseUserCount({ courseId });
-        return result.data.count;
+        const response = await fetch(
+          `https://us-central1-k-syndicate.cloudfunctions.net/getCourseUserCount?courseId=${courseId}`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${await auth.currentUser.getIdToken()}`,
+            },
+          },
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data.count;
       } catch (error) {
         console.error('Error getting number of users:', error);
         return 0;
       }
     },
-    [], // Зависимости не нужны, так как getCourseUserCount определён вне компонента
+    [auth],
   );
 
   const login = useCallback(
