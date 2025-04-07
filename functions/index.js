@@ -75,6 +75,10 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
       return res.status(405).send('Method Not Allowed');
     }
 
+    if (req.method === 'OPTIONS') {
+      return res.status(204).send(''); // Явно обрабатываем OPTIONS
+    }
+
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).send('Unauthorized: No token provided');
