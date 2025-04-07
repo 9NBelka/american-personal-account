@@ -146,7 +146,7 @@ export default function AddProduct() {
   return (
     <div className={scss.addProduct}>
       <h2 className={scss.title}>Добавить новый продукт</h2>
-      {error && <p className={scss.error}>{error}</p>}
+
       <form onSubmit={handleSubmit} className={scss.form}>
         {/* Основные поля продукта */}
         <div className={scss.field}>

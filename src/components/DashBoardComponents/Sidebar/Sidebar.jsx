@@ -155,6 +155,7 @@ export default function Sidebar({
             scss.menuItem,
             (activeSection === 'productList' ||
               activeSection === 'addProduct' ||
+              activeSection === 'discountPresets' ||
               activeSection === 'editProduct') &&
               scss.active,
           )}>
@@ -190,6 +191,14 @@ export default function Sidebar({
                 )}
                 onClick={() => handleSectionClick('addProduct')}>
                 Добавить товар
+              </li>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'discountPresets' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('discountPresets')}>
+                Скидки
               </li>
             </ul>
           )}

@@ -23,7 +23,7 @@
         width: 5%; // №
       }
       &:nth-child(2) {
-        width: 10%; // Изображение
+        width: 5%; // Изображение
       }
       &:nth-child(3) {
         width: 20%; // Название
@@ -32,7 +32,7 @@
         width: 10%; // Категория
       }
       &:nth-child(5) {
-        width: 10%; // Цена
+        width: 15%; // Цена
       }
       &:nth-child(6) {
         width: 10%; // Уровень доступа
@@ -63,6 +63,22 @@
         object-position: center;
         background-color: var(--color-lightGrey);
       }
+    }
+
+    & .priceContainer {
+      display: flex;
+      gap: 0.5vw;
+      align-items: center;
+    }
+
+    & .originalPrice {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    & .discountedPrice {
+      color: #28a745;
+      font-weight: bold;
     }
 
     & .actions {

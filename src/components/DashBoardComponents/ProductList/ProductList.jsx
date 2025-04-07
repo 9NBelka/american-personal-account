@@ -128,9 +128,13 @@ export default function ProductList() {
       } else if (sortOption === 'name-desc') {
         return b.nameProduct.localeCompare(a.nameProduct);
       } else if (sortOption === 'price-asc') {
-        return a.priceProduct - b.priceProduct;
+        const priceA = a.discountedPrice || a.priceProduct;
+        const priceB = b.discountedPrice || b.priceProduct;
+        return priceA - priceB;
       } else if (sortOption === 'price-desc') {
-        return b.priceProduct - a.priceProduct;
+        const priceA = a.discountedPrice || a.priceProduct;
+        const priceB = b.discountedPrice || b.priceProduct;
+        return priceB - priceA;
       }
       return 0;
     });

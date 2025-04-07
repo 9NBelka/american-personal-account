@@ -22,6 +22,7 @@ import Notifications from './components/DashBoardComponents/Notifications/Notifi
 import ProductList from './components/DashBoardComponents/ProductList/ProductList';
 import AddProduct from './components/DashBoardComponents/AddProduct/AddProduct';
 import TimersCourses from './components/DashBoardComponents/TimersCourses/TimersCourses';
+import DiscountPresets from './components/DashBoardComponents/DiscountPresets/DiscountPresets';
 
 export default function App() {
   const navigate = useNavigate();
@@ -76,6 +77,7 @@ export default function App() {
             <Route path='editCourse' element={<CourseList />} />
             <Route path='productList' element={<ProductList />} />
             <Route path='addProduct' element={<AddProduct />} />
+            <Route path='discountPresets' element={<DiscountPresets />} />
             <Route path='notifications' element={<Notifications />} />
             <Route path='*' element={<div>Section Not Found</div>} />
           </Route>

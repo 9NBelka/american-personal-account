@@ -17,6 +17,8 @@ export default function EditProduct({ productId, onBack }) {
     nameProduct: '',
     imageProduct: '',
     priceProduct: 0,
+    discountedPrice: null,
+    discountPercent: null,
     access: '',
     available: true,
     categoryProduct: 'Course',
@@ -58,7 +60,9 @@ export default function EditProduct({ productId, onBack }) {
       nameProduct: productToEdit.nameProduct || '',
       imageProduct: productToEdit.imageProduct || '',
       priceProduct: productToEdit.priceProduct || 0,
-      access: productToEdit.access || accessLevels[0]?.id || '', // Устанавливаем первый уровень доступа по умолчанию
+      discountedPrice: productToEdit.discountedPrice || null,
+      discountPercent: productToEdit.discountPercent || null,
+      access: productToEdit.access || accessLevels[0]?.id || '',
       available: productToEdit.available !== undefined ? productToEdit.available : true,
       categoryProduct: productToEdit.categoryProduct || 'Course',
       descriptionProduct: productToEdit.descriptionProduct || [],
@@ -69,10 +73,31 @@ export default function EditProduct({ productId, onBack }) {
   // Обработчик изменения полей продукта
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setProductData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
-    }));
+    setProductData((prev) => {
+      // Валидация цены: не меньше 0
+      if (name === 'priceProduct') {
+        const newPrice = Number(value);
+        if (newPrice < 0) {
+          toast.error('Цена не может быть меньше 0');
+          return prev;
+        }
+
+        // Если есть discountPercent, пересчитываем discountedPrice
+        if (prev.discountPercent) {
+          const newDiscountedPrice = newPrice - (newPrice * prev.discountPercent) / 100;
+          return {
+            ...prev,
+            priceProduct: newPrice,
+            discountedPrice: newDiscountedPrice.toFixed(2),
+          };
+        }
+      }
+
+      return {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
+      };
+    });
   };
 
   // Обработчик выбора категории
@@ -143,7 +168,9 @@ export default function EditProduct({ productId, onBack }) {
     try {
       const updatedProductData = {
         ...productData,
-        createdAtProduct: productToEdit.createdAtProduct, // Сохраняем оригинальную дату создания
+        createdAtProduct: productToEdit.createdAtProduct,
+        discountedPrice: productData.discountPercent ? productData.discountedPrice : null,
+        discountPercent: productData.discountPercent || null,
       };
 
       await updateProduct(productData.id, updatedProductData);
@@ -218,6 +245,12 @@ export default function EditProduct({ productId, onBack }) {
             min='0'
             required
           />
+          {productData.discountPercent && (
+            <p className={scss.discountInfo}>
+              Текущая скидка: {productData.discountPercent}% | Цена со скидкой:{' '}
+              {productData.discountedPrice} $
+            </p>
+          )}
         </div>
         <div className={scss.field}>
           <label>Тип доступа</label>

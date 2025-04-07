@@ -1,4 +1,3 @@
-// context/AdminContext.js
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import {
@@ -24,7 +23,8 @@ export function AdminProvider({ children }) {
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [accessLevels, setAccessLevels] = useState([]);
-  const [timers, setTimers] = useState([]); // Новое состояние для таймеров
+  const [timers, setTimers] = useState([]);
+  const [discountPresets, setDiscountPresets] = useState([]);
   const [error, setError] = useState(null);
 
   // Подписка на пользователей в реальном времени
@@ -117,6 +117,30 @@ export function AdminProvider({ children }) {
       },
       (error) => {
         setError('Ошибка при загрузке таймеров: ' + error.message);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user, userRole]);
+
+  // Подписка на пресеты скидок в реальном времени
+  useEffect(() => {
+    if (!user || userRole !== 'admin') {
+      setDiscountPresets([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'discountPresets'),
+      (snapshot) => {
+        const presetList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setDiscountPresets(presetList);
+      },
+      (error) => {
+        setError('Ошибка при загрузке пресетов скидок: ' + error.message);
       },
     );
 
@@ -322,7 +346,6 @@ export function AdminProvider({ children }) {
       try {
         const productRef = doc(db, 'products', productData.id);
         await setDoc(productRef, productData);
-        setProducts((prev) => [...prev, productData]);
       } catch (error) {
         throw new Error('Ошибка при добавлении продукта: ' + error.message);
       }
@@ -340,67 +363,56 @@ export function AdminProvider({ children }) {
         const courseRef = doc(db, 'courses', courseId);
         await updateDoc(courseRef, updatedData);
 
-        // Находим старые данные курса
         const oldCourse = courses.find((c) => c.id === courseId);
         const oldModules = oldCourse?.modules || {};
         const newModules = updatedData.modules || {};
 
-        // Определяем, какие модули и уроки были удалены
         const deletedModuleIds = Object.keys(oldModules).filter(
           (moduleId) => !newModules[moduleId],
         );
         const updatedModuleIds = Object.keys(newModules);
 
-        // Получаем всех пользователей
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
           const userData = userDoc.data();
           const purchasedCourses = userData.purchasedCourses || {};
-          if (!purchasedCourses[courseId]) return; // Пропускаем, если пользователь не купил курс
+          if (!purchasedCourses[courseId]) return;
 
           let updatedCompletedLessons = { ...purchasedCourses[courseId].completedLessons };
 
-          // Удаляем записи о просмотренных уроках для удалённых модулей
           deletedModuleIds.forEach((moduleId) => {
             if (updatedCompletedLessons[moduleId]) {
               delete updatedCompletedLessons[moduleId];
             }
           });
 
-          // Для оставшихся модулей проверяем удалённые уроки
           updatedModuleIds.forEach((moduleId) => {
             const oldLessons = oldModules[moduleId]?.lessons || [];
             const newLessons = newModules[moduleId]?.lessons || [];
             const newLessonCount = newLessons.length;
 
             if (updatedCompletedLessons[moduleId]) {
-              // Фильтруем индексы уроков, оставляя только те, которые существуют в новом списке уроков
               updatedCompletedLessons[moduleId] = updatedCompletedLessons[moduleId].filter(
                 (lessonIndex) => lessonIndex < newLessonCount,
               );
-              // Если после фильтрации массив пуст, удаляем модуль из completedLessons
               if (updatedCompletedLessons[moduleId].length === 0) {
                 delete updatedCompletedLessons[moduleId];
               }
             }
           });
 
-          // Пересчитываем общее количество уроков в курсе
           const totalLessons = Object.values(newModules).reduce(
             (sum, module) => sum + (module.lessons?.length || 0),
             0,
           );
 
-          // Пересчитываем количество завершённых уроков
           const completedLessonsCount = Object.values(updatedCompletedLessons).reduce(
             (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
             0,
           );
 
-          // Пересчитываем прогресс
           const newProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
 
-          // Обновляем данные пользователя
           await updateDoc(doc(db, 'users', userDoc.id), {
             [`purchasedCourses.${courseId}.completedLessons`]: updatedCompletedLessons,
             [`purchasedCourses.${courseId}.progress`]: Math.round(newProgress),
@@ -412,7 +424,6 @@ export function AdminProvider({ children }) {
 
         await Promise.all(updatePromises);
 
-        // Обновляем локальное состояние курсов
         setCourses((prev) => prev.map((c) => (c.id === courseId ? { ...c, ...updatedData } : c)));
       } catch (error) {
         throw new Error('Ошибка при обновлении курса: ' + error.message);
@@ -430,7 +441,6 @@ export function AdminProvider({ children }) {
       try {
         const productRef = doc(db, 'products', productId);
         await updateDoc(productRef, updatedData);
-        setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, ...updatedData } : p)));
       } catch (error) {
         throw new Error('Ошибка при обновлении продукта: ' + error.message);
       }
@@ -543,6 +553,162 @@ export function AdminProvider({ children }) {
     [userRole],
   );
 
+  // Добавление нового пресета скидок
+  const addDiscountPreset = useCallback(
+    async (presetData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут добавлять пресеты скидок');
+      }
+      try {
+        const presetRef = doc(db, 'discountPresets', presetData.id);
+        await setDoc(presetRef, { ...presetData, isActive: false });
+      } catch (error) {
+        throw new Error('Ошибка при добавлении пресета скидок: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
+  // Обновление пресета скидок
+  const updateDiscountPreset = useCallback(
+    async (presetId, updatedData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут обновлять пресеты скидок');
+      }
+      try {
+        const presetToUpdate = discountPresets.find((p) => p.id === presetId);
+        if (!presetToUpdate) {
+          throw new Error('Пресет не найден');
+        }
+
+        const presetRef = doc(db, 'discountPresets', presetId);
+        await updateDoc(presetRef, updatedData);
+
+        // Если пресет активен, обновляем discountedPrice и discountPercent у товаров
+        if (presetToUpdate.isActive) {
+          // Сначала сбрасываем discountedPrice и discountPercent у всех товаров из старого пресета
+          const resetPromises = presetToUpdate.discountItems.map((item) => {
+            const productRef = doc(db, 'products', item.productId);
+            return updateDoc(productRef, {
+              discountedPrice: null,
+              discountPercent: null,
+            });
+          });
+          await Promise.all(resetPromises);
+
+          // Затем применяем новые скидки
+          const updatePromises = updatedData.discountItems.map((item) => {
+            const product = products.find((p) => p.id === item.productId);
+            if (!product) return Promise.resolve();
+
+            const originalPrice = product.priceProduct;
+            const discountedPrice = originalPrice - (originalPrice * item.discountPercent) / 100;
+            const productRef = doc(db, 'products', item.productId);
+            return updateDoc(productRef, {
+              discountedPrice: discountedPrice.toFixed(2),
+              discountPercent: item.discountPercent,
+            });
+          });
+          await Promise.all(updatePromises);
+        }
+      } catch (error) {
+        throw new Error('Ошибка при обновлении пресета: ' + error.message);
+      }
+    },
+    [userRole, discountPresets, products],
+  );
+
+  // Удаление пресета скидок
+  const deleteDiscountPreset = useCallback(
+    async (presetId) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут удалять пресеты скидок');
+      }
+      try {
+        const presetToDelete = discountPresets.find((p) => p.id === presetId);
+        if (presetToDelete?.isActive) {
+          const productUpdates = presetToDelete.discountItems.map((item) => {
+            const productRef = doc(db, 'products', item.productId);
+            return updateDoc(productRef, {
+              discountedPrice: null,
+              discountPercent: null,
+            });
+          });
+          await Promise.all(productUpdates);
+        }
+
+        await deleteDoc(doc(db, 'discountPresets', presetId));
+      } catch (error) {
+        throw new Error('Ошибка при удалении пресета скидок: ' + error.message);
+      }
+    },
+    [userRole, discountPresets],
+  );
+
+  // Включение/выключение пресета
+  const toggleDiscountPreset = useCallback(
+    async (presetId) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут управлять пресетами скидок');
+      }
+      try {
+        const presetToToggle = discountPresets.find((p) => p.id === presetId);
+        if (!presetToToggle) {
+          throw new Error('Пресет не найден');
+        }
+
+        if (presetToToggle.isActive) {
+          const presetRef = doc(db, 'discountPresets', presetId);
+          await updateDoc(presetRef, { isActive: false });
+
+          const productUpdates = presetToToggle.discountItems.map((item) => {
+            const productRef = doc(db, 'products', item.productId);
+            return updateDoc(productRef, {
+              discountedPrice: null,
+              discountPercent: null,
+            });
+          });
+          await Promise.all(productUpdates);
+        } else {
+          const activePreset = discountPresets.find((p) => p.isActive);
+          if (activePreset) {
+            const activePresetRef = doc(db, 'discountPresets', activePreset.id);
+            await updateDoc(activePresetRef, { isActive: false });
+
+            const productUpdates = activePreset.discountItems.map((item) => {
+              const productRef = doc(db, 'products', item.productId);
+              return updateDoc(productRef, {
+                discountedPrice: null,
+                discountPercent: null,
+              });
+            });
+            await Promise.all(productUpdates);
+          }
+
+          const presetRef = doc(db, 'discountPresets', presetId);
+          await updateDoc(presetRef, { isActive: true });
+
+          const productUpdates = presetToToggle.discountItems.map((item) => {
+            const product = products.find((p) => p.id === item.productId);
+            if (!product) return Promise.resolve();
+
+            const originalPrice = product.priceProduct;
+            const discountedPrice = originalPrice - (originalPrice * item.discountPercent) / 100;
+            const productRef = doc(db, 'products', item.productId);
+            return updateDoc(productRef, {
+              discountedPrice: discountedPrice.toFixed(2),
+              discountPercent: item.discountPercent,
+            });
+          });
+          await Promise.all(productUpdates);
+        }
+      } catch (error) {
+        throw new Error('Ошибка при управлении пресетом: ' + error.message);
+      }
+    },
+    [userRole, discountPresets, products],
+  );
+
   const value = {
     users,
     courses,
@@ -550,7 +716,8 @@ export function AdminProvider({ children }) {
     orders,
     notifications,
     accessLevels,
-    timers, // Добавляем timers в контекст
+    timers,
+    discountPresets,
     fetchAllCourses,
     fetchAllProducts,
     fetchAllOrders,
@@ -566,8 +733,12 @@ export function AdminProvider({ children }) {
     addNotification,
     deleteNotification,
     addAccessLevel,
-    addTimer, // Добавляем addTimer в контекст
-    deleteTimer, // Добавляем deleteTimer в контекст
+    addTimer,
+    deleteTimer,
+    addDiscountPreset,
+    updateDiscountPreset, // Добавляем метод
+    deleteDiscountPreset,
+    toggleDiscountPreset,
     error,
     setError,
   };

@@ -41,8 +41,21 @@ export default function TextListProducts({
           </td>
           <td>{product.nameProduct || 'Без названия'}</td>
           <td>{product.categoryProduct || 'Нет категории'}</td>
-          <td>{product.priceProduct ? `${product.priceProduct} $` : 'Нет цены'}</td>
-          <td>{getAccessLevelName(product.access)}</td> {/* Новый столбец */}
+          <td>
+            {product.discountedPrice ? (
+              <div className={scss.priceContainer}>
+                <span className={scss.originalPrice}>{product.priceProduct} $</span>
+                <span className={scss.discountedPrice}>
+                  {product.discountedPrice} $ (-{product.discountPercent}%)
+                </span>
+              </div>
+            ) : product.priceProduct ? (
+              `${product.priceProduct} $`
+            ) : (
+              'Нет цены'
+            )}
+          </td>
+          <td>{getAccessLevelName(product.access)}</td>
           <td>{product.available ? 'В продаже' : 'Не в продаже'}</td>
           <td>{formatDate(product.createdAtProduct)}</td>
           <td className={scss.actions}>

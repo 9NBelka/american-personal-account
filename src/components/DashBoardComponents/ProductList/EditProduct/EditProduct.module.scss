@@ -93,6 +93,15 @@
       min-height: 5vw;
       resize: vertical;
     }
+
+    & .discountInfo {
+      font-size: 0.7vw;
+      color: #2ecc71;
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      margin-top: 0.3vw;
+    }
   }
 
   & .categoryContainer,
