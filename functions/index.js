@@ -62,6 +62,7 @@ exports.getCourseUserCount = functions.https.onRequest((req, res) => {
 
       res.status(200).json({ count });
     } catch (error) {
+      console.error('Error verifying token:', error);
       return res.status(401).send('Unauthorized: Invalid token');
     }
   });
