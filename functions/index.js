@@ -22,52 +22,49 @@ const generateRandomPassword = () => {
   return password;
 };
 
-// Существующая функция getCourseUserCount
-exports.getCourseUserCount = functions.https.onRequest((req, res) => {
-  return cors(req, res, async () => {
-    if (req.method !== 'GET' && req.method !== 'POST') {
-      return res.status(405).send('Method Not Allowed');
+// Обновлённая функция getCourseUserCount с использованием onCall
+exports.getCourseUserCount = functions.https.onCall(async (data, context) => {
+  // Проверка аутентификации
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'No token provided');
+  }
+
+  const userId = context.auth.uid;
+  const courseId = data.courseId || 'architecture';
+
+  try {
+    const userDoc = await admin.firestore().doc(`users/${userId}`).get();
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('permission-denied', 'User not found');
     }
 
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).send('Unauthorized: No token provided');
+    const purchasedCourses = userDoc.data().purchasedCourses || {};
+    const courseData = purchasedCourses[courseId] || {};
+    if (!courseData.access || courseData.access === 'denied') {
+      throw new functions.https.HttpsError('permission-denied', 'No access to this course');
     }
 
-    const idToken = authHeader.split('Bearer ')[1];
-    try {
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      const userId = decodedToken.uid;
-
-      const courseId = req.query.courseId || 'architecture';
-
-      const userDoc = await admin.firestore().doc(`users/${userId}`).get();
-      if (!userDoc.exists) {
-        return res.status(403).send('Forbidden: User not found');
-      }
-
-      const purchasedCourses = userDoc.data().purchasedCourses || {};
+    const snapshot = await admin.firestore().collection('users').get();
+    const count = snapshot.docs.reduce((acc, doc) => {
+      const purchasedCourses = doc.data().purchasedCourses || {};
       const courseData = purchasedCourses[courseId] || {};
-      if (!courseData.access || courseData.access === 'denied') {
-        return res.status(403).send('Forbidden: No access to this course');
-      }
+      const hasAccess = courseData.access && courseData.access !== 'denied';
+      return acc + (hasAccess ? 1 : 0);
+    }, 0);
 
-      const snapshot = await admin.firestore().collection('users').get();
-      const count = snapshot.docs.reduce((acc, doc) => {
-        const purchasedCourses = doc.data().purchasedCourses || {};
-        const courseData = purchasedCourses[courseId] || {};
-        const hasAccess = courseData.access && courseData.access !== 'denied';
-        return acc + (hasAccess ? 1 : 0);
-      }, 0);
-
-      res.status(200).json({ count });
-    } catch (error) {
-      return res.status(401).send('Unauthorized: Invalid token');
+    return { count };
+  } catch (error) {
+    console.error('Error in getCourseUserCount:', error);
+    // Если это уже HttpsError, просто пробрасываем его
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
     }
-  });
+    // Иначе создаём новую ошибку
+    throw new functions.https.HttpsError('internal', `Error: ${error.message}`);
+  }
 });
 
-// Функция для добавления пользователя
+// Функция для добавления пользователя (без изменений)
 exports.addNewUser = functions.https.onRequest((req, res) => {
   return cors(req, res, async () => {
     if (req.method !== 'POST') {
@@ -84,7 +81,6 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const userId = decodedToken.uid;
 
-      // Проверяем, что вызывающий пользователь — администратор
       const userDoc = await admin.firestore().doc(`users/${userId}`).get();
       if (!userDoc.exists || userDoc.data().role !== 'admin') {
         return res.status(403).send('Forbidden: Only admins can add users');
@@ -92,12 +88,10 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
 
       const { name, email, role, purchasedCourses, registrationDate } = req.body;
 
-      // Проверяем, что все обязательные поля переданы
       if (!name || !email || !role) {
         return res.status(400).send('Missing required fields: name, email, role');
       }
 
-      // Проверяем, существует ли пользователь с таким email
       try {
         await admin.auth().getUserByEmail(email);
         return res.status(400).send('User with this email already exists');
@@ -107,17 +101,14 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
         }
       }
 
-      // Генерируем случайный пароль
       const password = generateRandomPassword();
 
-      // Создаем пользователя в Firebase Authentication
       const userRecord = await admin.auth().createUser({
         email,
         password,
         displayName: name,
       });
 
-      // Сохраняем данные пользователя в Firestore
       await admin
         .firestore()
         .doc(`users/${userRecord.uid}`)
@@ -131,7 +122,6 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
           readNotifications: [],
         });
 
-      // Генерируем ссылку для сброса пароля
       const actionCodeSettings = {
         url: 'https://lms-jet-one.vercel.app/login',
         handleCodeInApp: true,
@@ -151,7 +141,7 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
   });
 });
 
-// Новая функция для удаления пользователя
+// Функция для удаления пользователя (без изменений)
 exports.deleteUser = functions.https.onRequest((req, res) => {
   return cors(req, res, async () => {
     if (req.method !== 'POST') {
@@ -168,7 +158,6 @@ exports.deleteUser = functions.https.onRequest((req, res) => {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const adminUserId = decodedToken.uid;
 
-      // Проверяем, что вызывающий пользователь — администратор
       const adminUserDoc = await admin.firestore().doc(`users/${adminUserId}`).get();
       if (!adminUserDoc.exists || adminUserDoc.data().role !== 'admin') {
         return res.status(403).send('Forbidden: Only admins can delete users');
@@ -176,26 +165,20 @@ exports.deleteUser = functions.https.onRequest((req, res) => {
 
       const { userId } = req.body;
 
-      // Проверяем, что userId передан
       if (!userId) {
         return res.status(400).send('Missing required field: userId');
       }
 
-      // Проверяем, что пользователь, которого пытаются удалить, существует
       const userDoc = await admin.firestore().doc(`users/${userId}`).get();
       if (!userDoc.exists) {
         return res.status(404).send('User not found in Firestore');
       }
 
-      // Нельзя удалить самого себя
       if (userId === adminUserId) {
         return res.status(403).send('Forbidden: Cannot delete yourself');
       }
 
-      // Удаляем пользователя из Firebase Authentication
       await admin.auth().deleteUser(userId);
-
-      // Удаляем данные пользователя из Firestore
       await admin.firestore().doc(`users/${userId}`).delete();
 
       res.status(200).json({
