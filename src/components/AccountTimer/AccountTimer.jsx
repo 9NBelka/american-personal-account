@@ -108,7 +108,9 @@ export default function AccountTimer({ courseId, modules }) {
             <span className={clsx(scss.timeValue, bluePart === 'days' && scss.timeValueBlue)}>
               {timeLeft.days}
             </span>
-            <span className={scss.timeLabel}>d</span>
+            <span className={clsx(scss.timeLabel, bluePart === 'days' && scss.timeValueBlue)}>
+              d
+            </span>
             <span className={scss.timeSimvol}>:</span>
           </div>
           <div className={scss.timeBlock}>
