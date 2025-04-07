@@ -37,6 +37,9 @@ export default function AddUser({ onBack }) {
 
   // Обработчик отправки формы
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    if (setSubmitting.isSubmitting) return; // Дополнительная защита
+    setSubmitting(true);
+
     const existingUser = users.find((u) => u.email === values.email);
     if (existingUser) {
       toast.error('Пользователь с таким email уже существует.');
