@@ -66,6 +66,63 @@
     }
   }
 
+  & .fileInputContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5vw;
+
+    & .fileInput {
+      padding: 0.5vw;
+      background-color: #1e1e1e;
+      border-radius: 0.2vw;
+      font-size: 0.75vw;
+      color: #fff;
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+
+      &::-webkit-file-upload-button {
+        padding: 0.5vw 1vw;
+        background-color: #2ecc71;
+        border: none;
+        border-radius: 0.2vw;
+        font-size: 0.75vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+
+        &:hover {
+          background-color: #27ae60;
+        }
+      }
+    }
+
+    & .fileInfo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3vw;
+
+      p {
+        font-size: 0.7vw;
+        color: #888;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+      }
+
+      & .imagePreview {
+        width: 5vw;
+        height: 5vw;
+        object-fit: cover;
+        border-radius: 0.2vw;
+        margin-top: 0.3vw;
+      }
+    }
+  }
+
   & .categoryContainer,
   & .accessContainer {
     position: relative;

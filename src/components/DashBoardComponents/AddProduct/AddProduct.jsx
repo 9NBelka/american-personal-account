@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
 import scss from './AddProduct.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
@@ -6,20 +6,24 @@ import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function AddProduct() {
-  const { addProduct, error, setError, accessLevels } = useAdmin();
+  const { addProduct, error, setError, accessLevels, uploadImage } = useAdmin();
 
   // Состояние для данных продукта
   const [productData, setProductData] = useState({
     id: '',
     nameProduct: '',
-    imageProduct: '',
+    imageProduct: '', // Здесь будет храниться URL после загрузки
     priceProduct: 0,
-    access: accessLevels[0]?.id || '', // Устанавливаем первый уровень доступа по умолчанию
+    access: accessLevels[0]?.id || '',
     available: true,
     categoryProduct: 'Course',
     descriptionProduct: [],
     speakersProduct: [],
   });
+
+  // Состояние для выбранного файла
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null); // Для предпросмотра изображения
 
   // Состояние для выпадающего списка категорий и доступа
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -30,7 +34,6 @@ export default function AddProduct() {
     { value: 'Master class', label: 'Master class' },
   ];
 
-  // Динамические опции для типов доступа
   const accessOptions = accessLevels.map((level) => ({
     value: level.id,
     label: level.name,
@@ -49,6 +52,32 @@ export default function AddProduct() {
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
     }));
+  };
+
+  // Обработчик выбора файла
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Проверяем, что файл является изображением
+      if (!file.type.startsWith('image/')) {
+        toast.error('Пожалуйста, выберите файл изображения (jpg, png и т.д.)');
+        e.target.value = null; // Сбрасываем input
+        return;
+      }
+      // Проверяем размер файла (например, не больше 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Файл слишком большой. Максимальный размер: 5MB');
+        e.target.value = null;
+        return;
+      }
+      setSelectedFile(file);
+      // Создаем URL для предпросмотра
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
+    } else {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+    }
   };
 
   // Обработчик выбора категории
@@ -114,34 +143,57 @@ export default function AddProduct() {
   };
 
   // Обработчик отправки формы
+  // В AddProduct.js
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Формируем данные продукта для отправки в базу
+      // Валидация productId
+      if (!/^[a-zA-Z0-9-_]+$/.test(productData.id)) {
+        throw new Error(
+          'ID продукта должен содержать только латинские буквы, цифры, дефисы или подчеркивания',
+        );
+      }
+
+      let imageUrl = '';
+      if (selectedFile) {
+        imageUrl = await uploadImage(selectedFile, productData.id);
+      }
+
       const formattedProductData = {
         ...productData,
-        createdAtProduct: new Date().toISOString(), // Добавляем текущую дату создания
+        imageProduct: imageUrl,
+        createdAtProduct: new Date().toISOString(),
       };
 
       await addProduct(formattedProductData);
       toast.success('Продукт успешно добавлен!');
-      // Сбрасываем форму
       setProductData({
         id: '',
         nameProduct: '',
         imageProduct: '',
         priceProduct: 0,
-        access: accessLevels[0]?.id || '', // Сбрасываем на первый уровень доступа
+        access: accessLevels[0]?.id || '',
         available: true,
         categoryProduct: 'Course',
         descriptionProduct: [],
         speakersProduct: [],
       });
+      setSelectedFile(null);
+      setPreviewUrl(null);
     } catch (err) {
       setError('Ошибка при добавлении продукта: ' + err.message);
       toast.error('Ошибка при добавлении: ' + err.message);
     }
   };
+
+  // Очистка URL предпросмотра при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <div className={scss.addProduct}>
@@ -174,15 +226,23 @@ export default function AddProduct() {
           />
         </div>
         <div className={scss.field}>
-          <label htmlFor='imageProduct'>URL изображения</label>
-          <input
-            type='url'
-            id='imageProduct'
-            name='imageProduct'
-            value={productData.imageProduct}
-            onChange={handleInputChange}
-            placeholder='Введите URL изображения продукта...'
-          />
+          <label htmlFor='imageProduct'>Изображение продукта</label>
+          <div className={scss.fileInputContainer}>
+            <input
+              type='file'
+              id='imageProduct'
+              name='imageProduct'
+              accept='image/*'
+              onChange={handleFileChange}
+              className={scss.fileInput}
+            />
+            {selectedFile && (
+              <div className={scss.fileInfo}>
+                <p>Выбранный файл: {selectedFile.name}</p>
+                {previewUrl && <img src={previewUrl} alt='Preview' className={scss.imagePreview} />}
+              </div>
+            )}
+          </div>
         </div>
         <div className={scss.field}>
           <label htmlFor='priceProduct'>Цена</label>
@@ -201,10 +261,7 @@ export default function AddProduct() {
           <label>Тип доступа</label>
           <div className={scss.accessContainer}>
             <div
-              className={clsx(
-                scss.accessButton,
-                accessLevels.length === 0 && scss.disabled, // Добавляем класс disabled, если accessLevels пуст
-              )}
+              className={clsx(scss.accessButton, accessLevels.length === 0 && scss.disabled)}
               onClick={() => {
                 if (accessLevels.length > 0) {
                   setIsAccessOpen(!isAccessOpen);

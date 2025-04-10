@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { db, auth } from '../firebase';
+import { db, auth, storage } from '../firebase'; // Импортируем storage
 import {
   collection,
   setDoc,
@@ -10,6 +10,7 @@ import {
   onSnapshot,
   deleteDoc,
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Импортируем функции для Storage
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useAuth } from './AuthContext';
 
@@ -25,7 +26,7 @@ export function AdminProvider({ children }) {
   const [accessLevels, setAccessLevels] = useState([]);
   const [timers, setTimers] = useState([]);
   const [discountPresets, setDiscountPresets] = useState([]);
-  const [promoCodes, setPromoCodes] = useState([]); // Новое состояние для промокодов
+  const [promoCodes, setPromoCodes] = useState([]);
   const [error, setError] = useState(null);
 
   // Подписка на пользователей в реальном времени
@@ -252,6 +253,36 @@ export function AdminProvider({ children }) {
 
     return () => unsubscribe();
   }, [user, userRole]);
+
+  // Функция для загрузки изображения в Firebase Storage
+  // В AdminContext.js
+  const uploadImage = useCallback(
+    async (file, productId) => {
+      if (!file) {
+        throw new Error('Файл не выбран');
+      }
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут загружать изображения');
+      }
+
+      console.log('Попытка загрузки файла:', file.name);
+      console.log('productId:', productId);
+      console.log('UID пользователя:', auth.currentUser?.uid);
+      console.log('Роль пользователя:', userRole);
+
+      try {
+        const storageRef = ref(storage, `product-images/${productId}/${file.name}`);
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+        console.log('Файл успешно загружен, URL:', downloadURL);
+        return downloadURL;
+      } catch (error) {
+        console.error('Ошибка при загрузке:', error);
+        throw new Error('Ошибка при загрузке изображения: ' + error.message);
+      }
+    },
+    [userRole],
+  );
 
   // Добавление нового пользователя через Cloud Function
   const addUser = useCallback(
@@ -825,7 +856,7 @@ export function AdminProvider({ children }) {
     accessLevels,
     timers,
     discountPresets,
-    promoCodes, // Добавляем промокоды в контекст
+    promoCodes,
     fetchAllCourses,
     fetchAllProducts,
     fetchAllOrders,
@@ -847,10 +878,11 @@ export function AdminProvider({ children }) {
     updateDiscountPreset,
     deleteDiscountPreset,
     toggleDiscountPreset,
-    addPromoCode, // Добавляем методы для промокодов
+    addPromoCode,
     updatePromoCode,
     deletePromoCode,
     togglePromoCode,
+    uploadImage, // Добавляем функцию загрузки изображения
     error,
     setError,
   };
