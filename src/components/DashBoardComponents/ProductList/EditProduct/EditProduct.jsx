@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function EditProduct({ productId, onBack }) {
-  const { products, updateProduct, error, setError, accessLevels } = useAdmin();
+  const { products, updateProduct, error, setError, accessLevels, uploadImage } = useAdmin();
 
   // Находим продукт для редактирования
   const productToEdit = products.find((product) => product.id === productId);
@@ -25,6 +25,10 @@ export default function EditProduct({ productId, onBack }) {
     descriptionProduct: [],
     speakersProduct: [],
   });
+
+  // Состояние для выбранного файла и предпросмотра
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // Состояние для выпадающего списка категорий и доступа
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -68,21 +72,28 @@ export default function EditProduct({ productId, onBack }) {
       descriptionProduct: productToEdit.descriptionProduct || [],
       speakersProduct: productToEdit.speakersProduct || [],
     });
+    setPreviewUrl(productToEdit.imageProduct || null); // Устанавливаем текущий URL для предпросмотра
   }, [productToEdit, setError, onBack, accessLevels]);
+
+  // Очистка URL предпросмотра при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      if (previewUrl && !productData.imageProduct) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl, productData.imageProduct]);
 
   // Обработчик изменения полей продукта
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setProductData((prev) => {
-      // Валидация цены: не меньше 0
       if (name === 'priceProduct') {
         const newPrice = Number(value);
         if (newPrice < 0) {
           toast.error('Цена не может быть меньше 0');
           return prev;
         }
-
-        // Если есть discountPercent, пересчитываем discountedPrice
         if (prev.discountPercent) {
           const newDiscountedPrice = newPrice - (newPrice * prev.discountPercent) / 100;
           return {
@@ -92,12 +103,37 @@ export default function EditProduct({ productId, onBack }) {
           };
         }
       }
-
       return {
         ...prev,
         [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
       };
     });
+  };
+
+  // Обработчик выбора файла
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Проверяем, что файл является изображением
+      if (!file.type.startsWith('image/')) {
+        toast.error('Пожалуйста, выберите файл изображения (jpg, png и т.д.)');
+        e.target.value = null;
+        return;
+      }
+      // Проверяем размер файла (не больше 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Файл слишком большой. Максимальный размер: 5MB');
+        e.target.value = null;
+        return;
+      }
+      setSelectedFile(file);
+      // Создаем URL для предпросмотра
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
+    } else {
+      setSelectedFile(null);
+      setPreviewUrl(productData.imageProduct || null); // Восстанавливаем текущий URL, если файл не выбран
+    }
   };
 
   // Обработчик выбора категории
@@ -166,8 +202,16 @@ export default function EditProduct({ productId, onBack }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let imageUrl = productData.imageProduct;
+      if (selectedFile) {
+        // Загружаем новое изображение
+        imageUrl = await uploadImage(selectedFile, productData.id);
+        setProductData((prev) => ({ ...prev, imageProduct: imageUrl }));
+      }
+
       const updatedProductData = {
         ...productData,
+        imageProduct: imageUrl,
         createdAtProduct: productToEdit.createdAtProduct,
         discountedPrice: productData.discountPercent ? productData.discountedPrice : null,
         discountPercent: productData.discountPercent || null,
@@ -223,15 +267,23 @@ export default function EditProduct({ productId, onBack }) {
           />
         </div>
         <div className={scss.field}>
-          <label htmlFor='imageProduct'>URL изображения</label>
-          <input
-            type='url'
-            id='imageProduct'
-            name='imageProduct'
-            value={productData.imageProduct}
-            onChange={handleInputChange}
-            placeholder='Введите URL изображения продукта...'
-          />
+          <label htmlFor='imageProduct'>Изображение продукта</label>
+          <div className={scss.fileInputContainer}>
+            <input
+              type='file'
+              id='imageProduct'
+              name='imageProduct'
+              accept='image/*'
+              onChange={handleFileChange}
+              className={scss.fileInput}
+            />
+            {previewUrl && (
+              <div className={scss.fileInfo}>
+                {selectedFile && <p>Выбранный файл: {selectedFile.name}</p>}
+                <img src={previewUrl} alt='Preview' className={scss.imagePreview} />
+              </div>
+            )}
+          </div>
         </div>
         <div className={scss.field}>
           <label htmlFor='priceProduct'>Цена</label>

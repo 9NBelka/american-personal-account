@@ -271,7 +271,7 @@ export function AdminProvider({ children }) {
       console.log('Роль пользователя:', userRole);
 
       try {
-        const storageRef = ref(storage, `product-images/${productId}/${file.name}`);
+        const storageRef = ref(storage, `product-images/${productId}/${Date.now()}/${file.name}`);
         await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(storageRef);
         console.log('Файл успешно загружен, URL:', downloadURL);

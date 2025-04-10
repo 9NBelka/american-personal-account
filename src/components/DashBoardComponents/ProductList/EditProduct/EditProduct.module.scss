@@ -102,6 +102,23 @@
       line-height: var(--font-lineh-small);
       margin-top: 0.3vw;
     }
+
+    & .fileInputContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    & .fileInfo {
+      margin-top: 10px;
+    }
+
+    & .imagePreview {
+      max-width: 200px;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
   }
 
   & .categoryContainer,
