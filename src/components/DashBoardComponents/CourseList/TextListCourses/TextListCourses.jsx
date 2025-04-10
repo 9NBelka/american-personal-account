@@ -17,6 +17,14 @@ export default function TextListCourses({ courses, handleEdit, handleDelete, acc
     return accessLevel ? accessLevel.name : accessId || 'Не указан';
   };
 
+  // Функция для подсчёта общего количества уроков
+  const getLessonCount = (modules) => {
+    if (!modules || typeof modules !== 'object') return 0;
+    return Object.values(modules).reduce((total, module) => {
+      return total + (module.lessons?.length || 0);
+    }, 0);
+  };
+
   return (
     <tbody className={scss.listCourses}>
       {courses.map((course, index) => (
@@ -43,7 +51,8 @@ export default function TextListCourses({ courses, handleEdit, handleDelete, acc
           <td>{course.title}</td>
           <td>{course.category || 'Нет категории'}</td>
           <td>{course.id}</td>
-          <td>{getAccessLevelName(course.access)}</td> {/* Новый столбец */}
+          <td>{getAccessLevelName(course.access)}</td>
+          <td>{getLessonCount(course.modules)}</td> {/* Новый столбец */}
           <td>{formatDate(course.createdAt)}</td>
           <td className={scss.actions}>
             <button className={scss.editButton} onClick={() => handleEdit(course.id)}>
