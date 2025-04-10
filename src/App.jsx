@@ -23,6 +23,7 @@ import ProductList from './components/DashBoardComponents/ProductList/ProductLis
 import AddProduct from './components/DashBoardComponents/AddProduct/AddProduct';
 import TimersCourses from './components/DashBoardComponents/TimersCourses/TimersCourses';
 import DiscountPresets from './components/DashBoardComponents/DiscountPresets/DiscountPresets';
+import PromoCodes from './components/DashBoardComponents/PromoCodes/PromoCodes';
 
 export default function App() {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ export default function App() {
             <Route path='productList' element={<ProductList />} />
             <Route path='addProduct' element={<AddProduct />} />
             <Route path='discountPresets' element={<DiscountPresets />} />
+            <Route path='promocodes' element={<PromoCodes />} />
             <Route path='notifications' element={<Notifications />} />
             <Route path='*' element={<div>Section Not Found</div>} />
           </Route>

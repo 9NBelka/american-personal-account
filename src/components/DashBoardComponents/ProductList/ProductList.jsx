@@ -221,7 +221,7 @@ export default function ProductList() {
           ) : (
             <tbody>
               <tr>
-                <td colSpan='8'>Продукты не найдены.</td>
+                <td>Продукты не найдены.</td>
               </tr>
             </tbody>
           )}

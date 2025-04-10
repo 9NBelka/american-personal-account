@@ -9,7 +9,7 @@ export default function TitleListProducts() {
         <th>Название</th>
         <th>Категория</th>
         <th>Цена</th>
-        <th>Уровень доступа</th> {/* Новый столбец */}
+        <th>Уровень доступа</th>
         <th>Статус</th>
         <th>Дата создания</th>
         <th>Действия</th>

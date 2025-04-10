@@ -156,6 +156,7 @@ export default function Sidebar({
             (activeSection === 'productList' ||
               activeSection === 'addProduct' ||
               activeSection === 'discountPresets' ||
+              activeSection === 'promocodes' ||
               activeSection === 'editProduct') &&
               scss.active,
           )}>
@@ -199,6 +200,14 @@ export default function Sidebar({
                 )}
                 onClick={() => handleSectionClick('discountPresets')}>
                 Скидки
+              </li>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'promocodes' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('promocodes')}>
+                Промокоды
               </li>
             </ul>
           )}

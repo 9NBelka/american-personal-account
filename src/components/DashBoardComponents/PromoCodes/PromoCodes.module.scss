@@ -1,0 +1,402 @@
+.promoCodes {
+  padding: 1vw;
+
+  & .title {
+    font-size: 1.2vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    margin-bottom: 1vw;
+  }
+
+  & .error {
+    color: var(--color-red);
+    font-size: 0.8vw;
+    margin-bottom: 1vw;
+  }
+
+  & .createPromoCodeButton {
+    padding: 0.5vw 1vw;
+    background-color: #2ecc71;
+    border: none;
+    border-radius: 0.2vw;
+    font-size: 0.8vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+    margin-bottom: 1vw;
+
+    &:hover {
+      background-color: #27ae60;
+    }
+  }
+
+  & .promoCodeForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1vw;
+    background-color: #111111;
+    padding: 1vw;
+    border-radius: 0.25vw;
+    margin-bottom: 1vw;
+
+    & .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3vw;
+
+      label {
+        font-size: 0.75vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+      }
+
+      input {
+        padding: 0.5vw;
+        background-color: #1e1e1e;
+        border: none;
+        border-radius: 0.2vw;
+        font-size: 0.75vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        outline: none;
+
+        &::placeholder {
+          color: #888;
+        }
+
+        &:focus {
+          background-color: #252525;
+        }
+      }
+    }
+
+    & .promoCodeItem {
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+
+      & .searchContainer {
+        position: relative;
+        flex: 1;
+
+        input {
+          width: 100%;
+          padding: 0.5vw;
+          background-color: #1e1e1e;
+          border: none;
+          border-radius: 0.2vw;
+          font-size: 0.75vw;
+          color: #fff;
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+          outline: none;
+
+          &::placeholder {
+            color: #888;
+          }
+
+          &:focus {
+            background-color: #252525;
+          }
+
+          &:disabled {
+            background-color: #333;
+            cursor: not-allowed;
+          }
+        }
+
+        & .suggestions {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          width: 100%;
+          background-color: #1e1e1e;
+          border-radius: 0.2vw;
+          margin-top: 0.3vw;
+          padding: 0.3vw 0;
+          list-style: none;
+          z-index: 10;
+          box-shadow: 0 0.2vw 0.4vw rgba(0, 0, 0, 0.2);
+          max-height: 10vw;
+          overflow-y: auto;
+        }
+
+        & .suggestionItem {
+          padding: 0.4vw 0.75vw;
+          font-size: 0.75vw;
+          color: #fff;
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+          cursor: pointer;
+          transition: background-color 0.3s ease-in-out;
+
+          &:hover {
+            background-color: #252525;
+          }
+        }
+      }
+
+      span {
+        font-size: 0.75vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+
+        & .warning {
+          color: #e74c3c;
+          font-size: 0.65vw;
+          margin-left: 0.3vw;
+        }
+      }
+    }
+
+    & .addItemButton {
+      display: flex;
+      align-items: center;
+      gap: 0.3vw;
+      padding: 0.4vw 0.75vw;
+      background-color: #2ecc71;
+      border: none;
+      border-radius: 0.2vw;
+      font-size: 0.75vw;
+      color: #fff;
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      cursor: pointer;
+      transition: background-color 0.3s ease-in-out;
+
+      &:hover {
+        background-color: #27ae60;
+      }
+
+      svg {
+        width: 0.75vw;
+        height: 0.75vw;
+      }
+    }
+
+    & .deleteButton {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.4vw;
+      background-color: #e74c3c;
+      border: none;
+      border-radius: 0.2vw;
+      cursor: pointer;
+      transition: background-color 0.3s ease-in-out;
+
+      &:hover {
+        background-color: #c0392b;
+      }
+
+      svg {
+        width: 0.75vw;
+        height: 0.75vw;
+        color: #fff;
+      }
+    }
+
+    & .formButtons {
+      display: flex;
+      gap: 0.5vw;
+
+      & .submitButton {
+        padding: 0.5vw 1vw;
+        background-color: #2ecc71;
+        border: none;
+        border-radius: 0.2vw;
+        font-size: 0.8vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+
+        &:hover {
+          background-color: #27ae60;
+        }
+      }
+
+      & .cancelButton {
+        padding: 0.5vw 1vw;
+        background-color: #666;
+        border: none;
+        border-radius: 0.2vw;
+        font-size: 0.8vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+
+        &:hover {
+          background-color: #555;
+        }
+      }
+    }
+  }
+
+  & .promoCodeList {
+    display: flex;
+    flex-direction: column;
+    gap: 1vw;
+
+    & .promoCode {
+      background-color: #111111;
+      padding: 1vw;
+      border-radius: 0.25vw;
+
+      & .promoCodeHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5vw;
+
+        & .promoCodeName {
+          font-size: 0.9vw;
+          color: #fff;
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-normal);
+          line-height: var(--font-lineh-normal);
+        }
+
+        & .activeLabel {
+          font-size: 0.7vw;
+          color: #2ecc71;
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+        }
+      }
+
+      & .createdAt {
+        font-size: 0.7vw;
+        color: #888;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        margin-bottom: 0.5vw;
+      }
+
+      & .expiryDate {
+        font-size: 0.7vw;
+        color: #888;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        margin-bottom: 0.5vw;
+      }
+
+      & .discountPercent {
+        font-size: 0.75vw;
+        color: #2ecc71;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        margin-bottom: 0.5vw;
+      }
+
+      & .promoCodeItems {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3vw;
+        margin-bottom: 0.5vw;
+
+        & .item {
+          display: flex;
+          gap: 0.5vw;
+          font-size: 0.75vw;
+          color: #fff;
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+
+          & .productName {
+            flex: 1;
+          }
+
+          & .accessLevelName {
+            flex: 1;
+          }
+        }
+      }
+
+      & .promoCodeActions {
+        display: flex;
+        gap: 0.5vw;
+
+        & .activateButton,
+        & .deactivateButton,
+        & .editButton,
+        & .deleteButton {
+          display: flex;
+          align-items: center;
+          gap: 0.3vw;
+          padding: 0.4vw 0.75vw;
+          border: none;
+          border-radius: 0.2vw;
+          font-size: 0.75vw;
+          color: #fff;
+          font-family: var(--font-main-for-account);
+          font-weight: var(--font-weight-small);
+          line-height: var(--font-lineh-small);
+          cursor: pointer;
+          transition: background-color 0.3s ease-in-out;
+
+          svg {
+            width: 0.75vw;
+            height: 0.75vw;
+          }
+        }
+
+        & .activateButton {
+          background-color: #2ecc71;
+
+          &:hover {
+            background-color: #27ae60;
+          }
+        }
+
+        & .deactivateButton {
+          background-color: #e74c3c;
+
+          &:hover {
+            background-color: #c0392b;
+          }
+        }
+
+        & .editButton {
+          background-color: #3498db;
+
+          &:hover {
+            background-color: #2980b9;
+          }
+        }
+
+        & .deleteButton {
+          background-color: #e74c3c;
+
+          &:hover {
+            background-color: #c0392b;
+          }
+        }
+      }
+    }
+  }
+}

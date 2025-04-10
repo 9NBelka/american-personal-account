@@ -139,7 +139,11 @@ export default function CourseList() {
                 accessLevels={accessLevels} // Передаем accessLevels
               />
             ) : (
-              <p>Курсы не найдены.</p>
+              <tbody>
+                <tr>
+                  <td>Курсы не найдены.</td>
+                </tr>
+              </tbody>
             )}
           </table>
         </div>

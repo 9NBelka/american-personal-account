@@ -25,6 +25,7 @@ export function AdminProvider({ children }) {
   const [accessLevels, setAccessLevels] = useState([]);
   const [timers, setTimers] = useState([]);
   const [discountPresets, setDiscountPresets] = useState([]);
+  const [promoCodes, setPromoCodes] = useState([]); // Новое состояние для промокодов
   const [error, setError] = useState(null);
 
   // Подписка на пользователей в реальном времени
@@ -141,6 +142,45 @@ export function AdminProvider({ children }) {
       },
       (error) => {
         setError('Ошибка при загрузке пресетов скидок: ' + error.message);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user, userRole]);
+
+  // Подписка на промокоды в реальном времени
+  useEffect(() => {
+    if (!user || userRole !== 'admin') {
+      setPromoCodes([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'promoCodes'),
+      (snapshot) => {
+        const promoCodeList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setPromoCodes(promoCodeList);
+
+        // Проверяем промокоды на истечение срока действия
+        promoCodeList.forEach((promo) => {
+          if (promo.expiryDate && promo.available) {
+            const expiry = new Date(promo.expiryDate);
+            const now = new Date();
+            if (now >= expiry) {
+              // Отключаем промокод, если срок действия истек
+              const promoRef = doc(db, 'promoCodes', promo.id);
+              updateDoc(promoRef, { available: false }).catch((error) => {
+                console.error('Ошибка при отключении промокода:', error);
+              });
+            }
+          }
+        });
+      },
+      (error) => {
+        setError('Ошибка при загрузке промокодов: ' + error.message);
       },
     );
 
@@ -709,6 +749,73 @@ export function AdminProvider({ children }) {
     [userRole, discountPresets, products],
   );
 
+  // Добавление нового промокода
+  const addPromoCode = useCallback(
+    async (promoCodeData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут добавлять промокоды');
+      }
+      try {
+        const promoCodeRef = doc(db, 'promoCodes', promoCodeData.id);
+        await setDoc(promoCodeRef, promoCodeData);
+      } catch (error) {
+        throw new Error('Ошибка при добавлении промокода: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
+  // Обновление промокода
+  const updatePromoCode = useCallback(
+    async (promoCodeId, updatedData) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут обновлять промокоды');
+      }
+      try {
+        const promoCodeRef = doc(db, 'promoCodes', promoCodeId);
+        await updateDoc(promoCodeRef, updatedData);
+      } catch (error) {
+        throw new Error('Ошибка при обновлении промокода: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
+  // Удаление промокода
+  const deletePromoCode = useCallback(
+    async (promoCodeId) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут удалять промокоды');
+      }
+      try {
+        await deleteDoc(doc(db, 'promoCodes', promoCodeId));
+      } catch (error) {
+        throw new Error('Ошибка при удалении промокода: ' + error.message);
+      }
+    },
+    [userRole],
+  );
+
+  // Включение/выключение промокода
+  const togglePromoCode = useCallback(
+    async (promoCodeId) => {
+      if (userRole !== 'admin') {
+        throw new Error('Только администраторы могут управлять промокодами');
+      }
+      try {
+        const promoCode = promoCodes.find((p) => p.id === promoCodeId);
+        if (!promoCode) {
+          throw new Error('Промокод не найден');
+        }
+        const promoCodeRef = doc(db, 'promoCodes', promoCodeId);
+        await updateDoc(promoCodeRef, { available: !promoCode.available });
+      } catch (error) {
+        throw new Error('Ошибка при управлении промокодом: ' + error.message);
+      }
+    },
+    [userRole, promoCodes],
+  );
+
   const value = {
     users,
     courses,
@@ -718,6 +825,7 @@ export function AdminProvider({ children }) {
     accessLevels,
     timers,
     discountPresets,
+    promoCodes, // Добавляем промокоды в контекст
     fetchAllCourses,
     fetchAllProducts,
     fetchAllOrders,
@@ -736,9 +844,13 @@ export function AdminProvider({ children }) {
     addTimer,
     deleteTimer,
     addDiscountPreset,
-    updateDiscountPreset, // Добавляем метод
+    updateDiscountPreset,
     deleteDiscountPreset,
     toggleDiscountPreset,
+    addPromoCode, // Добавляем методы для промокодов
+    updatePromoCode,
+    deletePromoCode,
+    togglePromoCode,
     error,
     setError,
   };
