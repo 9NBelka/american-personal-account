@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useCallback, useState } from 'react';
-import { auth, db, storage, setAdminClaim } from '../firebase';
+import { auth, db, storage } from '../firebase';
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -381,11 +381,6 @@ export function AuthProvider({ children }) {
   );
 
   useEffect(() => {
-    if (!user) {
-      setAccessLevels([]); // Очищаем уровни доступа, если пользователь не аутентифицирован
-      return;
-    }
-
     const unsubscribe = onSnapshot(
       collection(db, 'accessLevels'),
       (snapshot) => {
@@ -401,7 +396,7 @@ export function AuthProvider({ children }) {
     );
 
     return () => unsubscribe();
-  }, [user]); // Зависимость от user
+  }, []);
 
   useEffect(() => {
     if (!user || !userAccessLevels.length) {
