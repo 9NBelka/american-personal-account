@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage'; // Добавляем Storage
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -31,5 +32,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app); // Инициализируем Storage
+const functions = getFunctions();
+const setAdminClaim = httpsCallable(functions, 'setAdminClaim');
+
+await setAdminClaim({ uid: 'I3FVwa894aZl04PCYMRCumadylT2' });
 
 export { db, auth, storage }; // Экспортируем storage

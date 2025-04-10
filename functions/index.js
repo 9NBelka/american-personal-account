@@ -212,3 +212,9 @@ exports.deleteUser = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+exports.setAdminClaim = functions.https.onCall(async (data, context) => {
+  const uid = data.uid;
+  await admin.auth().setCustomUserClaims(uid, { admin: true });
+  return { message: 'Admin claim set successfully' };
+});
