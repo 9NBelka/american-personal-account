@@ -41,6 +41,14 @@ if (!adminUid) {
   throw new Error('Переменная окружения VITE_ADMIN_UID не установлена');
 }
 
-await setAdminClaim({ uid: adminUid });
+// Оборачиваем вызов в асинхронную функцию
+(async () => {
+  try {
+    await setAdminClaim({ uid: adminUid });
+    console.log('Custom claim установлен для UID:', adminUid);
+  } catch (error) {
+    console.error('Ошибка при установке custom claim:', error);
+  }
+})();
 
 export { db, auth, storage };
