@@ -214,7 +214,30 @@ exports.deleteUser = functions.https.onRequest((req, res) => {
 });
 
 exports.setAdminClaim = functions.https.onCall(async (data, context) => {
+  // Проверяем, что запрос пришел от аутентифицированного пользователя
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Пользователь не аутентифицирован');
+  }
+
+  // Проверяем, что пользователь — админ (опционально, если хочешь ограничить доступ)
+  // Для этого нужно, чтобы у вызывающего уже был custom claim admin: true
+  if (!context.auth.token.admin) {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'Только админы могут устанавливать custom claims',
+    );
+  }
+
   const uid = data.uid;
-  await admin.auth().setCustomUserClaims(uid, { admin: true });
-  return { message: 'Admin claim set successfully' };
+  if (!uid) {
+    throw new functions.https.HttpsError('invalid-argument', 'UID не передан');
+  }
+
+  try {
+    await admin.auth().setCustomUserClaims(uid, { admin: true });
+    return { message: 'Admin claim set successfully' };
+  } catch (error) {
+    console.error('Ошибка при установке custom claim:', error);
+    throw new functions.https.HttpsError('internal', 'Не удалось установить custom claim');
+  }
 });
