@@ -144,6 +144,8 @@ export default function PersonalAccount() {
     ? timers.find((timer) => timer.courseId === activeCourse.id)
     : null;
 
+  console.log(activeTimer);
+
   return (
     <div className={scss.personalAccountBackground}>
       <div className={scss.container}>
@@ -197,11 +199,10 @@ export default function PersonalAccount() {
               </div>
             )}
             <div className={scss.courseRightContainer}>
-              {/* Добавляем таймер перед списком уроков */}
               {activeTimer && (
                 <AccountTimer courseId={activeCourse.id} modules={activeCourse.modules} />
               )}
-              <AccountCompanyAndQuestions />
+              <AccountCompanyAndQuestions activeTimer={activeTimer} />
               <div className={scss.courseAccessBlock}>
                 <h3 className={scss.courseAccessTitle}>Available courses:</h3>
                 <p className={scss.courseAccessDescrtiption}>
