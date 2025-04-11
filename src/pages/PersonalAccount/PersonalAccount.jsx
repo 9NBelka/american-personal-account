@@ -144,8 +144,6 @@ export default function PersonalAccount() {
     ? timers.find((timer) => timer.courseId === activeCourse.id)
     : null;
 
-  console.log(activeTimer);
-
   return (
     <div className={scss.personalAccountBackground}>
       <div className={scss.container}>
