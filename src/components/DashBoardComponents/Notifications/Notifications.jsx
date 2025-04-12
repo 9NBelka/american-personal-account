@@ -1,15 +1,22 @@
-// components/DashBoardComponents/Notifications/Notifications.jsx
 import { useState } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useDispatch, useSelector } from 'react-redux'; // Добавляем Redux хуки
+import {
+  addNotification,
+  deleteNotification,
+  setError,
+  updateNotification,
+} from '../../../store/slices/adminSlice'; // Импортируем действия
 import { toast } from 'react-toastify';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../firebase';
 import scss from './Notifications.module.scss';
 import NotificationsList from './NotificationsList/NotificationsList';
 import NotificationsCreate from './NotificationsCreate/NotificationsCreate';
 
 export default function Notifications() {
-  const { addNotification, notifications, deleteNotification, accessLevels } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { notifications, accessLevels } = useSelector((state) => state.admin);
+
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [selectedAccessLevels, setSelectedAccessLevels] = useState([]);
@@ -24,12 +31,18 @@ export default function Notifications() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title || !message) {
+    if (!title.trim() || !message.trim()) {
+      dispatch(setError('Пожалуйста, заполните все поля.')); // Используем dispatch
       toast.error('Пожалуйста, заполните все поля.');
       return;
     }
 
     if (!sendToAll && selectedAccessLevels.length === 0) {
+      dispatch(
+        setError(
+          'Пожалуйста, выберите хотя бы один уровень доступа или включите "Отправить всем".',
+        ),
+      ); // Используем dispatch
       toast.error(
         'Пожалуйста, выберите хотя бы один уровень доступа или включите "Отправить всем".',
       );
@@ -51,14 +64,15 @@ export default function Notifications() {
         notificationData.accessLevels = selectedAccessLevels;
       }
 
-      await addNotification(notificationData);
+      await dispatch(addNotification(notificationData)).unwrap();
       toast.success('Уведомление успешно отправлено!');
       setTitle('');
       setMessage('');
       setSelectedAccessLevels([]);
       setSendToAll(false);
     } catch (error) {
-      toast.error('Ошибка при отправке уведомления: ' + error.message);
+      dispatch(setError('Ошибка при отправке уведомления: ' + error)); // Используем dispatch
+      toast.error('Ошибка при отправке уведомления: ' + error);
     }
   };
 
@@ -68,10 +82,11 @@ export default function Notifications() {
     }
 
     try {
-      await deleteNotification(notificationId);
+      await dispatch(deleteNotification(notificationId)).unwrap();
       toast.success('Уведомление успешно удалено!');
     } catch (error) {
-      toast.error('Ошибка при удалении уведомления: ' + error.message);
+      dispatch(setError('Ошибка при удалении уведомления: ' + error)); // Используем dispatch
+      toast.error('Ошибка при удалении уведомления: ' + error);
     }
   };
 
@@ -81,11 +96,13 @@ export default function Notifications() {
     }
 
     try {
-      const notificationRef = doc(db, 'notifications', notificationId);
-      await updateDoc(notificationRef, updatedNotification);
+      await dispatch(
+        updateNotification({ notificationId, updatedData: updatedNotification }),
+      ).unwrap();
       toast.success('Уведомление успешно обновлено!');
     } catch (error) {
-      toast.error('Ошибка при обновлении уведомления: ' + error.message);
+      dispatch(setError('Ошибка при обновлении уведомления: ' + error));
+      toast.error('Ошибка при обновлении уведомления: ' + error);
     }
   };
 

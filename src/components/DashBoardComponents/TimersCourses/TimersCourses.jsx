@@ -1,14 +1,16 @@
-// components/DashBoardComponents/TimersCourses/TimersCourses.jsx
-import { useState, useEffect } from 'react'; // Добавляем useEffect
-import { useAdmin } from '../../../context/AdminContext';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux'; // Добавляем Redux хуки
+import { fetchCourses, addTimer, deleteTimer, setError } from '../../../store/slices/adminSlice'; // Импортируем действия
 import scss from './TimersCourses.module.scss';
 import { BsChevronDown, BsTrash } from 'react-icons/bs';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function TimersCourses() {
-  const { accessLevels, courses, timers, addTimer, deleteTimer, fetchAllCourses, error, setError } =
-    useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { accessLevels, courses, timers, error } = useSelector((state) => state.admin);
 
   // Состояние для управления добавлением нового таймера
   const [isAddingTimer, setIsAddingTimer] = useState(false);
@@ -22,9 +24,9 @@ export default function TimersCourses() {
   useEffect(() => {
     if (courses.length === 0) {
       setIsLoadingCourses(true);
-      fetchAllCourses().finally(() => setIsLoadingCourses(false));
+      dispatch(fetchCourses()).finally(() => setIsLoadingCourses(false));
     }
-  }, [courses, fetchAllCourses]);
+  }, [courses, dispatch]);
 
   // Фильтруем курсы, которые связаны с выбранным уровнем доступа
   const availableCourses = courses.filter((course) => course.access === selectedAccess?.id);
@@ -32,7 +34,7 @@ export default function TimersCourses() {
   // Обработчик добавления нового таймера
   const handleAddTimer = async () => {
     if (!selectedAccess || !selectedCourse) {
-      setError('Пожалуйста, выберите уровень доступа и курс');
+      dispatch(setError('Пожалуйста, выберите уровень доступа и курс')); // Используем dispatch
       toast.error('Пожалуйста, выберите уровень доступа и курс');
       return;
     }
@@ -40,16 +42,18 @@ export default function TimersCourses() {
     // Проверяем, не существует ли уже таймер для этого уровня доступа
     const existingTimer = timers.find((timer) => timer.accessLevel === selectedAccess.id);
     if (existingTimer) {
-      setError('Таймер для этого уровня доступа уже существует');
+      dispatch(setError('Таймер для этого уровня доступа уже существует')); // Используем dispatch
       toast.error('Таймер для этого уровня доступа уже существует');
       return;
     }
 
     try {
-      await addTimer({
-        accessLevel: selectedAccess.id,
-        courseId: selectedCourse.id,
-      });
+      await dispatch(
+        addTimer({
+          accessLevel: selectedAccess.id,
+          courseId: selectedCourse.id,
+        }),
+      ).unwrap();
       toast.success('Таймер успешно добавлен!');
       setIsAddingTimer(false);
       setSelectedAccess(null);
@@ -57,19 +61,19 @@ export default function TimersCourses() {
       setIsAccessOpen(false);
       setIsCourseOpen(false);
     } catch (err) {
-      setError('Ошибка при добавлении таймера: ' + err.message);
-      toast.error('Ошибка при добавлении таймера: ' + err.message);
+      dispatch(setError('Ошибка при добавлении таймера: ' + err)); // Используем dispatch
+      toast.error('Ошибка при добавлении таймера: ' + err);
     }
   };
 
   // Обработчик удаления таймера
   const handleDeleteTimer = async (timerId) => {
     try {
-      await deleteTimer(timerId);
+      await dispatch(deleteTimer(timerId)).unwrap();
       toast.success('Таймер успешно удалён!');
     } catch (err) {
-      setError('Ошибка при удалении таймера: ' + err.message);
-      toast.error('Ошибка при удалении таймера: ' + err.message);
+      dispatch(setError('Ошибка при удалении таймера: ' + err)); // Используем dispatch
+      toast.error('Ошибка при удалении таймера: ' + err);
     }
   };
 

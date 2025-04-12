@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useAdmin } from '../../../../context/AdminContext';
+import { useDispatch, useSelector } from 'react-redux'; // Добавляем Redux хуки
+import { updateProduct, setError, uploadImage } from '../../../../store/slices/adminSlice'; // Импортируем действия
 import scss from './EditProduct.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function EditProduct({ productId, onBack }) {
-  const { products, updateProduct, error, setError, accessLevels, uploadImage } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { products, accessLevels } = useSelector((state) => state.admin);
 
   // Находим продукт для редактирования
   const productToEdit = products.find((product) => product.id === productId);
@@ -54,7 +58,7 @@ export default function EditProduct({ productId, onBack }) {
   // Инициализация данных продукта при загрузке компонента
   useEffect(() => {
     if (!productToEdit) {
-      setError('Продукт не найден');
+      dispatch(setError('Продукт не найден')); // Используем dispatch
       onBack();
       return;
     }
@@ -73,7 +77,7 @@ export default function EditProduct({ productId, onBack }) {
       speakersProduct: productToEdit.speakersProduct || [],
     });
     setPreviewUrl(productToEdit.imageProduct || null); // Устанавливаем текущий URL для предпросмотра
-  }, [productToEdit, setError, onBack, accessLevels]);
+  }, [productToEdit, dispatch, onBack, accessLevels]);
 
   // Очистка URL предпросмотра при размонтировании компонента
   useEffect(() => {
@@ -114,18 +118,6 @@ export default function EditProduct({ productId, onBack }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Проверяем, что файл является изображением
-      if (!file.type.startsWith('image/')) {
-        toast.error('Пожалуйста, выберите файл изображения (jpg, png и т.д.)');
-        e.target.value = null;
-        return;
-      }
-      // Проверяем размер файла (не больше 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Файл слишком большой. Максимальный размер: 5MB');
-        e.target.value = null;
-        return;
-      }
       setSelectedFile(file);
       // Создаем URL для предпросмотра
       const preview = URL.createObjectURL(file);
@@ -205,7 +197,9 @@ export default function EditProduct({ productId, onBack }) {
       let imageUrl = productData.imageProduct;
       if (selectedFile) {
         // Загружаем новое изображение
-        imageUrl = await uploadImage(selectedFile, productData.id);
+        imageUrl = await dispatch(
+          uploadImage({ file: selectedFile, productId: productData.id }),
+        ).unwrap();
         setProductData((prev) => ({ ...prev, imageProduct: imageUrl }));
       }
 
@@ -217,12 +211,14 @@ export default function EditProduct({ productId, onBack }) {
         discountPercent: productData.discountPercent || null,
       };
 
-      await updateProduct(productData.id, updatedProductData);
+      await dispatch(
+        updateProduct({ productId: productData.id, updatedData: updatedProductData }),
+      ).unwrap();
       toast.success('Продукт успешно обновлен!');
       onBack();
     } catch (err) {
-      setError('Ошибка при обновлении продукта: ' + err.message);
-      toast.error('Ошибка при обновлении: ' + err.message);
+      dispatch(setError('Ошибка при обновлении продукта: ' + err)); // Используем dispatch
+      toast.error('Ошибка при обновлении: ' + err);
     }
   };
 
@@ -238,7 +234,6 @@ export default function EditProduct({ productId, onBack }) {
           Назад
         </button>
       </div>
-      {error && <p className={scss.error}>{error}</p>}
       <form onSubmit={handleSubmit} className={scss.form}>
         {/* Основные поля продукта */}
         <div className={scss.field}>

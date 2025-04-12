@@ -1,13 +1,15 @@
-// components/DashBoardComponents/EditCourse/EditCourse.jsx
 import { useState, useEffect } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
 import scss from './EditCourse.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateCourse, addAccessLevel, setError } from '../../../store/slices/adminSlice'; // Добавили setError
 
 export default function EditCourse({ courseId, onBack }) {
-  const { courses, updateCourse, error, setError, accessLevels, addAccessLevel } = useAdmin();
+  const dispatch = useDispatch();
+
+  const { courses, accessLevels } = useSelector((state) => state.admin);
 
   // Находим курс для редактирования
   const courseToEdit = courses.find((course) => course.id === courseId);
@@ -41,7 +43,7 @@ export default function EditCourse({ courseId, onBack }) {
   // Инициализация данных курса при загрузке компонента
   useEffect(() => {
     if (!courseToEdit) {
-      setError('Курс не найден');
+      dispatch(setError('Курс не найден')); // Используем dispatch
       onBack();
       return;
     }
@@ -49,11 +51,9 @@ export default function EditCourse({ courseId, onBack }) {
     // Преобразуем объект modules в массив moduleList
     const formattedModules = Object.entries(courseToEdit.modules || {})
       .sort(([, moduleA], [, moduleB]) => {
-        // Проверяем, есть ли у модуля дата создания (если есть)
         if (moduleA.createdAt && moduleB.createdAt) {
           return new Date(moduleA.createdAt) - new Date(moduleB.createdAt);
         }
-        // Если даты нет, сортируем по порядку ключей (модуль1, модуль2 и т.д.)
         const numA = parseInt(moduleA.title.replace(/\D/g, ''), 10) || 0;
         const numB = parseInt(moduleB.title.replace(/\D/g, ''), 10) || 0;
         return numA - numB;
@@ -76,7 +76,7 @@ export default function EditCourse({ courseId, onBack }) {
     });
 
     setModuleList(formattedModules);
-  }, [courseToEdit, setError, onBack]);
+  }, [courseToEdit, dispatch, onBack]);
 
   // Обработчик изменения полей курса
   const handleInputChange = (e) => {
@@ -99,26 +99,28 @@ export default function EditCourse({ courseId, onBack }) {
   // Обработчик добавления нового уровня доступа
   const handleAddAccessLevel = async () => {
     if (!newAccessName.trim()) {
-      setError('Название уровня доступа не может быть пустым');
+      dispatch(setError('Название уровня доступа не может быть пустым')); // Используем dispatch
       return;
     }
 
     const accessId = newAccessName.toLowerCase().replace(/\s+/g, '');
     if (accessLevels.some((level) => level.id === accessId)) {
-      setError('Уровень доступа с таким названием уже существует');
+      dispatch(setError('Уровень доступа с таким названием уже существует')); // Используем dispatch
       return;
     }
 
     try {
-      await addAccessLevel({
-        id: accessId,
-        name: newAccessName,
-      });
+      await dispatch(
+        addAccessLevel({
+          id: accessId,
+          name: newAccessName,
+        }),
+      ).unwrap();
       setCourseData((prev) => ({ ...prev, access: accessId }));
       setNewAccessName('');
       setShowNewAccessInput(false);
     } catch (err) {
-      setError('Ошибка при добавлении уровня доступа: ' + err.message);
+      dispatch(setError('Ошибка при добавлении уровня доступа: ' + err)); // Используем dispatch
     }
   };
 
@@ -200,7 +202,7 @@ export default function EditCourse({ courseId, onBack }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!courseData.access) {
-      setError('Пожалуйста, выберите или добавьте уровень доступа');
+      dispatch(setError('Пожалуйста, выберите или добавьте уровень доступа')); // Используем dispatch
       return;
     }
     try {
@@ -221,12 +223,14 @@ export default function EditCourse({ courseId, onBack }) {
         modules: modulesObject,
       };
 
-      await updateCourse(courseData.id, updatedCourseData);
+      await dispatch(
+        updateCourse({ courseId: courseData.id, updatedData: updatedCourseData }),
+      ).unwrap();
       toast.success('Курс успешно обновлен!');
       onBack();
     } catch (err) {
-      setError('Ошибка при обновлении курса: ' + err.message);
-      toast.error('Ошибка при обновлении: ' + err.message);
+      dispatch(setError('Ошибка при обновлении курса: ' + err)); // Используем dispatch
+      toast.error('Ошибка при обновлении: ' + err);
     }
   };
 
@@ -256,7 +260,6 @@ export default function EditCourse({ courseId, onBack }) {
           Назад
         </button>
       </div>
-      {error && <p className={scss.error}>{error}</p>}
       <form onSubmit={handleSubmit} className={scss.form}>
         {/* Основные поля курса */}
         <div className={scss.field}>

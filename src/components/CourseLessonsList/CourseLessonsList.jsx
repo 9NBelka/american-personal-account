@@ -1,55 +1,53 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
+import { updateLastModule } from '../../store/slices/authSlice';
 import scss from './CourseLessonsList.module.scss';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import clsx from 'clsx';
-import { useAuth } from '../../context/AuthContext';
 
-export default function CourseLessonsList({
+const CourseLessonsList = ({
   courseId,
   module,
   index,
   expandedModule,
   toggleModule,
   handleLessonClick,
-  completedLessons,
+  completedLessons = {}, // Значение по умолчанию
   toggleLessonCompletion,
   getCompletedCount,
   getTotalDuration,
-  playlistPage,
-}) {
-  const { updateLastModule } = useAuth();
+  playlistPage = false, // Значение по умолчанию
+}) => {
+  const dispatch = useDispatch();
+
   const { completed, total } = getCompletedCount(module.id, module.links);
   const totalDuration = getTotalDuration(module.links);
 
   const [isModuleLocked, setIsModuleLocked] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Проверяем, заблокирован ли модуль
   useEffect(() => {
     const checkUnlockDate = () => {
       if (!module.unlockDate) {
-        setIsModuleLocked(false);
+        if (isModuleLocked !== false) {
+          setIsModuleLocked(false);
+        }
         return;
       }
 
       const unlockDate = new Date(module.unlockDate);
       const now = new Date();
-      setCurrentDate(now);
+      const shouldBeLocked = now < unlockDate;
 
-      if (now < unlockDate) {
-        setIsModuleLocked(true);
-      } else {
-        setIsModuleLocked(false);
+      if (isModuleLocked !== shouldBeLocked) {
+        setIsModuleLocked(shouldBeLocked);
       }
     };
 
     checkUnlockDate();
 
-    // Периодически проверяем текущую дату (каждые 10 секунд)
     const interval = setInterval(checkUnlockDate, 10000);
-
     return () => clearInterval(interval);
-  }, [module.unlockDate]);
+  }, [module.unlockDate, isModuleLocked]);
 
   const formatVideoTime = (minutes) => {
     if (!minutes) return '';
@@ -73,29 +71,44 @@ export default function CourseLessonsList({
     });
   };
 
-  const handleToggle = (e) => {
-    e.stopPropagation();
-    if (isModuleLocked) return; // Не открываем модуль, если он заблокирован
+  const handleToggle = useCallback(
+    (e) => {
+      e.stopPropagation();
+      if (isModuleLocked) {
+        return;
+      }
 
-    toggleModule(index);
-  };
+      toggleModule(index);
+    },
+    [isModuleLocked, index, module.id, toggleModule],
+  );
 
-  const handleLessonClickWithUpdate = (videoUrl) => {
-    if (isModuleLocked) return; // Не воспроизводим урок, если модуль заблокирован
+  const handleLessonClickWithUpdate = useCallback(
+    (videoUrl) => {
+      if (isModuleLocked) return;
 
-    if (courseId) {
-      updateLastModule(courseId, module.id);
-    }
-    handleLessonClick(videoUrl);
-  };
+      if (courseId) {
+        dispatch(updateLastModule({ courseId, moduleId: module.id }));
+      }
+      handleLessonClick(videoUrl);
+    },
+    [isModuleLocked, courseId, module.id, handleLessonClick, dispatch],
+  );
+
+  const handleToggleLessonCompletion = useCallback(
+    (lessonIndex) => {
+      if (isModuleLocked) return;
+      toggleLessonCompletion(module.id, lessonIndex);
+    },
+    [isModuleLocked, module.id, toggleLessonCompletion],
+  );
 
   return (
-    <div key={module.id} className={clsx(scss.moduleMainBlock, isModuleLocked && scss.locked)}>
+    <div className={clsx(scss.moduleMainBlock, isModuleLocked && scss.locked)}>
       <div className={scss.moduleTitleAndIconBlock} onClick={handleToggle}>
         <div className={scss.moduleTitleAndCountBlock}>
           <h3 className={scss.moduleTitle}>
-            {index + 1 + `. ` + `module | `}
-            {module.moduleTitle}
+            {index + 1}. module | {module.moduleTitle}
           </h3>
           <span className={scss.moduleCompletionCount}>
             {completed}/{total} | {totalDuration}
@@ -126,16 +139,12 @@ export default function CourseLessonsList({
                     <input
                       type='checkbox'
                       checked={isCompleted}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleLessonCompletion(module.id, lessonIndex);
-                      }}
+                      onChange={() => handleToggleLessonCompletion(lessonIndex)}
                       className={scss.checkbox}
                     />
                     <span className={scss.checkmark}></span>
                   </label>
-                  {lessonIndex + 1 + `. `}
-                  {lesson.title}
+                  {lessonIndex + 1}. {lesson.title}
                 </div>
                 {lesson.videoTime && (
                   <span className={scss.lessonTime}>{formatVideoTime(lesson.videoTime)}</span>
@@ -147,4 +156,6 @@ export default function CourseLessonsList({
       )}
     </div>
   );
-}
+};
+
+export default React.memo(CourseLessonsList);

@@ -1,7 +1,8 @@
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { signUp } from '../../store/slices/authSlice'; // Import thunk
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import scss from './SignUp.module.scss';
 import { BsBoxArrowInRight } from 'react-icons/bs';
@@ -10,7 +11,8 @@ import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/Ac
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const { userRole, isLoading, signUp } = useAuth();
+  const dispatch = useDispatch();
+  const { userRole, isLoading } = useSelector((state) => state.auth); // Replaced useAuth
 
   useEffect(() => {
     if (userRole) {
@@ -48,7 +50,14 @@ export default function SignUp() {
 
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
-      await signUp(values.name, values.lastName, values.email, values.password);
+      await dispatch(
+        signUp({
+          name: values.name,
+          lastName: values.lastName,
+          email: values.email,
+          password: values.password,
+        }),
+      ).unwrap();
       navigate('/login');
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {

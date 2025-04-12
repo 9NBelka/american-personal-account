@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useDispatch, useSelector } from 'react-redux'; // Добавили Redux хуки
+import { addCourse, addAccessLevel, setError } from '../../../store/slices/adminSlice'; // Импортируем действия
 import scss from './AddCourse.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function AddCourse() {
-  const { addCourse, addAccessLevel, accessLevels, error, setError } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { accessLevels, error } = useSelector((state) => state.admin);
 
   // Состояние для данных курса
   const [courseData, setCourseData] = useState({
@@ -61,28 +65,32 @@ export default function AddCourse() {
   // Обработчик добавления нового уровня доступа
   const handleAddAccessLevel = async () => {
     if (!newAccessName.trim()) {
+      dispatch(setError('Название уровня доступа не может быть пустым')); // Используем dispatch
       toast.error('Название уровня доступа не может быть пустым');
-
       return;
     }
 
     const accessId = newAccessName.toLowerCase().replace(/\s+/g, '');
-    // Проверяем, существует ли уже уровень с таким ID
     if (accessLevels.some((level) => level.id === accessId)) {
+      dispatch(setError('Уровень доступа с таким названием уже существует')); // Используем dispatch
       toast.error('Уровень доступа с таким названием уже существует');
       return;
     }
 
     try {
-      await addAccessLevel({
-        id: accessId,
-        name: newAccessName,
-      });
+      await dispatch(
+        addAccessLevel({
+          id: accessId,
+          name: newAccessName,
+        }),
+      ).unwrap();
       setCourseData((prev) => ({ ...prev, access: accessId }));
       setNewAccessName('');
       setShowNewAccessInput(false);
+      toast.success('Уровень доступа успешно добавлен!');
     } catch (err) {
-      toast.error('Ошибка при добавлении уровня доступа: ' + err.message);
+      dispatch(setError('Ошибка при добавлении уровня доступа: ' + err)); // Используем dispatch
+      toast.error('Ошибка при добавлении уровня доступа: ' + err);
     }
   };
 
@@ -170,10 +178,27 @@ export default function AddCourse() {
   // Обработчик отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!courseData.id.trim()) {
+      dispatch(setError('ID курса не может быть пустым')); // Используем dispatch
+      toast.error('ID курса не может быть пустым');
+      return;
+    }
+    if (!courseData.title.trim()) {
+      dispatch(setError('Название курса не может быть пустым')); // Используем dispatch
+      toast.error('Название курса не может быть пустым');
+      return;
+    }
+    if (!courseData.description.trim()) {
+      dispatch(setError('Описание курса не может быть пустым')); // Используем dispatch
+      toast.error('Описание курса не может быть пустым');
+      return;
+    }
     if (!courseData.access) {
+      dispatch(setError('Пожалуйста, выберите или добавьте уровень доступа')); // Используем dispatch
       toast.error('Пожалуйста, выберите или добавьте уровень доступа');
       return;
     }
+
     try {
       // Формируем данные курса для отправки в базу
       const formattedCourseData = {
@@ -190,7 +215,7 @@ export default function AddCourse() {
         }, {}),
       };
 
-      await addCourse(formattedCourseData);
+      await dispatch(addCourse(formattedCourseData)).unwrap();
       toast.success('Курс успешно добавлен!');
       // Сбрасываем форму
       setCourseData({
@@ -205,7 +230,8 @@ export default function AddCourse() {
       setModules({});
       setModuleCount(0);
     } catch (err) {
-      toast.error('Ошибка при добавлении курса: ' + err.message);
+      dispatch(setError('Ошибка при добавлении курса: ' + err)); // Используем dispatch
+      toast.error('Ошибка при добавлении курса: ' + err);
     }
   };
 
@@ -370,7 +396,7 @@ export default function AddCourse() {
                       type='text'
                       value={lesson.title}
                       onChange={(e) => handleLessonChange(moduleId, index, 'title', e.target.value)}
-                      placeholder={`Название урока ${index}`}
+                      placeholder={`Название урока ${index + 1}`}
                       required
                     />
                     <input

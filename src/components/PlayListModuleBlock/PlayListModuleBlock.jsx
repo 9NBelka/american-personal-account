@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import scss from './PlayListModuleBlock.module.scss';
 import PlayListModuleHeader from '../PlayListModuleHeader/PlayListModuleHeader';
 import CourseLessonsList from '../CourseLessonsList/CourseLessonsList';
@@ -18,8 +18,15 @@ export default function PlayListModuleBlock({
   getTotalDuration,
   totalDuration,
 }) {
-  const sortedModules = [...modules].sort((a, b) => a.id.localeCompare(b.id));
+  const sortedModules = useMemo(() => {
+    return [...(modules || [])].sort((a, b) => a.id.localeCompare(b.id));
+  }, [modules]);
+
   const playlistPage = true;
+
+  useEffect(() => {
+    console.log('Modules changed:', modules);
+  }, [modules]);
 
   return (
     <div className={scss.moduleBlock}>
@@ -37,7 +44,7 @@ export default function PlayListModuleBlock({
           index={index}
           expandedModule={expandedModule}
           toggleModule={toggleModule}
-          handleLessonClick={handleLessonClick}
+          handleLessonClick={(videoUrl) => handleLessonClick(videoUrl, index)}
           completedLessons={completedLessons}
           toggleLessonCompletion={toggleLessonCompletion}
           getCompletedCount={getCompletedCount}

@@ -1,5 +1,5 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import AccountLoadingIndicator from '../AccountLoadingIndicator/AccountLoadingIndicator';
 
 /*
@@ -10,14 +10,14 @@ import AccountLoadingIndicator from '../AccountLoadingIndicator/AccountLoadingIn
 */
 
 export default function PrivateRoute({ children, allowedRoles }) {
-  const { userRole, isLoading } = useAuth();
+  const { user, userRole, isLoading } = useSelector((state) => state.auth);
 
   if (isLoading) {
     return <AccountLoadingIndicator />;
   }
 
-  if (!userRole) {
-    return <Navigate to='/login' />;
+  if (!user || !allowedRoles.includes(userRole)) {
+    return <Navigate to='/login' replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react'; // Добавляем useRef
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux'; // Добавляем useSelector и useDispatch
+import { updateUserName, updateUserPassword, updateUserAvatar } from '../../store/slices/authSlice'; // Импортируем действия
 import { toast } from 'react-toastify';
 import scss from './EditProfile.module.scss';
 import EditProfilePassword from '../../components/EditProfilePassword/EditProfilePassword';
@@ -8,9 +9,11 @@ import EditProfileName from '../../components/EditProfileName/EditProfileName';
 import EditProfileAvatar from '../../components/EditProfileAvatar/EditProfileAvatar';
 
 export default function EditProfile() {
-  const { user, userName, updateUserName, updateUserPassword, avatarUrl, updateUserAvatar } =
-    useAuth();
+  const dispatch = useDispatch(); // Добавляем useDispatch
   const navigate = useNavigate();
+
+  // Получаем данные из Redux store
+  const { user, userName, avatarUrl } = useSelector((state) => state.auth);
 
   const [name, setName] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -44,7 +47,7 @@ export default function EditProfile() {
         return;
       }
       if (name && name !== userName) {
-        await updateUserName(name);
+        await dispatch(updateUserName(name)).unwrap(); // Вызываем через dispatch
         toast.success('Name updated successfully!');
       } else {
         setNameError('Please enter a new name to update.');
@@ -63,7 +66,7 @@ export default function EditProfile() {
 
     try {
       if (currentPassword && newPassword) {
-        await updateUserPassword(currentPassword, newPassword);
+        await dispatch(updateUserPassword({ currentPassword, newPassword })).unwrap(); // Вызываем через dispatch
         toast.success('Password updated successfully!');
         setCurrentPassword('');
         setNewPassword('');
@@ -138,7 +141,7 @@ export default function EditProfile() {
     setAvatarError(null);
 
     try {
-      await updateUserAvatar(avatarFile);
+      await dispatch(updateUserAvatar(avatarFile)).unwrap(); // Вызываем через dispatch
       toast.success('Avatar updated successfully!');
       setAvatarFile(null);
     } catch (error) {

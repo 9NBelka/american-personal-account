@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useDispatch, useSelector } from 'react-redux'; // Добавляем Redux хуки
+import { addProduct, clearError, setError, uploadImage } from '../../../store/slices/adminSlice'; // Импортируем действия
 import scss from './AddProduct.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 export default function AddProduct() {
-  const { addProduct, error, setError, accessLevels, uploadImage } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { accessLevels, error } = useSelector((state) => state.admin);
 
   // Состояние для данных продукта
   const [productData, setProductData] = useState({
@@ -38,6 +42,16 @@ export default function AddProduct() {
     value: level.id,
     label: level.name,
   }));
+
+  // Обновляем productData.access, если accessLevels изменились
+  useEffect(() => {
+    if (accessLevels.length > 0 && !productData.access) {
+      setProductData((prev) => ({
+        ...prev,
+        access: accessLevels[0].id,
+      }));
+    }
+  }, [accessLevels, productData.access]);
 
   // Функция для получения названия уровня доступа
   const getAccessLevelName = (accessId) => {
@@ -143,7 +157,6 @@ export default function AddProduct() {
   };
 
   // Обработчик отправки формы
-  // В AddProduct.js
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -156,7 +169,9 @@ export default function AddProduct() {
 
       let imageUrl = '';
       if (selectedFile) {
-        imageUrl = await uploadImage(selectedFile, productData.id);
+        imageUrl = await dispatch(
+          uploadImage({ file: selectedFile, productId: productData.id }),
+        ).unwrap();
       }
 
       const formattedProductData = {
@@ -165,8 +180,9 @@ export default function AddProduct() {
         createdAtProduct: new Date().toISOString(),
       };
 
-      await addProduct(formattedProductData);
+      await dispatch(addProduct(formattedProductData)).unwrap();
       toast.success('Продукт успешно добавлен!');
+      dispatch(clearError()); // Очищаем ошибку после успешного добавления
       setProductData({
         id: '',
         nameProduct: '',
@@ -181,8 +197,8 @@ export default function AddProduct() {
       setSelectedFile(null);
       setPreviewUrl(null);
     } catch (err) {
-      setError('Ошибка при добавлении продукта: ' + err.message);
-      toast.error('Ошибка при добавлении: ' + err.message);
+      dispatch(setError('Ошибка при добавлении продукта: ' + err)); // Используем dispatch
+      toast.error('Ошибка при добавлении: ' + err);
     }
   };
 
@@ -198,7 +214,7 @@ export default function AddProduct() {
   return (
     <div className={scss.addProduct}>
       <h2 className={scss.title}>Добавить новый продукт</h2>
-
+      {error && <p className={scss.error}>{error}</p>}
       <form onSubmit={handleSubmit} className={scss.form}>
         {/* Основные поля продукта */}
         <div className={scss.field}>

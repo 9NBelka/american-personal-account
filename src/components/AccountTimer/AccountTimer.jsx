@@ -9,19 +9,27 @@ export default function AccountTimer({ courseId, modules }) {
 
   const findNextModule = useCallback(() => {
     const now = new Date();
+
     const futureModules = modules
       .filter((module) => {
-        if (!module.unlockDate) return false;
-        const unlockDate = new Date(module.unlockDate);
-        if (isNaN(unlockDate.getTime())) {
-          console.warn(`Некорректная дата unlockDate в модуле ${module.id}: ${module.unlockDate}`);
+        if (!module.unlockDate) {
+          console.warn(`Module ${module.id} has no unlockDate`);
           return false;
         }
-        return unlockDate > now;
+        const unlockDate = new Date(module.unlockDate);
+        if (isNaN(unlockDate.getTime())) {
+          console.warn(`Invalid unlockDate in module ${module.id}: ${module.unlockDate}`);
+          return false;
+        }
+        const isFuture = unlockDate > now;
+
+        return isFuture;
       })
       .sort((a, b) => new Date(a.unlockDate) - new Date(b.unlockDate));
 
-    return futureModules.length > 0 ? futureModules[0] : null;
+    const nextModule = futureModules.length > 0 ? futureModules[0] : null;
+
+    return nextModule;
   }, [modules]);
 
   useEffect(() => {
@@ -33,12 +41,13 @@ export default function AccountTimer({ courseId, modules }) {
 
       if (!nextModule) {
         nextModule = findNextModule();
+
         setCurrentModule(nextModule);
       } else {
         const unlockDate = new Date(nextModule.unlockDate);
         if (isNaN(unlockDate.getTime())) {
           console.warn(
-            `Некорректная дата unlockDate в текущем модуле ${nextModule.id}: ${nextModule.unlockDate}`,
+            `Invalid unlockDate in currentModule ${nextModule.id}: ${nextModule.unlockDate}`,
           );
           nextModule = findNextModule();
           setCurrentModule(nextModule);
@@ -67,8 +76,10 @@ export default function AccountTimer({ courseId, modules }) {
     updateTimer();
     interval = setInterval(updateTimer, 1000);
 
-    return () => clearInterval(interval);
-  }, [modules, currentModule, findNextModule]);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [courseId, modules, findNextModule]); // Зависимости включают courseId и modules
 
   if (!currentModule || !timeLeft) {
     return null;

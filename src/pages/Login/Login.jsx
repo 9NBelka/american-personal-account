@@ -1,8 +1,8 @@
-// Login.js
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { login, resetPassword } from '../../store/slices/authSlice'; // Import thunks
 import scss from './Login.module.scss';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import { BsBoxArrowInRight } from 'react-icons/bs';
@@ -12,7 +12,8 @@ import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetP
 
 export default function Login() {
   const navigate = useNavigate();
-  const { userRole, isLoading, login, resetPassword } = useAuth();
+  const dispatch = useDispatch();
+  const { userRole, isLoading } = useSelector((state) => state.auth); // Replaced useAuth
   const [showResetModal, setShowResetModal] = useState(false);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function Login() {
 
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
-      await login(values.email, values.password);
+      await dispatch(login({ email: values.email, password: values.password })).unwrap();
     } catch (error) {
       if (
         error.code === 'auth/user-not-found' ||
@@ -52,6 +53,16 @@ export default function Login() {
 
   const handleForgotPassword = () => {
     setShowResetModal(true);
+  };
+
+  const handleResetPassword = async (email) => {
+    try {
+      const result = await dispatch(resetPassword(email)).unwrap();
+      return result;
+    } catch (error) {
+      console.error('Password reset failed:', error); // Log for debugging
+      throw new Error('Failed to reset password. Please try again.'); // User-friendly message
+    }
   };
 
   if (isLoading) {
@@ -86,14 +97,13 @@ export default function Login() {
               linkTo='/signUp'
               isSubmitting={isLoading}
               otherPointsText='Log in'
-              onForgotPassword={handleForgotPassword} // Передаем обработчик
-            >
+              onForgotPassword={handleForgotPassword}>
               <LSPrivacyCheckbox />
             </LSAuthForm>
             <LSResetPasswordModal
               isOpen={showResetModal}
               onClose={() => setShowResetModal(false)}
-              resetPassword={resetPassword}
+              resetPassword={handleResetPassword} // Updated to use Redux thunk
               isLoading={isLoading}
             />
           </div>

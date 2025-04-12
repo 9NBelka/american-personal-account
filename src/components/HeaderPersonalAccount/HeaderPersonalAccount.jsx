@@ -1,11 +1,9 @@
-// components/HeaderPersonalAccount/HeaderPersonalAccount.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux'; // Добавляем useSelector
 import scss from './HeaderPersonalAccount.module.scss';
-import { useAuth } from '../../context/AuthContext';
-import { useAdmin } from '../../context/AdminContext';
 import { BsBellFill, BsBoxArrowInRight } from 'react-icons/bs';
 import AccountLoadingIndicator from '../AccountLoadingIndicator/AccountLoadingIndicator';
 import NotificationDrop from './NotificationDrop/NotificationDrop';
@@ -13,6 +11,8 @@ import NotificationDrop from './NotificationDrop/NotificationDrop';
 export default function HeaderPersonalAccount({ handleLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Получаем данные из Redux store
   const {
     lastCourseId,
     progress,
@@ -22,8 +22,8 @@ export default function HeaderPersonalAccount({ handleLogout }) {
     avatarUrl,
     readNotifications,
     notifications,
-  } = useAuth();
-  // const { notifications } = useAdmin();
+  } = useSelector((state) => state.auth);
+
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationRef = useRef(null); // Ссылка на выпадающий блок
   const bellIconRef = useRef(null); // Ссылка на иконку колокольчика
@@ -157,7 +157,6 @@ export default function HeaderPersonalAccount({ handleLogout }) {
                   </div>
                 )}
               </div>
-
               <BsBoxArrowInRight className={scss.profileIcon} onClick={handleLogout} />
             </div>
           </div>

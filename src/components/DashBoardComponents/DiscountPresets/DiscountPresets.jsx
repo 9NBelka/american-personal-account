@@ -1,24 +1,27 @@
 import { useState, useEffect } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useDispatch, useSelector } from 'react-redux'; // Добавляем Redux хуки
+import {
+  addDiscountPreset,
+  updateDiscountPreset,
+  deleteDiscountPreset,
+  toggleDiscountPreset,
+  setError,
+  clearError,
+} from '../../../store/slices/adminSlice'; // Импортируем действия
 import scss from './DiscountPresets.module.scss';
-import { BsPlus, BsTrash, BsPencil } from 'react-icons/bs'; // Добавляем иконку для редактирования
+import { BsPlus, BsTrash, BsPencil } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function DiscountPresets() {
-  const {
-    products,
-    discountPresets,
-    addDiscountPreset,
-    updateDiscountPreset, // Добавляем метод для обновления
-    deleteDiscountPreset,
-    toggleDiscountPreset,
-    error,
-    setError,
-  } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { products, discountPresets, error } = useSelector((state) => state.admin);
+
   const [isCreating, setIsCreating] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // Состояние для режима редактирования
-  const [editingPresetId, setEditingPresetId] = useState(null); // ID редактируемого пресета
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingPresetId, setEditingPresetId] = useState(null);
   const [presetName, setPresetName] = useState('');
   const [discountItems, setDiscountItems] = useState([]);
   const [searchTerms, setSearchTerms] = useState([]);
@@ -96,7 +99,6 @@ export default function DiscountPresets() {
       }
 
       if (isEditing) {
-        // Режим редактирования
         const existingPreset = discountPresets.find(
           (p) => p.name.toLowerCase() === presetName.toLowerCase() && p.id !== editingPresetId,
         );
@@ -105,16 +107,17 @@ export default function DiscountPresets() {
         }
 
         const presetData = {
-          id: editingPresetId,
           name: presetName,
           discountItems,
-          createdAt: discountPresets.find((p) => p.id === editingPresetId).createdAt, // Сохраняем дату создания
+          createdAt: discountPresets.find((p) => p.id === editingPresetId).createdAt,
+          isActive: discountPresets.find((p) => p.id === editingPresetId).isActive,
         };
 
-        await updateDiscountPreset(editingPresetId, presetData);
+        await dispatch(
+          updateDiscountPreset({ presetId: editingPresetId, updatedData: presetData }),
+        ).unwrap();
         toast.success('Пресет успешно обновлён!');
       } else {
-        // Режим создания
         const existingPreset = discountPresets.find(
           (p) => p.name.toLowerCase() === presetName.toLowerCase(),
         );
@@ -127,40 +130,42 @@ export default function DiscountPresets() {
           name: presetName,
           discountItems,
           createdAt: new Date().toISOString(),
+          isActive: true,
         };
 
-        await addDiscountPreset(presetData);
+        await dispatch(addDiscountPreset(presetData)).unwrap();
         toast.success('Пресет скидок успешно создан!');
       }
 
+      dispatch(clearError()); // Очищаем ошибку после успешного действия
       setIsCreating(false);
       setIsEditing(false);
       setEditingPresetId(null);
       setPresetName('');
       setDiscountItems([]);
     } catch (err) {
-      setError('Ошибка: ' + err.message);
-      toast.error('Ошибка: ' + err.message);
+      dispatch(setError('Ошибка: ' + err)); // Используем dispatch
+      toast.error('Ошибка: ' + err);
     }
   };
 
   const handleDeletePreset = async (presetId) => {
     if (window.confirm('Вы уверены, что хотите удалить этот пресет?')) {
       try {
-        await deleteDiscountPreset(presetId);
+        await dispatch(deleteDiscountPreset(presetId)).unwrap();
         toast.success('Пресет успешно удалён!');
       } catch (error) {
-        toast.error('Ошибка при удалении: ' + error.message);
+        toast.error('Ошибка при удалении: ' + error);
       }
     }
   };
 
   const handleTogglePreset = async (presetId) => {
     try {
-      await toggleDiscountPreset(presetId);
+      await dispatch(toggleDiscountPreset(presetId)).unwrap();
       toast.success('Статус пресета изменён!');
     } catch (error) {
-      toast.error('Ошибка при изменении статуса: ' + error.message);
+      toast.error('Ошибка при изменении статуса: ' + error);
     }
   };
 

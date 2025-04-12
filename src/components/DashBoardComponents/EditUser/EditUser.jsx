@@ -1,6 +1,7 @@
 import scss from './EditUser.module.scss';
 import { useEffect, useState } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateUser, fetchUsers } from '../../../store/slices/adminSlice'; // Импортируем действия
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
@@ -10,14 +11,18 @@ import AddCourseForm from './AddCourseForm/AddCourseForm';
 import FormActions from './FormActions/FormActions';
 
 export default function EditUser({ userId, onBack }) {
-  const { users, updateUser, courses, fetchAllCourses, accessLevels } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { users, courses, accessLevels } = useSelector((state) => state.admin);
+
   const user = users.find((u) => u.id === userId);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
 
   useEffect(() => {
-    fetchAllCourses();
-  }, [fetchAllCourses]);
+    dispatch(fetchUsers());
+  }, [dispatch]);
 
   // Схема валидации с Yup
   const validationSchema = Yup.object({
@@ -51,11 +56,11 @@ export default function EditUser({ userId, onBack }) {
     }
 
     try {
-      await updateUser(userId, values);
+      await dispatch(updateUser({ userId, updatedData: values })).unwrap();
       toast.success('Пользователь успешно обновлен!');
       onBack();
     } catch (error) {
-      toast.error('Ошибка при обновлении: ' + error.message);
+      toast.error('Ошибка при обновлении: ' + error);
     } finally {
       setSubmitting(false);
     }

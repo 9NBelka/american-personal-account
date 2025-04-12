@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
 import { debounce } from 'lodash';
 import { toast } from 'react-toastify';
 import EditCourse from '../EditCourse/EditCourse';
@@ -10,10 +9,14 @@ import FilterCourses from './FilterCourses/FilterCourses';
 import PaginationOnCourses from './PaginationOnCourses/PaginationOnCourses';
 import AmountCourses from './AmountCourses/AmountCourses';
 import { useOutletContext } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCourses, deleteCourse } from '../../../store/slices/adminSlice'; // Исправлен импорт
 
 export default function CourseList() {
   const { handleSectionClick } = useOutletContext();
-  const { courses, fetchAllCourses, deleteCourse, setError, accessLevels } = useAdmin();
+  const dispatch = useDispatch();
+
+  const { courses, accessLevels, status } = useSelector((state) => state.admin); // Добавили status
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOption, setSortOption] = useState('title-asc');
@@ -22,8 +25,8 @@ export default function CourseList() {
   const [editingCourseId, setEditingCourseId] = useState(null);
 
   useEffect(() => {
-    fetchAllCourses();
-  }, [fetchAllCourses]);
+    dispatch(fetchCourses()); // Исправлено на fetchAllCourses
+  }, [dispatch]);
 
   // Debounce для поиска
   const debouncedSetSearchQuery = useMemo(
@@ -82,11 +85,12 @@ export default function CourseList() {
   };
 
   // Обработчик удаления
-  const handleDelete = async (courseId) => {
+  const handleDelete = (courseId) => {
     if (window.confirm('Вы уверены, что хотите удалить этот курс?')) {
-      deleteCourse(courseId)
+      dispatch(deleteCourse(courseId))
+        .unwrap()
         .then(() => toast.success('Курс удален!'))
-        .catch((error) => toast.error('Ошибка при удалении: ' + error.message));
+        .catch((error) => toast.error('Ошибка при удалении: ' + error));
     }
   };
 
@@ -104,6 +108,11 @@ export default function CourseList() {
   // Если редактируем курс, показываем EditCourse
   if (editingCourseId) {
     return <EditCourse courseId={editingCourseId} onBack={handleBack} />;
+  }
+
+  // Показываем индикатор загрузки, если данные еще не загружены
+  if (status === 'loading') {
+    return <div>Загрузка курсов...</div>;
   }
 
   // Иначе показываем список курсов
@@ -136,7 +145,7 @@ export default function CourseList() {
                 courses={paginatedCourses}
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
-                accessLevels={accessLevels} // Передаем accessLevels
+                accessLevels={accessLevels}
               />
             ) : (
               <tbody>

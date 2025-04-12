@@ -1,14 +1,17 @@
-// components/HeaderPersonalAccount/NotificationDrop/NotificationDrop.jsx
 import { BsBellFill } from 'react-icons/bs';
-import { useAuth } from '../../../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux'; // Добавляем useSelector и useDispatch
+import { markNotificationAsRead } from '../../../store/slices/authSlice'; // Импортируем действие
 import scss from './NotificationDrop.module.scss';
 
 export default function NotificationDrop({ sortedNotifications, formatDate }) {
-  const { markNotificationAsRead, accessLevels } = useAuth();
+  const dispatch = useDispatch(); // Добавляем useDispatch
+
+  // Получаем accessLevels из Redux store
+  const { accessLevels } = useSelector((state) => state.auth);
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await markNotificationAsRead(notificationId);
+      await dispatch(markNotificationAsRead(notificationId)).unwrap(); // Вызываем через dispatch
     } catch (error) {
       console.error('Ошибка при отметке уведомления как прочитанного:', error);
     }
@@ -17,7 +20,7 @@ export default function NotificationDrop({ sortedNotifications, formatDate }) {
   const handleClearAll = async () => {
     try {
       for (const notification of sortedNotifications) {
-        await markNotificationAsRead(notification.id);
+        await dispatch(markNotificationAsRead(notification.id)).unwrap(); // Вызываем через dispatch
       }
     } catch (error) {
       console.error('Ошибка при очистке всех уведомлений:', error);

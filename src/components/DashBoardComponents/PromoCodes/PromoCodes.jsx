@@ -1,23 +1,25 @@
 import { useState, useEffect } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useDispatch, useSelector } from 'react-redux'; // Добавляем Redux хуки
+import {
+  fetchProducts,
+  addPromoCode,
+  updatePromoCode,
+  deletePromoCode,
+  togglePromoCode,
+  setError,
+  clearError,
+} from '../../../store/slices/adminSlice'; // Импортируем действия
 import scss from './PromoCodes.module.scss';
 import { BsPlus, BsTrash, BsPencil } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function PromoCodes() {
-  const {
-    products,
-    fetchAllProducts,
-    accessLevels,
-    promoCodes,
-    addPromoCode,
-    updatePromoCode,
-    deletePromoCode,
-    togglePromoCode,
-    error,
-    setError,
-  } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { products, accessLevels, promoCodes, error, status } = useSelector((state) => state.admin);
+
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingPromoCodeId, setEditingPromoCodeId] = useState(null);
@@ -29,8 +31,10 @@ export default function PromoCodes() {
   const [expiryDate, setExpiryDate] = useState('');
 
   useEffect(() => {
-    fetchAllProducts();
-  }, [fetchAllProducts]);
+    if (products.length === 0) {
+      dispatch(fetchProducts());
+    }
+  }, [products, dispatch]);
 
   // Синхронизируем search terms с items
   useEffect(() => {
@@ -168,7 +172,9 @@ export default function PromoCodes() {
           expiryDate: expiryDate || null,
         };
 
-        await updatePromoCode(editingPromoCodeId, promoCodeData);
+        await dispatch(
+          updatePromoCode({ promoCodeId: editingPromoCodeId, updatedData: promoCodeData }),
+        ).unwrap();
         toast.success('Промокод успешно обновлён!');
       } else {
         const existingPromoCode = promoCodes.find(
@@ -188,10 +194,11 @@ export default function PromoCodes() {
           expiryDate: expiryDate || null,
         };
 
-        await addPromoCode(promoCodeData);
+        await dispatch(addPromoCode(promoCodeData)).unwrap();
         toast.success('Промокод успешно создан!');
       }
 
+      dispatch(clearError()); // Очищаем ошибку после успешного действия
       setIsCreating(false);
       setIsEditing(false);
       setEditingPromoCodeId(null);
@@ -202,28 +209,28 @@ export default function PromoCodes() {
       setAccessLevelSearchTerms(['']);
       setExpiryDate('');
     } catch (err) {
-      setError('Ошибка: ' + err.message);
-      toast.error('Ошибка: ' + err.message);
+      dispatch(setError('Ошибка: ' + err)); // Используем dispatch
+      toast.error('Ошибка: ' + err);
     }
   };
 
   const handleDeletePromoCode = async (promoCodeId) => {
     if (window.confirm('Вы уверены, что хотите удалить этот промокод?')) {
       try {
-        await deletePromoCode(promoCodeId);
+        await dispatch(deletePromoCode(promoCodeId)).unwrap();
         toast.success('Промокод успешно удалён!');
       } catch (error) {
-        toast.error('Ошибка при удалении: ' + error.message);
+        toast.error('Ошибка при удалении: ' + error);
       }
     }
   };
 
   const handleTogglePromoCode = async (promoCodeId) => {
     try {
-      await togglePromoCode(promoCodeId);
+      await dispatch(togglePromoCode(promoCodeId)).unwrap();
       toast.success('Статус промокода изменён!');
     } catch (error) {
-      toast.error('Ошибка при изменении статуса: ' + error.message);
+      toast.error('Ошибка при изменении статуса: ' + error);
     }
   };
 
@@ -262,6 +269,10 @@ export default function PromoCodes() {
       minute: '2-digit',
     });
   };
+
+  if (status === 'loading') {
+    return <div>Загрузка...</div>;
+  }
 
   return (
     <div className={scss.promoCodes}>

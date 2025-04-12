@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useDispatch, useSelector } from 'react-redux'; // Добавляем Redux хуки
+import { fetchProducts, deleteProduct } from '../../../store/slices/adminSlice'; // Импортируем действия
 import { toast } from 'react-toastify';
 import scss from './ProductList.module.scss';
 import TitleListProducts from './TitleListProducts/TitleListProducts';
@@ -9,7 +10,11 @@ import FilterProducts from './FilterProducts/FilterProducts';
 import clsx from 'clsx';
 
 export default function ProductList() {
-  const { products, fetchAllProducts, deleteProduct, accessLevels } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { products, accessLevels, status } = useSelector((state) => state.admin);
+
   const [editingProductId, setEditingProductId] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -22,8 +27,10 @@ export default function ProductList() {
 
   // Загружаем продукты при монтировании компонента
   useEffect(() => {
-    fetchAllProducts();
-  }, [fetchAllProducts]);
+    if (products.length === 0) {
+      dispatch(fetchProducts());
+    }
+  }, [products, dispatch]);
 
   // Подсчёт количества продуктов по категориям, типам доступа и статусу доступности
   const categoryCounts = useCallback(() => {
@@ -166,10 +173,10 @@ export default function ProductList() {
   const handleDelete = async (productId) => {
     if (window.confirm('Вы уверены, что хотите удалить этот продукт?')) {
       try {
-        await deleteProduct(productId);
+        await dispatch(deleteProduct(productId)).unwrap();
         toast.success('Продукт успешно удален!');
       } catch (error) {
-        toast.error('Ошибка при удалении: ' + error.message);
+        toast.error('Ошибка при удалении: ' + error);
       }
     }
   };
@@ -180,7 +187,7 @@ export default function ProductList() {
   }
 
   // Показываем индикатор загрузки, если продукты еще не загрузились
-  if (products.length === 0) {
+  if (status === 'loading') {
     return <div>Загрузка продуктов...</div>;
   }
 
@@ -204,7 +211,7 @@ export default function ProductList() {
         sortOption={sortOption}
         setSortOption={setSortOption}
         debouncedSetSearchQuery={debouncedSetSearchQuery}
-        accessLevels={accessLevels} // Передаем accessLevels
+        accessLevels={accessLevels}
       />
 
       {/* Таблица продуктов */}
@@ -216,7 +223,7 @@ export default function ProductList() {
               products={currentProducts}
               handleEdit={handleEdit}
               handleDelete={handleDelete}
-              getAccessLevelName={getAccessLevelName} // Передаем функцию
+              getAccessLevelName={getAccessLevelName}
             />
           ) : (
             <tbody>

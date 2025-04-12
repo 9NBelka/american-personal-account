@@ -1,6 +1,7 @@
 import scss from './AddUser.module.scss';
 import { useEffect, useState } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { addUser, fetchCourses } from '../../../store/slices/adminSlice'; // Импортируем действия
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
@@ -9,13 +10,17 @@ import AddCourseForm from '../EditUser/AddCourseForm/AddCourseForm';
 import FormActions from '../EditUser/FormActions/FormActions';
 
 export default function AddUser({ onBack }) {
-  const { addUser, users, courses, fetchAllCourses, accessLevels } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { users, courses, accessLevels } = useSelector((state) => state.admin);
+
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
 
   useEffect(() => {
-    fetchAllCourses();
-  }, [fetchAllCourses]);
+    dispatch(fetchCourses());
+  }, [dispatch]);
 
   // Схема валидации с Yup
   const validationSchema = Yup.object({
@@ -53,7 +58,7 @@ export default function AddUser({ onBack }) {
     }
 
     try {
-      await addUser(values);
+      await dispatch(addUser(values)).unwrap();
       toast.success(
         'Пользователь успешно зарегистрирован! Ссылка для установки пароля отправлена на email.',
       );
@@ -64,7 +69,7 @@ export default function AddUser({ onBack }) {
         console.warn('onBack is not a function');
       }
     } catch (error) {
-      toast.error('Ошибка при регистрации: ' + error.message);
+      toast.error('Ошибка при регистрации: ' + error);
     } finally {
       setSubmitting(false);
     }

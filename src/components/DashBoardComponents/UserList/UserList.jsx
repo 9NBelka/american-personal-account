@@ -1,6 +1,7 @@
 import scss from './UserList.module.scss';
 import { useState, useMemo, useEffect } from 'react';
-import { useAdmin } from '../../../context/AdminContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchUsers, deleteUser } from '../../../store/slices/adminSlice'; // Импортируем действия
 import { debounce } from 'lodash';
 import { toast } from 'react-toastify';
 import EditUser from '../EditUser/EditUser';
@@ -13,7 +14,11 @@ import { useOutletContext } from 'react-router-dom';
 
 export default function UserList() {
   const { handleSectionClick } = useOutletContext();
-  const { users, deleteUser, courses, fetchAllCourses, accessLevels } = useAdmin();
+  const dispatch = useDispatch();
+
+  // Получаем данные из Redux store
+  const { users, courses, accessLevels, status } = useSelector((state) => state.admin);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
@@ -25,8 +30,8 @@ export default function UserList() {
 
   // Загружаем курсы при монтировании компонента
   useEffect(() => {
-    fetchAllCourses();
-  }, [fetchAllCourses]);
+    dispatch(fetchUsers());
+  }, [dispatch]);
 
   // Debounce для поиска
   const debouncedSetSearchQuery = useMemo(
@@ -60,7 +65,7 @@ export default function UserList() {
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCourse =
-        courseFilter === 'all' || (user.purchasedCourses && user.purchasedCourses[courseFilter]); // Убрали проверку на ['standard', 'vanilla']
+        courseFilter === 'all' || (user.purchasedCourses && user.purchasedCourses[courseFilter]);
       const matchesAccess =
         courseFilter === 'all' ||
         accessFilter === 'all' ||
@@ -100,9 +105,10 @@ export default function UserList() {
   // Обработчик удаления
   const handleDelete = (userId) => {
     if (window.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      deleteUser(userId)
+      dispatch(deleteUser(userId))
+        .unwrap()
         .then(() => toast.success('Пользователь удален!'))
-        .catch((error) => toast.error('Ошибка при удалении: ' + error.message));
+        .catch((error) => toast.error('Ошибка при удалении: ' + error));
     }
   };
 
@@ -123,7 +129,7 @@ export default function UserList() {
   }
 
   // Показываем индикатор загрузки, если пользователи еще не загрузились
-  if (users.length === 0) {
+  if (status === 'loading') {
     return <div>Загрузка пользователей...</div>;
   }
 
@@ -149,7 +155,7 @@ export default function UserList() {
           setCurrentPage={setCurrentPage}
           roleCounts={roleCounts}
           courses={courses}
-          accessLevels={accessLevels} // Передаем accessLevels
+          accessLevels={accessLevels}
           sortOption={sortOption}
           setSortOption={setSortOption}
           debouncedSetSearchQuery={debouncedSetSearchQuery}
