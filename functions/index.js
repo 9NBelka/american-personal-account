@@ -1,16 +1,14 @@
 // Импорты для firebase-functions/v2
-import { onRequest } from 'firebase-functions/v2/https';
+import { onRequest } from 'firebase-functions/v2/https'; // Правильный импорт для HTTP-функций
 import {
   onDocumentCreated,
   onDocumentUpdated,
   onDocumentDeleted,
 } from 'firebase-functions/v2/firestore';
-import { initializeApp as initializeAdminApp } from 'firebase-admin/app';
+import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { getAuth as getAdminAuth } from 'firebase-admin/auth';
+import { getAuth } from 'firebase-admin/auth';
 import cors from 'cors';
-import { initializeApp as initializeClientApp } from 'firebase/app'; // Клиентский SDK
-import { getAuth as getClientAuth, sendPasswordResetEmail } from 'firebase/auth'; // Клиентский Auth
 
 // Обработчик предупреждений Node.js
 process.on('warning', (warning) => {
@@ -19,10 +17,10 @@ process.on('warning', (warning) => {
   console.warn(warning.stack);
 });
 
-// Инициализация Firebase Admin SDK
-initializeAdminApp();
+// Инициализация Firebase Admin
+initializeApp();
 const adminFirestore = getFirestore();
-const adminAuth = getAdminAuth();
+const adminAuth = getAuth();
 
 // Настройка CORS
 const corsHandler = cors({ origin: 'https://lms-jet-one.vercel.app' });
@@ -38,112 +36,6 @@ const generateRandomPassword = () => {
   }
   return password;
 };
-
-// Функция addNewUser
-export const addNewUser = onRequest(async (req, res) => {
-  corsHandler(req, res, async () => {
-    if (req.method !== 'POST') {
-      return res.status(405).json({ message: 'Method Not Allowed' });
-    }
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Unauthorized: No token provided' });
-    }
-
-    try {
-      const idToken = authHeader.split('Bearer ')[1];
-      const decodedToken = await adminAuth.verifyIdToken(idToken);
-      const userId = decodedToken.uid;
-
-      const userDoc = await adminFirestore.doc(`users/${userId}`).get();
-      if (!userDoc.exists || userDoc.data().role !== 'admin') {
-        return res.status(403).json({ message: 'Forbidden: Only admins can add users' });
-      }
-
-      const { name, email, role, purchasedCourses, registrationDate } = req.body;
-
-      if (!name || !email || !role) {
-        return res.status(400).json({ message: 'Missing required fields: name, email, role' });
-      }
-
-      try {
-        await adminAuth.getUserByEmail(email);
-        return res.status(400).json({ message: 'User with this email already exists' });
-      } catch (error) {
-        if (error.code !== 'auth/user-not-found') {
-          throw error;
-        }
-      }
-
-      const password = generateRandomPassword();
-
-      const userRecord = await adminAuth.createUser({
-        email,
-        password,
-        displayName: name,
-      });
-
-      await adminFirestore.doc(`users/${userRecord.uid}`).set({
-        name,
-        email,
-        role,
-        registrationDate: registrationDate || new Date().toISOString(),
-        purchasedCourses: purchasedCourses || {},
-        avatarUrl: null,
-        readNotifications: [],
-      });
-
-      // Инициализация Firebase Client SDK внутри функции
-      const firebaseConfig = {
-        apiKey: process.env.APP_API_KEY,
-        authDomain: process.env.APP_AUTH_DOMAIN,
-        projectId: process.env.APP_PROJECT_ID,
-        storageBucket: process.env.APP_STORAGE_BUCKET,
-        messagingSenderId: process.env.APP_MESSAGING_SENDER_ID,
-        appId: process.env.APP_APP_ID,
-        measurementId: process.env.APP_MEASUREMENT_ID,
-      };
-
-      // Проверка на наличие всех обязательных ключей
-      const requiredKeys = [
-        'apiKey',
-        'authDomain',
-        'projectId',
-        'storageBucket',
-        'messagingSenderId',
-        'appId',
-      ];
-      const missingKeys = requiredKeys.filter((key) => !firebaseConfig[key]);
-      if (missingKeys.length > 0) {
-        throw new Error(`Отсутствуют обязательные переменные окружения: ${missingKeys.join(', ')}`);
-      }
-
-      const clientApp = initializeClientApp(firebaseConfig);
-      const clientAuth = getClientAuth(clientApp);
-
-      const actionCodeSettings = {
-        url: 'https://lms-jet-one.vercel.app/login',
-        handleCodeInApp: true,
-      };
-
-      // Отправляем письмо со сбросом пароля через клиентский SDK
-      await sendPasswordResetEmail(clientAuth, email, actionCodeSettings);
-
-      // Генерируем ссылку для отображения в toast (опционально)
-      const resetLink = await adminAuth.generatePasswordResetLink(email, actionCodeSettings);
-
-      res.status(200).json({
-        message: 'User created successfully',
-        userId: userRecord.uid,
-        resetLink,
-      });
-    } catch (error) {
-      console.error('Error adding user:', error);
-      res.status(500).json({ message: `Error adding user: ${error.message}` });
-    }
-  });
-});
 
 // Функция getCourseUserCount
 export const getCourseUserCount = onRequest(async (req, res) => {
@@ -248,6 +140,73 @@ export const recalculateUserCount = onRequest(async (req, res) => {
     } catch (error) {
       console.error('Error recalculating userCount:', error);
       res.status(500).json({ message: `Error recalculating userCount: ${error.message}` });
+    }
+  });
+});
+
+// Функция addNewUser
+// Функция addNewUser
+export const addNewUser = onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ message: 'Method Not Allowed' });
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Unauthorized: No token provided' });
+    }
+
+    try {
+      const idToken = authHeader.split('Bearer ')[1];
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
+      const userId = decodedToken.uid;
+
+      const userDoc = await adminFirestore.doc(`users/${userId}`).get();
+      if (!userDoc.exists || userDoc.data().role !== 'admin') {
+        return res.status(403).json({ message: 'Forbidden: Only admins can add users' });
+      }
+
+      const { name, email, role, purchasedCourses, registrationDate } = req.body;
+
+      if (!name || !email || !role) {
+        return res.status(400).json({ message: 'Missing required fields: name, email, role' });
+      }
+
+      try {
+        await adminAuth.getUserByEmail(email);
+        return res.status(400).json({ message: 'User with this email already exists' });
+      } catch (error) {
+        if (error.code !== 'auth/user-not-found') {
+          throw error;
+        }
+      }
+
+      const password = generateRandomPassword();
+
+      const userRecord = await adminAuth.createUser({
+        email,
+        password,
+        displayName: name,
+      });
+
+      await adminFirestore.doc(`users/${userRecord.uid}`).set({
+        name,
+        email,
+        role,
+        registrationDate: registrationDate || new Date().toISOString(),
+        purchasedCourses: purchasedCourses || {},
+        avatarUrl: null,
+        readNotifications: [],
+      });
+
+      res.status(200).json({
+        message: 'User created successfully',
+        userId: userRecord.uid,
+      });
+    } catch (error) {
+      console.error('Error adding user:', error);
+      res.status(500).json({ message: `Error adding user: ${error.message}` });
     }
   });
 });

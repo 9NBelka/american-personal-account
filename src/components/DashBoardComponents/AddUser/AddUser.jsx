@@ -2,6 +2,7 @@ import scss from './AddUser.module.scss';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addUser, fetchCourses } from '../../../store/slices/adminSlice';
+import { resetPassword } from '../../../store/slices/authSlice'; // Импортируем resetPassword
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
@@ -73,11 +74,20 @@ export default function AddUser({ onBack }) {
         purchasedCourses: values.purchasedCourses,
       };
 
-      const result = await dispatch(addUser(userData)).unwrap();
-      toast.success(
-        `Пользователь ${values.name} успешно зарегистрирован! Ссылка для установки пароля: ${result.resetLink}`,
-        { autoClose: false },
-      );
+      // Создаем пользователя через Cloud Function
+      await dispatch(addUser(userData)).unwrap();
+
+      // Отправляем письмо для сброса пароля
+      const resetResult = await dispatch(resetPassword(values.email)).unwrap();
+      if (resetResult.success) {
+        toast.success(
+          `Пользователь ${values.name} успешно зарегистрирован! Ссылка для сброса пароля отправлена на ${values.email}.`,
+          { autoClose: 5000 },
+        );
+      } else {
+        toast.error('Пользователь создан, но не удалось отправить письмо для сброса пароля.');
+      }
+
       resetForm();
       if (typeof onBack === 'function') {
         onBack();
