@@ -34,7 +34,9 @@ export const fetchUsers = createAsyncThunk(
   'admin/fetchUsers',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') return [];
+    if (!auth.user || auth.userRole !== 'admin') {
+      return rejectWithValue('Только администраторы могут просматривать список пользователей');
+    }
     try {
       const snapshot = await getDocs(collection(db, 'users'));
       return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -48,7 +50,9 @@ export const fetchCourses = createAsyncThunk(
   'admin/fetchCourses',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') return [];
+    if (!auth.user || auth.userRole !== 'admin') {
+      return rejectWithValue('Только администраторы могут просматривать список курсов');
+    }
     try {
       const snapshot = await getDocs(collection(db, 'courses'));
       return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -251,10 +255,12 @@ export const addUser = createAsyncThunk(
   'admin/addUser',
   async (userData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (auth.userRole !== 'admin') {
       return rejectWithValue('Только администраторы могут добавлять пользователей');
+    }
     try {
-      const idToken = await auth.user.getIdToken();
+      // Получаем idToken от текущего пользователя
+      const idToken = await auth.currentUser.getIdToken(); // Используем auth.currentUser вместо auth.user
       const response = await fetch(
         'https://us-central1-k-syndicate.cloudfunctions.net/addNewUser',
         {
@@ -268,11 +274,8 @@ export const addUser = createAsyncThunk(
         return rejectWithValue(errorData.message || 'Ошибка при добавлении пользователя');
       }
       const result = await response.json();
-      await sendPasswordResetEmail(auth, userData.email, {
-        url: 'https://lms-jet-one.vercel.app/login',
-        handleCodeInApp: true,
-      });
-      return result;
+      // Возвращаем результат, который включает userId и resetLink
+      return result; // { message: 'User created successfully', userId, resetLink }
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -283,10 +286,11 @@ export const deleteUser = createAsyncThunk(
   'admin/deleteUser',
   async (userId, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (auth.userRole !== 'admin') {
       return rejectWithValue('Только администраторы могут удалять пользователей');
+    }
     try {
-      const idToken = await auth.user.getIdToken();
+      const idToken = await auth.currentUser.getIdToken(); // Используем auth.currentUser
       const response = await fetch(
         'https://us-central1-k-syndicate.cloudfunctions.net/deleteUser',
         {
@@ -299,7 +303,8 @@ export const deleteUser = createAsyncThunk(
         const errorData = await response.json();
         return rejectWithValue(errorData.message || 'Ошибка при удалении пользователя');
       }
-      return userId;
+      const result = await response.json();
+      return { userId, message: result.message }; // Возвращаем userId и message
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -753,17 +758,29 @@ const adminSlice = createSlice({
     builder
       .addCase(fetchUsers.pending, (state) => {
         state.status = 'loading';
+        state.error = null;
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.users = action.payload;
+        state.error = null;
       })
       .addCase(fetchUsers.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
+      .addCase(fetchCourses.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
       .addCase(fetchCourses.fulfilled, (state, action) => {
+        state.status = 'succeeded';
         state.courses = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchCourses.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.products = action.payload;
@@ -810,11 +827,39 @@ const adminSlice = createSlice({
       .addCase(uploadImage.rejected, (state, action) => {
         state.error = action.payload;
       })
+      .addCase(addUser.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
       .addCase(addUser.fulfilled, (state, action) => {
-        state.users.push(action.payload);
+        state.status = 'succeeded';
+        state.error = null;
+        const { userId, userData } = action.payload;
+        state.users.push({
+          id: userId,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          registrationDate: userData.registrationDate,
+          purchasedCourses: userData.purchasedCourses || {},
+        });
+      })
+      .addCase(addUser.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(deleteUser.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
       })
       .addCase(deleteUser.fulfilled, (state, action) => {
-        state.users = state.users.filter((u) => u.id !== action.payload);
+        state.status = 'succeeded';
+        state.error = null;
+        state.users = state.users.filter((user) => user.id !== action.payload.userId);
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       })
       .addCase(addAccessLevel.fulfilled, (state, action) => {
         state.accessLevels.push(action.payload);

@@ -1,7 +1,7 @@
 import scss from './UserList.module.scss';
 import { useState, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchUsers, deleteUser } from '../../../store/slices/adminSlice'; // Импортируем действия
+import { fetchUsers, deleteUser } from '../../../store/slices/adminSlice';
 import { debounce } from 'lodash';
 import { toast } from 'react-toastify';
 import EditUser from '../EditUser/EditUser';
@@ -16,8 +16,7 @@ export default function UserList() {
   const { handleSectionClick } = useOutletContext();
   const dispatch = useDispatch();
 
-  // Получаем данные из Redux store
-  const { users, courses, accessLevels, status } = useSelector((state) => state.admin);
+  const { users, courses, accessLevels, status, error } = useSelector((state) => state.admin);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -28,12 +27,10 @@ export default function UserList() {
   const [usersPerPage] = useState(2);
   const [editingUserId, setEditingUserId] = useState(null);
 
-  // Загружаем курсы при монтировании компонента
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
 
-  // Debounce для поиска
   const debouncedSetSearchQuery = useMemo(
     () =>
       debounce((value) => {
@@ -43,7 +40,6 @@ export default function UserList() {
     [],
   );
 
-  // Подсчет количества пользователей по ролям
   const roleCounts = {
     all: users.length,
     admin: users.filter((user) => user.role === 'admin').length,
@@ -51,12 +47,10 @@ export default function UserList() {
     student: users.filter((user) => user.role === 'student').length,
   };
 
-  // Находим последнего зарегистрированного пользователя
   const lastUser = users
     .slice()
     .sort((a, b) => new Date(b.registrationDate) - new Date(a.registrationDate))[0];
 
-  // Фильтрация и сортировка пользователей
   const filteredUsers = users
     .filter((user) => {
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
@@ -91,51 +85,46 @@ export default function UserList() {
       return 0;
     });
 
-  // Пагинация
   const totalUsers = filteredUsers.length;
   const totalPages = Math.ceil(totalUsers / usersPerPage);
   const startIndex = (currentPage - 1) * usersPerPage;
   const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
 
-  // Обработчик редактирования
   const handleEdit = (userId) => {
     setEditingUserId(userId);
   };
 
-  // Обработчик удаления
-  const handleDelete = (userId) => {
+  const handleDelete = async (userId) => {
     if (window.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      dispatch(deleteUser(userId))
-        .unwrap()
-        .then(() => toast.success('Пользователь удален!'))
-        .catch((error) => toast.error('Ошибка при удалении: ' + error));
+      try {
+        await dispatch(deleteUser(userId)).unwrap();
+        toast.success('Пользователь успешно удален!');
+      } catch (err) {
+        toast.error('Ошибка при удалении: ' + err);
+      }
     }
   };
 
-  // Обработчик возврата к списку
   const handleBack = () => {
     setEditingUserId(null);
   };
 
-  // Обработчик смены страницы
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Если редактируем пользователя, показываем EditUser
   if (editingUserId) {
     return <EditUser userId={editingUserId} onBack={handleBack} />;
   }
 
-  // Показываем индикатор загрузки, если пользователи еще не загрузились
   if (status === 'loading') {
     return <div>Загрузка пользователей...</div>;
   }
 
-  // Иначе показываем список пользователей
   return (
     <>
+      {error && <div className={scss.error}>{error}</div>}
       <AmountUsers roleCounts={roleCounts} lastUser={lastUser} />
       <div className={scss.listMainBlock}>
         <div>
@@ -144,7 +133,6 @@ export default function UserList() {
           </button>
         </div>
         <h2 className={scss.listTitle}>Список пользователей</h2>
-        {/* Фильтры и сортировка и Поиск */}
         <FilterUsers
           roleFilter={roleFilter}
           setRoleFilter={setRoleFilter}
@@ -179,7 +167,6 @@ export default function UserList() {
             )}
           </table>
         </div>
-        {/* Пагинация */}
         {totalPages > 1 && (
           <PaginationOnUsers
             totalPages={totalPages}

@@ -1,7 +1,7 @@
 import scss from './AddUser.module.scss';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addUser, fetchCourses } from '../../../store/slices/adminSlice'; // Импортируем действия
+import { addUser, fetchCourses } from '../../../store/slices/adminSlice';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
@@ -12,8 +12,7 @@ import FormActions from '../EditUser/FormActions/FormActions';
 export default function AddUser({ onBack }) {
   const dispatch = useDispatch();
 
-  // Получаем данные из Redux store
-  const { users, courses, accessLevels } = useSelector((state) => state.admin);
+  const { users, courses, accessLevels, status, error } = useSelector((state) => state.admin);
 
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
@@ -22,7 +21,6 @@ export default function AddUser({ onBack }) {
     dispatch(fetchCourses());
   }, [dispatch]);
 
-  // Схема валидации с Yup
   const validationSchema = Yup.object({
     name: Yup.string().required('Имя обязательно'),
     email: Yup.string().email('Неверный формат email').required('Email обязателен'),
@@ -31,18 +29,16 @@ export default function AddUser({ onBack }) {
       .required('Роль обязательна'),
   });
 
-  // Начальные значения формы
   const initialValues = {
     name: '',
     email: '',
-    role: '',
+    role: 'student', // Значение по умолчанию
     registrationDate: new Date().toISOString(),
     purchasedCourses: {},
   };
 
-  // Обработчик отправки формы
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    if (setSubmitting.isSubmitting) return; // Дополнительная защита
+    if (setSubmitting.isSubmitting) return;
     setSubmitting(true);
 
     const existingUser = users.find((u) => u.email === values.email);
@@ -58,9 +54,10 @@ export default function AddUser({ onBack }) {
     }
 
     try {
-      await dispatch(addUser(values)).unwrap();
+      const result = await dispatch(addUser(values)).unwrap();
       toast.success(
-        'Пользователь успешно зарегистрирован! Ссылка для установки пароля отправлена на email.',
+        `Пользователь ${values.name} успешно зарегистрирован! Ссылка для установки пароля: ${result.resetLink}`,
+        { autoClose: false }, // Чтобы ссылка оставалась видна
       );
       resetForm();
       if (typeof onBack === 'function') {
@@ -75,7 +72,6 @@ export default function AddUser({ onBack }) {
     }
   };
 
-  // Функция для получения названия курса по ID
   const getCourseTitle = (courseId) => {
     const course = courses.find((c) => c.id === courseId);
     return course ? course.title : courseId;
@@ -84,6 +80,7 @@ export default function AddUser({ onBack }) {
   return (
     <div className={scss.addUser}>
       <h2>Регистрация пользователя</h2>
+      {error && <div className={scss.error}>{error}</div>}
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
@@ -100,7 +97,7 @@ export default function AddUser({ onBack }) {
               selectedPackage={selectedPackage}
               setSelectedPackage={setSelectedPackage}
               getCourseTitle={getCourseTitle}
-              accessLevels={accessLevels} // Передаем accessLevels
+              accessLevels={accessLevels}
             />
             <FormActions
               isSubmitting={isSubmitting}
