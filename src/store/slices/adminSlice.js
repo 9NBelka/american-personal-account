@@ -252,7 +252,6 @@ export const addUser = createAsyncThunk(
   'admin/addUser',
   async (userData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    const currentUser = useAuth();
     if (!auth.isAuthInitialized) {
       return rejectWithValue('Авторизация еще не инициализирована');
     }
@@ -274,13 +273,23 @@ export const addUser = createAsyncThunk(
         },
       );
       if (!response.ok) {
-        const errorData = await response.json();
-        return rejectWithValue(errorData.message || 'Ошибка при добавлении пользователя');
+        const text = await response.text();
+        try {
+          const errorData = JSON.parse(text);
+          const errorMessage =
+            errorData.message || errorData.error?.message || 'Ошибка при добавлении пользователя';
+          return rejectWithValue(errorMessage);
+        } catch (e) {
+          // Если ответ — строка, а не JSON
+          return rejectWithValue(text || 'Ошибка при добавлении пользователя');
+        }
       }
       const result = await response.json();
       return { ...result, userData };
     } catch (error) {
-      return rejectWithValue(error.message);
+      console.error('Ошибка в addUser:', error);
+      const errorMessage = error.message || 'Неизвестная ошибка при добавлении пользователя';
+      return rejectWithValue(errorMessage);
     }
   },
 );

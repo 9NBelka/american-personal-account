@@ -65,7 +65,15 @@ export default function AddUser({ onBack }) {
     }
 
     try {
-      const result = await dispatch(addUser(values)).unwrap();
+      const userData = {
+        name: values.name,
+        email: values.email,
+        role: values.role,
+        registrationDate: values.registrationDate,
+        purchasedCourses: values.purchasedCourses,
+      };
+
+      const result = await dispatch(addUser(userData)).unwrap();
       toast.success(
         `Пользователь ${values.name} успешно зарегистрирован! Ссылка для установки пароля: ${result.resetLink}`,
         { autoClose: false },
@@ -77,7 +85,8 @@ export default function AddUser({ onBack }) {
         console.warn('onBack is not a function');
       }
     } catch (error) {
-      toast.error('Ошибка при регистрации: ' + error);
+      const errorMessage = typeof error === 'string' ? error : 'Неизвестная ошибка';
+      toast.error(`Ошибка при регистрации: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }

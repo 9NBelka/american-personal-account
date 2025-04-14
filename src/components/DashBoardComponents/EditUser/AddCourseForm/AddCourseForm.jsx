@@ -53,6 +53,28 @@ export default function AddCourseForm({
     });
   };
 
+  const handleAddCourse = () => {
+    if (!selectedCourse) {
+      toast.error('Пожалуйста, выберите курс.');
+      return;
+    }
+    if (!selectedPackage) {
+      toast.error('Пожалуйста, выберите уровень доступа.');
+      return;
+    }
+
+    setFieldValue('purchasedCourses', {
+      ...values.purchasedCourses,
+      [selectedCourse]: {
+        completedLessons: {},
+        progress: 0,
+        access: selectedPackage,
+      },
+    });
+    setSelectedCourse('');
+    setSelectedPackage('');
+  };
+
   return (
     <div className={scss.addCourseContainer}>
       {/* Отображение добавленных курсов */}
@@ -140,25 +162,7 @@ export default function AddCourseForm({
         )}
       </div>
 
-      <button
-        type='button'
-        className={scss.addCourseButton}
-        onClick={() => {
-          if (selectedCourse && selectedPackage) {
-            setFieldValue('purchasedCourses', {
-              ...values.purchasedCourses,
-              [selectedCourse]: {
-                completedLessons: {},
-                progress: 0,
-                access: selectedPackage,
-              },
-            });
-            setSelectedCourse('');
-            setSelectedPackage('');
-          } else {
-            toast.error('Пожалуйста, выберите курс и уровень доступа.');
-          }
-        }}>
+      <button type='button' className={scss.addCourseButton} onClick={handleAddCourse}>
         Добавить
       </button>
     </div>
