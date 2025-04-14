@@ -3,11 +3,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  fetchCourseUserCount,
-  toggleLessonCompletion,
-  setLastCourseId,
-} from '../../store/slices/authSlice';
+import { toggleLessonCompletion, setLastCourseId } from '../../store/slices/authSlice';
 import AccountCoursesBlock from '../../components/AccountCoursesBlock/AccountCoursesBlock';
 import AccountUserProfileInfo from '../../components/AccountUserProfileInfo/AccountUserProfileInfo';
 import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/AccountLoadingIndicator';
@@ -15,6 +11,8 @@ import AccountCourseLessons from '../../components/AccountCourseLessons/AccountC
 import AccountTimer from '../../components/AccountTimer/AccountTimer';
 import scss from './PersonalAccount.module.scss';
 import AccountCompanyAndQuestions from '../../components/AccountCompanyAndQuestions/AccountCompanyAndQuestions';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase'; // Импортируй db из твоей firebase-конфигурации
 
 export default function PersonalAccount() {
   const navigate = useNavigate();
@@ -33,19 +31,7 @@ export default function PersonalAccount() {
     lastCourseId,
   } = useSelector((state) => state.auth);
 
-  const [userCount, setUserCount] = useState(0);
   const [activeCourse, setActiveCourse] = useState(null);
-
-  useEffect(() => {
-    if (lastCourseId) {
-      dispatch(fetchCourseUserCount(lastCourseId))
-        .unwrap()
-        .then(setUserCount)
-        .catch((error) => {
-          console.error('Ошибка при загрузке количества пользователей: ' + error);
-        });
-    }
-  }, [lastCourseId, dispatch]);
 
   useEffect(() => {
     if (!courses.length) {
@@ -53,7 +39,6 @@ export default function PersonalAccount() {
       return;
     }
 
-    // Выбираем курс по lastCourseId или первый доступный
     const defaultCourseId = lastCourseId || courses.find((course) => course.available)?.id;
     if (!defaultCourseId) {
       console.log('No default course found');
@@ -110,15 +95,27 @@ export default function PersonalAccount() {
       totalLessons,
       completedLessonsCount,
       totalDuration,
+      userCount: initialActiveCourse.userCount,
     };
 
     setActiveCourse(updatedCourse);
 
-    // Синхронизируем lastCourseId
+    // Подписка на изменения userCount в реальном времени
+    const courseRef = doc(db, 'courses', defaultCourseId);
+    const unsubscribe = onSnapshot(courseRef, (doc) => {
+      if (doc.exists()) {
+        const newUserCount = doc.data().userCount || 0;
+        setActiveCourse((prev) => (prev ? { ...prev, userCount: newUserCount } : prev));
+      }
+    });
+
     if (!lastCourseId && defaultCourseId) {
       console.log('Setting lastCourseId to:', defaultCourseId);
       dispatch(setLastCourseId(defaultCourseId));
     }
+
+    // Отписываемся при размонтировании компонента
+    return () => unsubscribe();
   }, [lastCourseId, courses, completedLessons, dispatch]);
 
   const handleCourseSelect = (courseId) => {
@@ -157,7 +154,7 @@ export default function PersonalAccount() {
                   progress={progress}
                   courseTitle={activeCourse.title}
                   modules={activeCourse.modules}
-                  userCount={userCount}
+                  userCount={activeCourse.userCount}
                   completedLessons={completedLessons}
                   completedLessonsCount={activeCourse.completedLessonsCount}
                   totalLessons={activeCourse.totalLessons}

@@ -1,14 +1,29 @@
+// Импорты для firebase-functions/v2
+import { onRequest } from 'firebase-functions/v2/https'; // Правильный импорт для HTTP-функций
+import {
+  onDocumentCreated,
+  onDocumentUpdated,
+  onDocumentDeleted,
+} from 'firebase-functions/v2/firestore';
+import { initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
+import cors from 'cors';
+
+// Обработчик предупреждений Node.js
 process.on('warning', (warning) => {
   console.warn(warning.name);
   console.warn(warning.message);
   console.warn(warning.stack);
 });
 
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const cors = require('cors')({ origin: 'https://lms-jet-one.vercel.app' });
+// Инициализация Firebase Admin
+initializeApp();
+const adminFirestore = getFirestore();
+const adminAuth = getAuth();
 
-admin.initializeApp();
+// Настройка CORS
+const corsHandler = cors({ origin: 'https://lms-jet-one.vercel.app' });
 
 // Функция для генерации случайного пароля
 const generateRandomPassword = () => {
@@ -22,9 +37,9 @@ const generateRandomPassword = () => {
   return password;
 };
 
-// Существующая функция getCourseUserCount
-exports.getCourseUserCount = functions.https.onRequest((req, res) => {
-  return cors(req, res, async () => {
+// Функция getCourseUserCount
+export const getCourseUserCount = onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
     if (req.method !== 'GET' && req.method !== 'POST') {
       return res.status(405).send('Method Not Allowed');
     }
@@ -36,12 +51,12 @@ exports.getCourseUserCount = functions.https.onRequest((req, res) => {
 
     const idToken = authHeader.split('Bearer ')[1];
     try {
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
       const userId = decodedToken.uid;
 
       const courseId = req.query.courseId || 'architecture';
 
-      const userDoc = await admin.firestore().doc(`users/${userId}`).get();
+      const userDoc = await adminFirestore.doc(`users/${userId}`).get();
       if (!userDoc.exists) {
         return res.status(403).send('Forbidden: User not found');
       }
@@ -52,31 +67,25 @@ exports.getCourseUserCount = functions.https.onRequest((req, res) => {
         return res.status(403).send('Forbidden: No access to this course');
       }
 
-      const snapshot = await admin.firestore().collection('users').get();
-      const count = snapshot.docs.reduce((acc, doc) => {
-        const purchasedCourses = doc.data().purchasedCourses || {};
-        const courseData = purchasedCourses[courseId] || {};
-        const hasAccess = courseData.access && courseData.access !== 'denied';
-        return acc + (hasAccess ? 1 : 0);
-      }, 0);
+      const courseDoc = await adminFirestore.doc(`courses/${courseId}`).get();
+      const count =
+        courseDoc.exists && courseDoc.data().userCount !== undefined
+          ? courseDoc.data().userCount
+          : 0;
 
       res.status(200).json({ count });
     } catch (error) {
-      console.error('Error verifying token:', error);
-      return res.status(401).send('Unauthorized: Invalid token');
+      console.error('Error verifying token or fetching course data:', error);
+      return res.status(401).send('Unauthorized: Invalid token or server error');
     }
   });
 });
 
-// Функция для добавления пользователя
-exports.addNewUser = functions.https.onRequest((req, res) => {
-  return cors(req, res, async () => {
+// Новая HTTP-функция для ручного пересчета userCount
+export const recalculateUserCount = onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       return res.status(405).send('Method Not Allowed');
-    }
-
-    if (req.method === 'OPTIONS') {
-      return res.status(204).send(''); // Явно обрабатываем OPTIONS
     }
 
     const authHeader = req.headers.authorization;
@@ -86,25 +95,88 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
 
     try {
       const idToken = authHeader.split('Bearer ')[1];
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
       const userId = decodedToken.uid;
 
       // Проверяем, что вызывающий пользователь — администратор
-      const userDoc = await admin.firestore().doc(`users/${userId}`).get();
+      const userDoc = await adminFirestore.doc(`users/${userId}`).get();
+      if (!userDoc.exists || userDoc.data().role !== 'admin') {
+        return res.status(403).send('Forbidden: Only admins can recalculate user counts');
+      }
+
+      const coursesSnapshot = await adminFirestore.collection('courses').get();
+      const courseIds = coursesSnapshot.docs.map((doc) => doc.id);
+
+      for (const courseId of courseIds) {
+        const usersSnapshot = await adminFirestore.collection('users').get();
+        const count = usersSnapshot.docs.reduce((acc, doc) => {
+          const purchasedCourses = doc.data().purchasedCourses || {};
+          const courseData = purchasedCourses[courseId] || {};
+          const hasAccess = courseData.access && courseData.access !== 'denied';
+          return acc + (hasAccess ? 1 : 0);
+        }, 0);
+
+        await adminFirestore
+          .doc(`courses/${courseId}`)
+          .update({
+            userCount: count,
+            lastUpdated: new Date().toISOString(),
+          })
+          .catch(async (error) => {
+            if (error.code === 'not-found') {
+              await adminFirestore.doc(`courses/${courseId}`).set({
+                id: courseId,
+                userCount: count,
+                lastUpdated: new Date().toISOString(),
+              });
+            } else {
+              throw error;
+            }
+          });
+      }
+
+      res.status(200).json({ message: 'Successfully recalculated userCount for all courses' });
+    } catch (error) {
+      console.error('Error recalculating userCount:', error);
+      res.status(500).send(`Error recalculating userCount: ${error.message}`);
+    }
+  });
+});
+
+// Функция addNewUser
+export const addNewUser = onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== 'POST') {
+      return res.status(405).send('Method Not Allowed');
+    }
+
+    if (req.method === 'OPTIONS') {
+      return res.status(204).send('');
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).send('Unauthorized: No token provided');
+    }
+
+    try {
+      const idToken = authHeader.split('Bearer ')[1];
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
+      const userId = decodedToken.uid;
+
+      const userDoc = await adminFirestore.doc(`users/${userId}`).get();
       if (!userDoc.exists || userDoc.data().role !== 'admin') {
         return res.status(403).send('Forbidden: Only admins can add users');
       }
 
       const { name, email, role, purchasedCourses, registrationDate } = req.body;
 
-      // Проверяем, что все обязательные поля переданы
       if (!name || !email || !role) {
         return res.status(400).send('Missing required fields: name, email, role');
       }
 
-      // Проверяем, существует ли пользователь с таким email
       try {
-        await admin.auth().getUserByEmail(email);
+        await adminAuth.getUserByEmail(email);
         return res.status(400).send('User with this email already exists');
       } catch (error) {
         if (error.code !== 'auth/user-not-found') {
@@ -112,37 +184,30 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
         }
       }
 
-      // Генерируем случайный пароль
       const password = generateRandomPassword();
 
-      // Создаем пользователя в Firebase Authentication
-      const userRecord = await admin.auth().createUser({
+      const userRecord = await adminAuth.createUser({
         email,
         password,
         displayName: name,
       });
 
-      // Сохраняем данные пользователя в Firestore
-      await admin
-        .firestore()
-        .doc(`users/${userRecord.uid}`)
-        .set({
-          name,
-          email,
-          role,
-          registrationDate: registrationDate || new Date().toISOString(),
-          purchasedCourses: purchasedCourses || {},
-          avatarUrl: null,
-          readNotifications: [],
-        });
+      await adminFirestore.doc(`users/${userRecord.uid}`).set({
+        name,
+        email,
+        role,
+        registrationDate: registrationDate || new Date().toISOString(),
+        purchasedCourses: purchasedCourses || {},
+        avatarUrl: null,
+        readNotifications: [],
+      });
 
-      // Генерируем ссылку для сброса пароля
       const actionCodeSettings = {
         url: 'https://lms-jet-one.vercel.app/login',
         handleCodeInApp: true,
       };
 
-      const resetLink = await admin.auth().generatePasswordResetLink(email, actionCodeSettings);
+      const resetLink = await adminAuth.generatePasswordResetLink(email, actionCodeSettings);
 
       res.status(200).json({
         message: 'User created successfully',
@@ -156,9 +221,9 @@ exports.addNewUser = functions.https.onRequest((req, res) => {
   });
 });
 
-// Новая функция для удаления пользователя
-exports.deleteUser = functions.https.onRequest((req, res) => {
-  return cors(req, res, async () => {
+// Функция deleteUser
+export const deleteUser = onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       return res.status(405).send('Method Not Allowed');
     }
@@ -170,38 +235,31 @@ exports.deleteUser = functions.https.onRequest((req, res) => {
 
     try {
       const idToken = authHeader.split('Bearer ')[1];
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
       const adminUserId = decodedToken.uid;
 
-      // Проверяем, что вызывающий пользователь — администратор
-      const adminUserDoc = await admin.firestore().doc(`users/${adminUserId}`).get();
+      const adminUserDoc = await adminFirestore.doc(`users/${adminUserId}`).get();
       if (!adminUserDoc.exists || adminUserDoc.data().role !== 'admin') {
         return res.status(403).send('Forbidden: Only admins can delete users');
       }
 
       const { userId } = req.body;
 
-      // Проверяем, что userId передан
       if (!userId) {
         return res.status(400).send('Missing required field: userId');
       }
 
-      // Проверяем, что пользователь, которого пытаются удалить, существует
-      const userDoc = await admin.firestore().doc(`users/${userId}`).get();
+      const userDoc = await adminFirestore.doc(`users/${userId}`).get();
       if (!userDoc.exists) {
         return res.status(404).send('User not found in Firestore');
       }
 
-      // Нельзя удалить самого себя
       if (userId === adminUserId) {
         return res.status(403).send('Forbidden: Cannot delete yourself');
       }
 
-      // Удаляем пользователя из Firebase Authentication
-      await admin.auth().deleteUser(userId);
-
-      // Удаляем данные пользователя из Firestore
-      await admin.firestore().doc(`users/${userId}`).delete();
+      await adminAuth.deleteUser(userId);
+      await adminFirestore.doc(`users/${userId}`).delete();
 
       res.status(200).json({
         message: 'User deleted successfully',
@@ -211,4 +269,105 @@ exports.deleteUser = functions.https.onRequest((req, res) => {
       res.status(500).send(`Error deleting user: ${error.message}`);
     }
   });
+});
+
+// Вспомогательная функция для обновления userCount
+const updateCourseUserCount = async (courseId) => {
+  const usersSnapshot = await adminFirestore.collection('users').get();
+  const count = usersSnapshot.docs.reduce((acc, doc) => {
+    const purchasedCourses = doc.data().purchasedCourses || {};
+    const courseData = purchasedCourses[courseId] || {};
+    const hasAccess = courseData.access && courseData.access !== 'denied';
+    return acc + (hasAccess ? 1 : 0);
+  }, 0);
+
+  await adminFirestore
+    .doc(`courses/${courseId}`)
+    .update({
+      userCount: count,
+      lastUpdated: new Date().toISOString(),
+    })
+    .catch(async (error) => {
+      if (error.code === 'not-found') {
+        await adminFirestore.doc(`courses/${courseId}`).set({
+          id: courseId,
+          userCount: count,
+          lastUpdated: new Date().toISOString(),
+        });
+      } else {
+        throw error;
+      }
+    });
+};
+
+// Триггер onUserCreate
+export const onUserCreate = onDocumentCreated('users/{userId}', async (event) => {
+  try {
+    const snap = event.data;
+    if (!snap) {
+      console.log('No data associated with the event');
+      return;
+    }
+    const userData = snap.data();
+    const purchasedCourses = userData.purchasedCourses || {};
+
+    for (const courseId of Object.keys(purchasedCourses)) {
+      const courseData = purchasedCourses[courseId];
+      const hasAccess = courseData.access && courseData.access !== 'denied';
+      if (hasAccess) {
+        await updateCourseUserCount(courseId);
+      }
+    }
+  } catch (error) {
+    console.error('Error in onUserCreate:', error);
+  }
+});
+
+// Триггер onUserUpdate
+export const onUserUpdate = onDocumentUpdated('users/{userId}', async (event) => {
+  try {
+    const beforeData = event.data.before.data();
+    const afterData = event.data.after.data();
+
+    const beforeCourses = beforeData.purchasedCourses || {};
+    const afterCourses = afterData.purchasedCourses || {};
+
+    const allCourseIds = new Set([...Object.keys(beforeCourses), ...Object.keys(afterCourses)]);
+
+    for (const courseId of allCourseIds) {
+      const beforeAccess =
+        beforeCourses[courseId]?.access && beforeCourses[courseId].access !== 'denied';
+      const afterAccess =
+        afterCourses[courseId]?.access && afterCourses[courseId].access !== 'denied';
+
+      if (beforeAccess !== afterAccess) {
+        await updateCourseUserCount(courseId);
+      }
+    }
+  } catch (error) {
+    console.error('Error in onUserUpdate:', error);
+  }
+});
+
+// Триггер onUserDelete
+export const onUserDelete = onDocumentDeleted('users/{userId}', async (event) => {
+  try {
+    const snap = event.data;
+    if (!snap) {
+      console.log('No data associated with the event');
+      return;
+    }
+    const userData = snap.data();
+    const purchasedCourses = userData.purchasedCourses || {};
+
+    for (const courseId of Object.keys(purchasedCourses)) {
+      const courseData = purchasedCourses[courseId];
+      const hadAccess = courseData.access && courseData.access !== 'denied';
+      if (hadAccess) {
+        await updateCourseUserCount(courseId);
+      }
+    }
+  } catch (error) {
+    console.error('Error in onUserDelete:', error);
+  }
 });

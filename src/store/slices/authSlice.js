@@ -167,36 +167,11 @@ export const fetchCourses = createAsyncThunk(
             totalLessons,
             completedLessonsCount,
             totalDuration,
+            userCount: courseData.userCount || 0, // Добавляем userCount из Firestore
           };
         }),
       );
       return courseList;
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  },
-);
-
-export const fetchCourseUserCount = createAsyncThunk(
-  'auth/fetchCourseUserCount',
-  async (courseId, { getState, rejectWithValue }) => {
-    const { user } = getState().auth;
-    if (!user) return 0;
-    try {
-      const response = await fetch(
-        `https://us-central1-k-syndicate.cloudfunctions.net/getCourseUserCount?courseId=${courseId}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${await auth.currentUser.getIdToken()}`,
-          },
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      return data.count;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -511,12 +486,6 @@ const authSlice = createSlice({
       })
       .addCase(markNotificationAsRead.fulfilled, (state, action) => {
         state.readNotifications = action.payload;
-      })
-      .addCase(fetchCourseUserCount.fulfilled, (state, action) => {
-        // Можно сохранить userCount в состоянии, если нужно
-      })
-      .addCase(fetchCourseUserCount.rejected, (state, action) => {
-        state.error = action.payload;
       });
   },
 });
