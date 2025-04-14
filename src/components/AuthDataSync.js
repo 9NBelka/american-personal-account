@@ -1,20 +1,49 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import {
+  setUser,
+  setUserRole,
   setNotifications,
   setAccessLevels,
   setTimers,
   setUserAccessLevels,
+  setAuthInitialized, // Новое действие для isAuthInitialized
 } from '../store/slices/authSlice';
+import { fetchUserData, fetchCourses } from '../store/slices/authSlice';
 import { setError } from '../store/slices/adminSlice';
 
 const AuthDataSync = () => {
   const dispatch = useDispatch();
   const { user, userAccessLevels, isAuthInitialized } = useSelector((state) => state.auth);
 
-  // Ждем, пока авторизация инициализируется
+  // Синхронизация состояния авторизации
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userData = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+        };
+        dispatch(setUser(userData));
+        const userDataResult = await dispatch(fetchUserData(firebaseUser.uid)).unwrap();
+        dispatch(setUserRole(userDataResult.role));
+        dispatch(fetchCourses(userDataResult.purchasedCourses));
+      } else {
+        dispatch(setUser(null));
+        dispatch(setUserRole(null));
+      }
+      // Устанавливаем isAuthInitialized в true после определения состояния авторизации
+      dispatch(setAuthInitialized(true));
+    });
+
+    return () => unsubscribeAuth();
+  }, [dispatch]);
+
+  // Синхронизация accessLevels
   useEffect(() => {
     if (!isAuthInitialized) return;
 
@@ -32,6 +61,7 @@ const AuthDataSync = () => {
     return () => unsubscribeAccessLevels();
   }, [dispatch, isAuthInitialized]);
 
+  // Синхронизация timers
   useEffect(() => {
     if (!isAuthInitialized || !user || !userAccessLevels.length) {
       dispatch(setTimers([]));
@@ -55,6 +85,7 @@ const AuthDataSync = () => {
     return () => unsubscribeTimers();
   }, [user, userAccessLevels, dispatch, isAuthInitialized]);
 
+  // Синхронизация notifications
   useEffect(() => {
     if (!isAuthInitialized || !user) {
       dispatch(setNotifications([]));
