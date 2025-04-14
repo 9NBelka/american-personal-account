@@ -8,18 +8,29 @@ import { toast } from 'react-toastify';
 import UserInfoForm from '../EditUser/UserInfoForm/UserInfoForm';
 import AddCourseForm from '../EditUser/AddCourseForm/AddCourseForm';
 import FormActions from '../EditUser/FormActions/FormActions';
+import { useNavigate } from 'react-router-dom';
 
 export default function AddUser({ onBack }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { users, courses, accessLevels, status, error } = useSelector((state) => state.admin);
+  const { user, userRole, isAuthInitialized } = useSelector((state) => state.auth);
 
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
 
   useEffect(() => {
+    if (!isAuthInitialized) return;
+
+    if (!user || userRole !== 'admin') {
+      toast.error('Только администраторы могут добавлять пользователей');
+      navigate('/login');
+      return;
+    }
+
     dispatch(fetchCourses());
-  }, [dispatch]);
+  }, [dispatch, user, userRole, isAuthInitialized, navigate]);
 
   const validationSchema = Yup.object({
     name: Yup.string().required('Имя обязательно'),
@@ -32,7 +43,7 @@ export default function AddUser({ onBack }) {
   const initialValues = {
     name: '',
     email: '',
-    role: 'student', // Значение по умолчанию
+    role: 'student',
     registrationDate: new Date().toISOString(),
     purchasedCourses: {},
   };
@@ -57,7 +68,7 @@ export default function AddUser({ onBack }) {
       const result = await dispatch(addUser(values)).unwrap();
       toast.success(
         `Пользователь ${values.name} успешно зарегистрирован! Ссылка для установки пароля: ${result.resetLink}`,
-        { autoClose: false }, // Чтобы ссылка оставалась видна
+        { autoClose: false },
       );
       resetForm();
       if (typeof onBack === 'function') {
@@ -77,6 +88,14 @@ export default function AddUser({ onBack }) {
     return course ? course.title : courseId;
   };
 
+  if (!isAuthInitialized) {
+    return <div>Инициализация авторизации...</div>;
+  }
+
+  if (!user || userRole !== 'admin') {
+    return null;
+  }
+
   return (
     <div className={scss.addUser}>
       <h2>Регистрация пользователя</h2>
@@ -85,7 +104,7 @@ export default function AddUser({ onBack }) {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}>
-        {({ values, setFieldValue, isSubmitting, initialValues }) => (
+        {({ values, setFieldValue, isSubmitting }) => (
           <Form className={scss.form}>
             <UserInfoForm values={values} initialValues={initialValues} />
             <AddCourseForm

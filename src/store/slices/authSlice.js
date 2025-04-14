@@ -9,9 +9,13 @@ import {
   reauthenticateWithCredential,
   updatePassword,
   EmailAuthProvider,
+  signOut,
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc, setDoc, getDocs, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+// Храним currentUser вне Redux
+let firebaseCurrentUser = null;
 
 const initialState = {
   user: null,
@@ -30,6 +34,7 @@ const initialState = {
   timers: [],
   error: null,
   isLoading: true,
+  isAuthInitialized: false,
   lastCourseId: localStorage.getItem('lastCourseId') || null,
   status: 'idle',
 };
@@ -39,13 +44,64 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      return null; // User data fetched by onAuthStateChanged
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      firebaseCurrentUser = user; // Сохраняем Firebase User в глобальной переменной
+      return { uid: user.uid, email: user.email, displayName: user.displayName };
     } catch (error) {
       return rejectWithValue(error);
     }
   },
 );
+
+// Обновляем initializeAuth для корректной инициализации
+export const initializeAuth = createAsyncThunk(
+  'auth/initializeAuth',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            const userData = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+            };
+            firebaseCurrentUser = firebaseUser; // Сохраняем Firebase User
+            dispatch(setUser(userData)); // Передаем только сериализуемые данные
+            const userDataResult = await dispatch(fetchUserData(firebaseUser.uid)).unwrap();
+            dispatch(setUserRole(userDataResult.role));
+            dispatch(fetchCourses(userDataResult.purchasedCourses));
+            resolve(userData);
+          } else {
+            firebaseCurrentUser = null;
+            dispatch(setUser(null));
+            dispatch(setUserRole(null));
+            resolve(null);
+          }
+          dispatch(setAuthInitialized(true));
+          unsubscribe();
+        });
+      });
+    } catch (error) {
+      dispatch(setAuthInitialized(true));
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+  try {
+    await signOut(auth);
+    firebaseCurrentUser = null; // Очищаем при выходе
+    return null;
+  } catch (error) {
+    return rejectWithValue(error.message);
+  }
+});
+
+// Экспортируем функцию для получения currentUser
+export const getFirebaseCurrentUser = () => firebaseCurrentUser;
 
 export const signUp = createAsyncThunk(
   'auth/signUp',
@@ -54,6 +110,7 @@ export const signUp = createAsyncThunk(
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const registrationDate = new Date().toISOString();
       const user = userCredential.user;
+      firebaseCurrentUser = user;
 
       await setDoc(doc(db, 'users', user.uid), {
         name,
@@ -112,6 +169,7 @@ export const fetchUserData = createAsyncThunk(
   },
 );
 
+// Остальные thunks (fetchCourses, updateUserAvatar и т.д.) остаются без изменений
 export const fetchCourses = createAsyncThunk(
   'auth/fetchCourses',
   async (purchasedCourses, { rejectWithValue }) => {
@@ -167,7 +225,7 @@ export const fetchCourses = createAsyncThunk(
             totalLessons,
             completedLessonsCount,
             totalDuration,
-            userCount: courseData.userCount || 0, // Добавляем userCount из Firestore
+            userCount: courseData.userCount || 0,
           };
         }),
       );
@@ -366,6 +424,9 @@ const authSlice = createSlice({
     setUserRole: (state, action) => {
       state.userRole = action.payload;
     },
+    setAuthInitialized: (state, action) => {
+      state.isAuthInitialized = action.payload;
+    },
     setError: (state, action) => {
       state.error = action.payload;
     },
@@ -401,17 +462,47 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(initializeAuth.pending, (state) => {
+        state.isAuthInitialized = false;
+        state.isLoading = true;
+      })
+      .addCase(initializeAuth.fulfilled, (state) => {
+        state.isAuthInitialized = true;
+        state.isLoading = false;
+      })
+      .addCase(initializeAuth.rejected, (state, action) => {
+        state.isAuthInitialized = true;
+        state.isLoading = false;
+        state.error = action.payload;
+      })
       .addCase(login.pending, (state) => {
         state.status = 'loading';
         state.isLoading = true;
       })
-      .addCase(login.fulfilled, (state) => {
+      .addCase(login.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        state.isLoading = false;
       })
       .addCase(login.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload.message;
         state.isLoading = false;
+      })
+      .addCase(logout.fulfilled, (state) => {
+        state.user = null;
+        state.userRole = null;
+        state.userName = '';
+        state.registrationDate = '';
+        state.avatarUrl = null;
+        state.readNotifications = [];
+        state.userAccessLevels = [];
+        state.progress = {};
+        state.completedLessons = {};
+        state.lastModules = {};
+        state.courses = [];
+      })
+      .addCase(logout.rejected, (state, action) => {
+        state.error = action.payload;
       })
       .addCase(signUp.fulfilled, (state, action) => {
         state.user = action.payload;
@@ -453,7 +544,7 @@ const authSlice = createSlice({
           ].filter((index) => index !== lessonIndex);
         }
         state.progress[courseId] = progress;
-        state.lastModules[courseId] = moduleId; // Обновляем lastModules
+        state.lastModules[courseId] = moduleId;
       })
       .addCase(toggleLessonCompletion.rejected, (state, action) => {
         state.error = action.payload;
@@ -469,7 +560,7 @@ const authSlice = createSlice({
         state.userName = action.payload;
       })
       .addCase(updateUserPassword.fulfilled, (state) => {
-        // state.status = 'succeeded'; // Ничего не обновляем в состоянии, так как пароль обновляется в Firebase
+        // Ничего не обновляем в состоянии, так как пароль обновляется в Firebase
       })
       .addCase(resetPassword.pending, (state) => {
         state.status = 'loading';
@@ -493,6 +584,7 @@ const authSlice = createSlice({
 export const {
   setUser,
   setUserRole,
+  setAuthInitialized,
   setError,
   clearError,
   setLastCourseId,

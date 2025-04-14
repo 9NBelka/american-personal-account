@@ -17,10 +17,10 @@ import {
 
 const AdminDataSync = () => {
   const dispatch = useDispatch();
-  const { user, userRole } = useSelector((state) => state.auth);
+  const { user, userRole, isAuthInitialized } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (!user || userRole !== 'admin') return;
+    if (!isAuthInitialized || !user || userRole !== 'admin') return;
 
     const unsubscribes = [];
 
@@ -51,7 +51,7 @@ const AdminDataSync = () => {
     });
 
     return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
-  }, [user, userRole, dispatch]);
+  }, [user, userRole, dispatch, isAuthInitialized]);
 
   return null;
 };

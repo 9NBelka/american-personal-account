@@ -1,6 +1,6 @@
 import { Route, Routes, Navigate, useNavigate, useLocation, matchPath } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store'; // Import the Redux store
+import { Provider, useDispatch } from 'react-redux';
+import { store } from './store';
 import Login from './pages/Login/Login';
 import PersonalAccount from './pages/PersonalAccount/PersonalAccount';
 import SignUp from './pages/SignUp/SignUp';
@@ -11,7 +11,6 @@ import PrivateRoute from './components/PrivateRoute/PrivateRoute';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import HeaderPersonalAccount from './components/HeaderPersonalAccount/HeaderPersonalAccount';
-import { auth } from './firebase';
 import MainStatistics from './components/DashBoardComponents/MainStatistics/MainStatistics';
 import UserList from './components/DashBoardComponents/UserList/UserList';
 import AddUser from './components/DashBoardComponents/AddUser/AddUser';
@@ -23,16 +22,23 @@ import AddProduct from './components/DashBoardComponents/AddProduct/AddProduct';
 import TimersCourses from './components/DashBoardComponents/TimersCourses/TimersCourses';
 import DiscountPresets from './components/DashBoardComponents/DiscountPresets/DiscountPresets';
 import PromoCodes from './components/DashBoardComponents/PromoCodes/PromoCodes';
-import AuthDataSync from './components/AuthDataSync'; // Add sync component
-import AdminDataSync from './components/AdminDataSync'; // Add sync component
+import AuthDataSync from './components/AuthDataSync';
+import AdminDataSync from './components/AdminDataSync';
+import { useEffect } from 'react';
+import { initializeAuth, logout } from './store/slices/authSlice';
 
-export default function App() {
+function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(initializeAuth()); // Инициализируем авторизацию при монтировании
+  }, [dispatch]);
 
   const handleLogout = async () => {
     try {
-      await auth.signOut();
+      await dispatch(logout()).unwrap();
       navigate('/login');
     } catch (error) {
       console.error('Error exiting:', error);
@@ -41,13 +47,12 @@ export default function App() {
 
   const headerRoutes = ['/account', '/playlist/:courseId', '/edit'];
 
-  // Check if the current path matches one of the routes
   const shouldRenderHeader = headerRoutes.some((route) =>
     matchPath({ path: route, exact: true }, location.pathname),
   );
 
   return (
-    <Provider store={store}>
+    <>
       <AuthDataSync />
       <AdminDataSync />
       {shouldRenderHeader && <HeaderPersonalAccount handleLogout={handleLogout} />}
@@ -69,7 +74,6 @@ export default function App() {
               <DashBoard />
             </PrivateRoute>
           }>
-          {/* Nested routes for DashBoard */}
           <Route index element={<MainStatistics />} />
           <Route path='mainStatistics' element={<MainStatistics />} />
           <Route path='userList' element={<UserList />} />
@@ -104,6 +108,14 @@ export default function App() {
         <Route path='/' element={<Navigate to='/login' />} />
       </Routes>
       <ToastContainer />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <AppContent />
     </Provider>
   );
 }

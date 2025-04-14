@@ -10,7 +10,6 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignore non-serializable Firebase objects
         ignoredActions: [
           'admin/uploadImage/pending',
           'admin/uploadImage/fulfilled',

@@ -13,6 +13,8 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { sendPasswordResetEmail } from 'firebase/auth';
+import { getFirebaseCurrentUser } from './authSlice';
+import { useAuth } from '../../context/AuthContext';
 
 // Initial state
 const initialState = {
@@ -86,13 +88,11 @@ export const addProduct = createAsyncThunk(
       return rejectWithValue('Только администраторы могут добавлять продукты');
     }
     try {
-      // Проверяем, существует ли продукт с таким ID
       const productRef = doc(db, 'products', productData.id);
       const productSnap = await getDoc(productRef);
       if (productSnap.exists()) {
         return rejectWithValue('Продукт с таким ID уже существует');
       }
-      // Добавляем продукт в Firestore
       await setDoc(productRef, productData);
       return productData;
     } catch (error) {
@@ -126,10 +126,8 @@ export const deleteProduct = createAsyncThunk(
       return rejectWithValue('Только администраторы могут удалять продукты');
     }
     try {
-      // Удаляем продукт из Firestore
       await deleteDoc(doc(db, 'products', productId));
 
-      // Обновляем пользователей: удаляем продукт из их purchasedCourses
       const usersSnapshot = await getDocs(collection(db, 'users'));
       const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
         const userData = userDoc.data();
@@ -234,7 +232,6 @@ export const fetchPromoCodes = createAsyncThunk(
     try {
       const snapshot = await getDocs(collection(db, 'promoCodes'));
       const promoCodes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      // Check expiry dates
       for (const promo of promoCodes) {
         if (promo.expiryDate && promo.available) {
           const expiry = new Date(promo.expiryDate);
@@ -255,12 +252,19 @@ export const addUser = createAsyncThunk(
   'admin/addUser',
   async (userData, { getState, rejectWithValue }) => {
     const { auth } = getState();
+    const currentUser = useAuth();
+    if (!auth.isAuthInitialized) {
+      return rejectWithValue('Авторизация еще не инициализирована');
+    }
     if (auth.userRole !== 'admin') {
       return rejectWithValue('Только администраторы могут добавлять пользователей');
     }
     try {
-      // Получаем idToken от текущего пользователя
-      const idToken = await auth.currentUser.getIdToken(); // Используем auth.currentUser вместо auth.user
+      const currentUser = getFirebaseCurrentUser();
+      if (!currentUser) {
+        return rejectWithValue('Пользователь не авторизован');
+      }
+      const idToken = await currentUser.getIdToken();
       const response = await fetch(
         'https://us-central1-k-syndicate.cloudfunctions.net/addNewUser',
         {
@@ -274,8 +278,7 @@ export const addUser = createAsyncThunk(
         return rejectWithValue(errorData.message || 'Ошибка при добавлении пользователя');
       }
       const result = await response.json();
-      // Возвращаем результат, который включает userId и resetLink
-      return result; // { message: 'User created successfully', userId, resetLink }
+      return { ...result, userData };
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -286,11 +289,18 @@ export const deleteUser = createAsyncThunk(
   'admin/deleteUser',
   async (userId, { getState, rejectWithValue }) => {
     const { auth } = getState();
+    if (!auth.isAuthInitialized) {
+      return rejectWithValue('Авторизация еще не инициализирована');
+    }
     if (auth.userRole !== 'admin') {
       return rejectWithValue('Только администраторы могут удалять пользователей');
     }
     try {
-      const idToken = await auth.currentUser.getIdToken(); // Используем auth.currentUser
+      const currentUser = getFirebaseCurrentUser();
+      if (!currentUser) {
+        return rejectWithValue('Пользователь не авторизован');
+      }
+      const idToken = await currentUser.getIdToken();
       const response = await fetch(
         'https://us-central1-k-syndicate.cloudfunctions.net/deleteUser',
         {
@@ -304,7 +314,7 @@ export const deleteUser = createAsyncThunk(
         return rejectWithValue(errorData.message || 'Ошибка при удалении пользователя');
       }
       const result = await response.json();
-      return { userId, message: result.message }; // Возвращаем userId и message
+      return { userId, message: result.message };
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -432,8 +442,6 @@ export const uploadImage = createAsyncThunk(
     }
   },
 );
-
-// ... (keep existing thunks: updateUser, deleteCourse, uploadImage, etc.)
 
 export const addNotification = createAsyncThunk(
   'admin/addNotification',
@@ -732,7 +740,6 @@ const adminSlice = createSlice({
     },
     setNotifications: (state, action) => {
       const notifications = action.payload;
-      // Удаляем дубликаты по id
       const uniqueNotifications = Array.from(
         new Map(notifications.map((notification) => [notification.id, notification])).values(),
       );
@@ -743,7 +750,6 @@ const adminSlice = createSlice({
     },
     setTimers: (state, action) => {
       const timers = action.payload;
-      // Удаляем дубликаты по id
       const uniqueTimers = Array.from(new Map(timers.map((timer) => [timer.id, timer])).values());
       state.timers = uniqueTimers;
     },
