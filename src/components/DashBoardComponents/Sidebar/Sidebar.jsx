@@ -85,6 +85,7 @@ export default function Sidebar({
             className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
             onClick={() => {
               if (!isCollapsed) setIsUsersOpen(!isUsersOpen);
+              handleSectionClick('userList');
             }}>
             <div className={scss.iconAndTextMenuBlock}>
               <BsFillPeopleFill className={scss.menuIcon} />
@@ -130,6 +131,7 @@ export default function Sidebar({
             className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
             onClick={() => {
               if (!isCollapsed) setIsCoursesOpen(!isCoursesOpen);
+              handleSectionClick('courseList');
             }}>
             <div className={scss.iconAndTextMenuBlock}>
               <BsFillMortarboardFill className={scss.menuIcon} />
@@ -185,6 +187,7 @@ export default function Sidebar({
             className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
             onClick={() => {
               if (!isCollapsed) setIsProductOpen(!isProductOpen);
+              handleSectionClick('productList');
             }}>
             <div className={scss.iconAndTextMenuBlock}>
               <BsFillBoxFill className={scss.menuIcon} />

@@ -78,6 +78,9 @@ export default function OrderDetailsModal({ isOpen, onClose, order }) {
           <p>
             <strong>Первоначальная цена:</strong> ${order.totalOriginalPrice}
           </p>
+          <p>
+            <strong>Конвентированная цена:</strong> {order.convertedTotal} {order.currency}
+          </p>
           {order.promoCode && (
             <>
               <p>
