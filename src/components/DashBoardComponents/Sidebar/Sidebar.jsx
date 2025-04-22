@@ -177,6 +177,7 @@ export default function Sidebar({
               activeSection === 'addProduct' ||
               activeSection === 'discountPresets' ||
               activeSection === 'promocodes' ||
+              activeSection === 'currencySelector' ||
               activeSection === 'editProduct') &&
               scss.active,
           )}>
@@ -228,6 +229,14 @@ export default function Sidebar({
                 )}
                 onClick={() => handleSectionClick('promocodes')}>
                 Промокоды
+              </li>
+              <li
+                className={clsx(
+                  scss.submenuItem,
+                  activeSection === 'currencySelector' && scss.activeSubText,
+                )}
+                onClick={() => handleSectionClick('currencySelector')}>
+                Смена валюты
               </li>
             </ul>
           )}

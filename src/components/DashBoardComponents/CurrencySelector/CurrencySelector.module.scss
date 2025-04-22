@@ -1,0 +1,274 @@
+.currencySelector {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 2vw;
+
+  h2 {
+    font-size: 1.4vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    margin-top: 1vw;
+  }
+}
+
+.currencyTiles {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: start;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 1vw;
+  margin-top: 1vw;
+}
+
+.currencyTile {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: auto;
+  padding: 0.75vw;
+  border-radius: 0.4vw;
+  width: 24%;
+  box-shadow: 0.2vw 0.2vw 0.1vw 0.1vw rgba(0, 0, 0, 0.5);
+
+  &.blueGradient {
+    background: linear-gradient(45deg, #232742 0%, #1c1f30 100%);
+
+    & .iconBlock {
+      display: flex;
+      height: 100%;
+      background-color: #262c44;
+      padding: 0.4vw;
+      border-radius: 50%;
+
+      & .amountIcon {
+        height: 0.8vw;
+        width: 0.8vw;
+        fill: #484eac;
+      }
+    }
+  }
+
+  &.greenGradient {
+    background: linear-gradient(45deg, #263e28 0%, #202c20 100%);
+
+    & .iconBlock {
+      display: flex;
+      height: 100%;
+      background-color: #294829;
+      padding: 0.4vw;
+      border-radius: 50%;
+
+      & .amountIcon {
+        height: 0.8vw;
+        width: 0.8vw;
+        fill: #5fac66;
+      }
+    }
+  }
+  &.orangeGradient {
+    background: linear-gradient(45deg, #563917 0%, #372a19 100%);
+
+    & .iconBlock {
+      display: flex;
+      height: 100%;
+      background-color: #63420f;
+      padding: 0.4vw;
+      border-radius: 50%;
+
+      & .amountIcon {
+        height: 0.8vw;
+        width: 0.8vw;
+        fill: #ff9c14;
+      }
+    }
+  }
+
+  &.lightBlueGradient {
+    background: linear-gradient(45deg, #1b3e52 0%, #1a2c36 100%);
+
+    & .iconBlock {
+      display: flex;
+      height: 100%;
+      background-color: #234374;
+      padding: 0.4vw;
+      border-radius: 50%;
+
+      & .amountIcon {
+        height: 0.8vw;
+        width: 0.8vw;
+        fill: #2caedf;
+      }
+    }
+  }
+
+  .currencyContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3vw;
+
+    .currencyTitle {
+      font-size: 0.85vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-normal);
+      line-height: var(--font-lineh-normal);
+    }
+
+    .currencyRate {
+      font-size: 0.7vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-normal);
+      margin: 0;
+    }
+
+    .currencyStatus {
+      font-size: 0.7vw;
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-normal);
+      margin: 0;
+      color: #888;
+
+      &.activeStatus {
+        color: #28a745;
+      }
+    }
+
+    .input {
+      width: 100%;
+      padding: 0.4vw;
+      border: 1px solid #ccc;
+      border-radius: 0.2vw;
+      font-size: 0.7vw;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--color-white);
+
+      &:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+    }
+
+    .buttonGroup {
+      display: flex;
+      gap: 0.3vw;
+
+      .button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.4vw 0.8vw;
+        border-radius: 0.2vw;
+        cursor: pointer;
+        font-size: 0.7vw;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background-color: #0056b3;
+        }
+      }
+
+      .toggleButton {
+        background-color: #6c757d;
+
+        &.activeToggle {
+          background-color: #dc3545;
+        }
+
+        &:hover {
+          background-color: #5a6268;
+
+          &.activeToggle {
+            background-color: #c82333;
+          }
+        }
+      }
+    }
+  }
+
+  .iconBlock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .currencyIcon {
+      height: 0.8vw;
+      width: 0.8vw;
+    }
+  }
+}
+
+.addCurrency {
+  display: flex;
+  flex-direction: column;
+  width: 24%;
+  margin-top: 1.5vw;
+  padding: 1vw;
+  border-radius: 0.4vw;
+  box-shadow: 0.2vw 0.2vw 0.1vw 0.1vw rgba(0, 0, 0, 0.5);
+  background-color: #111111;
+
+  h3 {
+    display: flex;
+    font-size: 1vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5vw;
+    max-width: 20vw;
+    margin-top: 1vw;
+
+    .input {
+      // width: 100%;
+      padding: 0.4vw;
+      border: 1px solid #ccc;
+      border-radius: 0.2vw;
+      font-size: 0.7vw;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--color-white);
+
+      &:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+    }
+
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 0.4vw 0.8vw;
+      border-radius: 0.2vw;
+      cursor: pointer;
+      font-size: 0.7vw;
+      transition: background-color 0.3s ease;
+
+      &:hover {
+        background-color: #0056b3;
+      }
+    }
+  }
+}
+
+.loader {
+  font-size: 1vw;
+  color: var(--color-white);
+  text-align: center;
+}
+
+.error {
+  font-size: 1vw;
+  color: red;
+  text-align: center;
+}

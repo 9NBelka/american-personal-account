@@ -27,6 +27,7 @@ import AdminDataSync from './components/AdminDataSync';
 import { useEffect } from 'react';
 import { initializeAuth, logout } from './store/slices/authSlice';
 import Orders from './components/DashBoardComponents/Orders/Orders';
+import CurrencySelector from './components/DashBoardComponents/CurrencySelector/CurrencySelector';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -87,6 +88,7 @@ function AppContent() {
           <Route path='addProduct' element={<AddProduct />} />
           <Route path='discountPresets' element={<DiscountPresets />} />
           <Route path='promocodes' element={<PromoCodes />} />
+          <Route path='currencySelector' element={<CurrencySelector />} />
           <Route path='orders' element={<Orders />} />
           <Route path='notifications' element={<Notifications />} />
           <Route path='*' element={<div>Section Not Found</div>} />
