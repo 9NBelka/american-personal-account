@@ -1,0 +1,56 @@
+.ordersMainBlock {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 2vw;
+
+  & .ordersTitle {
+    font-size: 1.4vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    margin-top: 1vw;
+  }
+}
+
+.tableWrapper {
+  border-radius: 0.25vw;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #111111;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5vw;
+  margin-top: 1vw;
+
+  & .pageButton {
+    padding: 0.4vw 0.75vw;
+    background-color: #1e1e1e;
+    border: none;
+    border-radius: 0.2vw;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+
+    &:hover {
+      background-color: #252525;
+    }
+
+    &.active {
+      background-color: #2ecc71;
+      color: #fff;
+    }
+  }
+}

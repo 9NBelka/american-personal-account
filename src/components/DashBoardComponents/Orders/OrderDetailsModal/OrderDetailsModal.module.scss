@@ -1,0 +1,114 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #1e1e1e;
+  border-radius: 0.5vw;
+  padding: 2vw;
+  width: 50vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  color: #fff;
+  font-family: var(--font-main-for-account);
+}
+
+.closeButton {
+  position: absolute;
+  top: 1vw;
+  right: 1vw;
+  background: none;
+  border: none;
+  font-size: 1.5vw;
+  color: #fff;
+  cursor: pointer;
+
+  & .iconClose {
+    width: 1.5vw;
+    height: 1.5vw;
+    fill: white;
+    transition: 0.3s ease-in-out;
+
+    &:hover {
+      fill: #ff5555;
+    }
+  }
+}
+
+.modalTitle {
+  font-size: 1.2vw;
+  font-weight: var(--font-weight-normal);
+  line-height: var(--font-lineh-normal);
+  margin-bottom: 1vw;
+}
+
+.modalSection {
+  margin-bottom: 1.5vw;
+
+  h3 {
+    font-size: 0.9vw;
+    font-weight: var(--font-weight-bold);
+    margin-bottom: 0.5vw;
+  }
+
+  p {
+    font-size: 0.7vw;
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    margin: 0.3vw 0;
+  }
+
+  & .statusBlock {
+    display: flex;
+    flex-direction: row;
+    gap: 0.25vw;
+
+    & .greenColor {
+      color: var(--color-lightGreen);
+    }
+
+    & .orangeColor {
+      color: var(--color-orange);
+    }
+
+    & .redColor {
+      color: var(--color-red);
+    }
+  }
+}
+
+.itemsList {
+  list-style: none;
+  padding: 0;
+
+  & .item {
+    background-color: #252525;
+    border-radius: 0.3vw;
+    padding: 0.5vw;
+    margin-bottom: 0.5vw;
+
+    p {
+      margin: 0.2vw 0;
+    }
+
+    & .priceAndDiscountPercent {
+      display: flex;
+      flex-direction: row;
+      gap: 0.25vw;
+
+      & .greenColor {
+        color: var(--color-lightGreen);
+      }
+    }
+  }
+}

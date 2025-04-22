@@ -800,6 +800,18 @@ const adminSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.products = action.payload;
       })
+      // .addCase(fetchProducts.pending, (state) => {
+      //   state.status = 'loading';
+      //   state.error = null;
+      // })
+      // .addCase(fetchProducts.fulfilled, (state, action) => {
+      //   state.status = 'succeeded';
+      //   state.products = action.payload;
+      // })
+      // .addCase(fetchProducts.rejected, (state, action) => {
+      //   state.status = 'failed';
+      //   state.error = action.payload;
+      // })
       .addCase(addProduct.fulfilled, (state, action) => {
         // Добавляем продукт локально, но onSnapshot сделает это автоматически
       })

@@ -14,6 +14,9 @@ import {
   BsPower,
   BsBellFill,
   BsFillBoxFill,
+  BsCoin,
+  BsImage,
+  BsDisplayFill,
 } from 'react-icons/bs';
 
 export default function Sidebar({
@@ -47,6 +50,7 @@ export default function Sidebar({
         <h2 className={scss.sidebarTitle}>Панель управления</h2>
         <BsArrowBarLeft className={scss.iconTitle} onClick={toggleSidebar} />
       </div>
+
       <ul className={scss.menu}>
         <li
           className={clsx(scss.menuItem, activeSection === 'mainStatistics' && scss.active)}
@@ -54,6 +58,22 @@ export default function Sidebar({
           <div className={scss.iconAndTextMenuMainBlock}>
             <BsFillHouseFill className={scss.menuIcon} />
             <span className={scss.menuText}>Главная</span>
+          </div>
+        </li>
+        <li
+          className={clsx(scss.menuItem, activeSection === 'images' && scss.active)}
+          onClick={() => handleSectionClick('images')}>
+          <div className={scss.iconAndTextMenuMainBlock}>
+            <BsImage className={scss.menuIcon} />
+            <span className={scss.menuText}>Изображения</span>
+          </div>
+        </li>
+        <li
+          className={clsx(scss.menuItem, activeSection === 'pages' && scss.active)}
+          onClick={() => handleSectionClick('pages')}>
+          <div className={scss.iconAndTextMenuMainBlock}>
+            <BsDisplayFill className={scss.menuIcon} />
+            <span className={scss.menuText}>Страницы</span>
           </div>
         </li>
         <li
@@ -211,6 +231,14 @@ export default function Sidebar({
               </li>
             </ul>
           )}
+        </li>
+        <li
+          className={clsx(scss.menuItem, activeSection === 'orders' && scss.active)}
+          onClick={() => handleSectionClick('orders')}>
+          <div className={scss.iconAndTextMenuMainBlock}>
+            <BsCoin className={scss.menuIcon} />
+            <span className={scss.menuText}>Заказы</span>
+          </div>
         </li>
         <li
           className={clsx(scss.menuItem, activeSection === 'notifications' && scss.active)}

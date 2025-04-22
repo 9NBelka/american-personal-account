@@ -1,0 +1,40 @@
+.titleListOrders {
+  background-color: #1e1e1e;
+  border-bottom: 0.1vw solid #333;
+
+  th {
+    padding: 0.75vw 1vw;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-small);
+    text-align: left;
+    text-transform: uppercase;
+
+    &:nth-child(1) {
+      width: 5%; // №
+    }
+    &:nth-child(2) {
+      width: 15%; // Order ID
+    }
+    &:nth-child(3) {
+      width: 15%; // Customer Name
+    }
+    &:nth-child(4) {
+      width: 20%; // Email
+    }
+    &:nth-child(5) {
+      width: 10%; // Total Price
+    }
+    &:nth-child(6) {
+      width: 10%; // Payment Status
+    }
+    &:nth-child(7) {
+      width: 15%; // Date Created
+    }
+    &:nth-child(8) {
+      width: 10%; // Actions
+    }
+  }
+}

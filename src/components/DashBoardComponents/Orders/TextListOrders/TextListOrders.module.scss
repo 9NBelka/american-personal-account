@@ -1,0 +1,48 @@
+.listOrders {
+  background-color: #111111;
+
+  & .order {
+    background-color: #1e1e1e;
+    border-bottom: 0.05vw solid #333;
+    transition: 0.2s ease-in-out;
+
+    &:hover {
+      background-color: #252525;
+    }
+
+    td {
+      padding: 0.5vw 1vw;
+      font-size: 0.7vw;
+      color: #fff;
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      vertical-align: middle;
+    }
+
+    & .actions {
+      display: flex;
+      gap: 0.5vw;
+
+      & .detailsButton {
+        padding: 0.3vw 0.75vw;
+        border-radius: 0.2vw;
+        font-size: 0.65vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        transition: 0.3s ease-in-out;
+        cursor: pointer;
+        border: none;
+        background-color: var(--color-blue-opacity20); // Using a blue color for "Details"
+        border: 0.1vw solid var(--color-blue);
+
+        &:hover {
+          background-color: #1a3c5e;
+          border: 0.1vw solid transparent;
+        }
+      }
+    }
+  }
+}
