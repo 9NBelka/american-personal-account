@@ -28,6 +28,7 @@ import { useEffect } from 'react';
 import { initializeAuth, logout } from './store/slices/authSlice';
 import Orders from './components/DashBoardComponents/Orders/Orders';
 import CurrencySelector from './components/DashBoardComponents/CurrencySelector/CurrencySelector';
+import StorageForImages from './components/DashBoardComponents/StorageForImages/StorageForImages';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ function AppContent() {
           }>
           <Route index element={<MainStatistics />} />
           <Route path='mainStatistics' element={<MainStatistics />} />
+          <Route path='images' element={<StorageForImages />} />
           <Route path='userList' element={<UserList />} />
           <Route path='addUser' element={<AddUser />} />
           <Route path='courseList' element={<CourseList />} />

@@ -1,0 +1,162 @@
+.mainBlock {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 2vw;
+
+  .title {
+    font-size: 1.4vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    margin-top: 1vw;
+  }
+}
+
+.uploadSection {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  margin-bottom: 2vw;
+}
+
+.fileInput {
+  border: 0.1vw solid var(--color-lightGreen);
+  border-radius: 0.2vw;
+  padding: 0.3vw;
+  color: var(--color-white);
+  background-color: #222;
+  font-family: var(--font-main-for-account);
+  font-size: 0.65vw;
+}
+
+.uploadButton {
+  padding: 0.3vw 1vw;
+  border-radius: 0.2vw;
+  font-size: 0.65vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-weight: var(--font-weight-small);
+  line-height: var(--font-lineh-small);
+  transition: 0.3s ease-in-out;
+  cursor: pointer;
+  background-color: var(--color-green-opacity20);
+  border: 0.1vw solid var(--color-lightGreen);
+
+  &:hover {
+    background-color: #053a1b;
+    border: 0.1vw solid transparent;
+  }
+
+  &:disabled {
+    background-color: #444;
+    border: 0.1vw solid #666;
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  color: #ff5555;
+  margin-bottom: 1.5vw;
+  font-family: var(--font-main-for-account);
+  font-size: 0.8vw;
+}
+
+.loading {
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-size: 0.8vw;
+}
+
+.imageList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1vw;
+  background-color: #111111;
+  border-radius: 0.25vw;
+  padding: 1vw;
+}
+
+.imageCard {
+  background-color: #222;
+  padding: 0.5vw;
+  border-radius: 0.25vw;
+  width: 10vw;
+  transition: background-color 0.3s ease-in-out;
+
+  &:hover {
+    background-color: #333;
+  }
+}
+
+.imageWrapper {
+  width: 100%;
+  height: 8vw;
+  background-color: #333;
+  border-radius: 0.25vw;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.25vw;
+}
+
+.imageName {
+  font-size: 0.65vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  margin-top: 0.5vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.5vw;
+  margin-top: 0.75vw;
+}
+
+.actionButton {
+  flex: 1;
+  padding: 0.3vw 0.5vw;
+  border-radius: 0.2vw;
+  font-size: 0.65vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-weight: var(--font-weight-small);
+  line-height: var(--font-lineh-small);
+  transition: 0.3s ease-in-out;
+  cursor: pointer;
+  background-color: var(--color-green-opacity20);
+  border: 0.1vw solid var(--color-lightGreen);
+
+  &:hover {
+    background-color: #053a1b;
+    border: 0.1vw solid transparent;
+  }
+}
+
+.actionButtonDelete {
+  flex: 1;
+  padding: 0.3vw 0.5vw;
+  border-radius: 0.2vw;
+  font-size: 0.65vw;
+  color: var(--color-white);
+  font-family: var(--font-main-for-account);
+  font-weight: var(--font-weight-small);
+  line-height: var(--font-lineh-small);
+  transition: 0.3s ease-in-out;
+  cursor: pointer;
+  background-color: var(--color-red-opacity20);
+  border: 0.1vw solid var(--color-red);
+
+  &:hover {
+    background-color: #3f0d07;
+    border: 0.1vw solid transparent;
+  }
+}
