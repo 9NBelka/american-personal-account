@@ -38,3 +38,35 @@
     margin-top: 0.5vw;
   }
 }
+
+@media (max-width: 1024px) {
+  .lsInputField {
+    input {
+      padding: 1.2vw 1.5vw;
+      border-radius: 0.5vw;
+      font-size: 1.8vw;
+      margin-top: 1.5vw;
+    }
+
+    & p {
+      font-size: 1.6vw;
+      margin-top: 1vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .lsInputField {
+    & input {
+      padding: 2.5vw 3vw;
+      border-radius: 0.75vw;
+      font-size: 3.6vw;
+      margin-top: 3vw;
+    }
+
+    & p {
+      font-size: 3.2vw;
+      margin-top: 1.5vw;
+    }
+  }
+}

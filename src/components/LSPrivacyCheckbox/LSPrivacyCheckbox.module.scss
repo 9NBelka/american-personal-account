@@ -42,6 +42,44 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .checkboxContainer {
+    margin-top: 2vw;
+
+    label {
+      gap: 1vw;
+    }
+
+    .text {
+      font-size: 1.7vw;
+    }
+
+    & p {
+      font-size: 1.6vw;
+      margin-top: 1vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .checkboxContainer {
+    margin-top: 5vw;
+
+    label {
+      gap: 2vw;
+    }
+
+    .text {
+      font-size: 3.4vw;
+    }
+
+    & p {
+      font-size: 3.2vw;
+      margin-top: 1.5vw;
+    }
+  }
+}
+
 .checkbox {
   display: none; // Скрываем нативный чекбокс
 }
@@ -64,6 +102,30 @@
     font-size: 0.75vw;
     opacity: 0;
     transition: opacity 0.3s;
+  }
+}
+
+@media (max-width: 1024px) {
+  .checkmark {
+    width: 1.5vw;
+    height: 1.5vw;
+    border-radius: 0.25vw;
+
+    &:before {
+      font-size: 1.4vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .checkmark {
+    width: 3vw;
+    height: 3vw;
+    border-radius: 0.5vw;
+
+    &:before {
+      font-size: 2.4vw;
+    }
   }
 }
 

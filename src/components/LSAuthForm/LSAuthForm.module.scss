@@ -17,6 +17,18 @@
   line-height: var(--font-lineh-normal);
 }
 
+@media (max-width: 1024px) {
+  .titleLS {
+    font-size: 3vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .titleLS {
+    font-size: 6vw;
+  }
+}
+
 .answerAboutAccount {
   font-size: 0.85vw;
   color: var(--color-white);
@@ -35,11 +47,40 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .answerAboutAccount {
+    font-size: 1.75vw;
+    margin-top: 1vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .answerAboutAccount {
+    font-size: 3.2vw;
+    margin-top: 2vw;
+  }
+}
+
 .nameContainer {
   display: flex;
   flex-direction: column;
   width: 100%;
   margin-top: 1.5vw;
+}
+
+@media (max-width: 1024px) {
+  .nameContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 0vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .nameContainer {
+    margin-top: 5vw;
+  }
 }
 
 .nameContainerHalf {
@@ -54,6 +95,18 @@
 
   > div input {
     margin-top: 0vw;
+  }
+}
+
+@media (max-width: 1024px) {
+  .nameContainerHalf {
+    gap: 1.6vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .nameContainerHalf {
+    gap: 2.6vw;
   }
 }
 
@@ -76,6 +129,24 @@
 
   &:hover {
     opacity: 0.7;
+  }
+}
+
+@media (max-width: 1024px) {
+  .buttonSubmit {
+    padding: 1.2vw 0;
+    border-radius: 0.5vw;
+    font-size: 1.8vw;
+    margin-top: 2vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .buttonSubmit {
+    padding: 2.4vw 0;
+    border-radius: 0.75vw;
+    font-size: 3.6vw;
+    margin-top: 5vw;
   }
 }
 
@@ -114,10 +185,58 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .orSeparator {
+    margin-top: 3vw;
+
+    span {
+      padding: 0 1vw;
+      font-size: 1.6vw;
+    }
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 0.1vw;
+      background-color: #919191; // Цвет линий
+      opacity: 0.5;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .orSeparator {
+    margin-top: 5vw;
+
+    span {
+      padding: 0 2vw;
+      font-size: 3.4vw;
+    }
+
+    &::before,
+    &::after {
+      height: 0.2vw;
+    }
+  }
+}
+
 .socialButtonsBlock {
   display: flex;
   justify-content: space-between;
   gap: 1.2vw;
+}
+
+@media (max-width: 1024px) {
+  .socialButtonsBlock {
+    gap: 2vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .socialButtonsBlock {
+    gap: 4vw;
+  }
 }
 
 .socialButton {
@@ -150,6 +269,36 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .socialButton {
+    gap: 1vw;
+    padding: 1.2vw 0;
+    border-radius: 0.5vw;
+    font-size: 1.6vw;
+    margin-top: 3vw;
+
+    & .iconSocial {
+      width: 1.8vw;
+      height: 1.8vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .socialButton {
+    gap: 1.5vw;
+    padding: 2.4vw 0;
+    border-radius: 0.75vw;
+    font-size: 3.6vw;
+    margin-top: 5vw;
+
+    & .iconSocial {
+      width: 3vw;
+      height: 3vw;
+    }
+  }
+}
+
 .forgotPassword {
   display: flex;
   flex-direction: row;
@@ -166,6 +315,26 @@
 
     &:hover {
       opacity: 0.7;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .forgotPassword {
+    margin-top: 2vw;
+
+    & a {
+      font-size: 1.7vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .forgotPassword {
+    margin-top: 3vw;
+
+    & a {
+      font-size: 3.4vw;
     }
   }
 }
