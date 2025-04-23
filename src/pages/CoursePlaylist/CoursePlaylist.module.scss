@@ -8,11 +8,38 @@
   max-width: 100%;
 }
 
+@media (max-width: 1024px) {
+  .container {
+    width: 92vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    width: 90vw;
+  }
+}
+
 .playlistContainer {
   display: flex;
   width: 100%;
   gap: 1vw;
   padding-top: 2.2vw;
+}
+
+@media (max-width: 1024px) {
+  .playlistContainer {
+    gap: 1vw;
+    padding-top: 3vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .playlistContainer {
+    flex-direction: column;
+    gap: 1.5vw;
+    padding-top: 3vw;
+  }
 }
 
 .videoSection {
@@ -23,6 +50,18 @@
   height: 100%;
   width: 65%;
   min-width: 0; /* Предотвращает переполнение */
+}
+
+@media (max-width: 1024px) {
+  .videoSection {
+    width: 60%;
+  }
+}
+
+@media (max-width: 768px) {
+  .videoSection {
+    width: 100%;
+  }
 }
 
 .videoSectionMenu {
@@ -73,6 +112,46 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .videoSectionMenu {
+    margin-top: 0.75vw;
+    border-bottom: 0.1vw solid var(--color-darkGrey);
+
+    & .tabButton {
+      font-size: 1.4vw;
+      padding: 1.2vw 0vw;
+      width: 12vw;
+
+      &.active {
+        &::after {
+          bottom: -0.05vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+          height: 0.1vw;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .videoSectionMenu {
+    margin-top: 1vw;
+    border-bottom: 0.1vw solid var(--color-darkGrey);
+
+    & .tabButton {
+      font-size: 1.6vw;
+      padding: 1.4vw 0vw;
+      width: 14vw;
+
+      &.active {
+        &::after {
+          bottom: -0.05vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+          height: 0.1vw;
+        }
+      }
+    }
+  }
+}
+
 .videoSectionMenuResults {
   display: flex;
   flex-direction: column;
@@ -84,6 +163,14 @@
   margin-top: 2vw;
 }
 
+@media (max-width: 1024px) {
+  .videoSectionMenuResults {
+    border-radius: 1vw;
+    padding: 2vw;
+    margin-top: 1.5vw;
+  }
+}
+
 .modulesSection {
   display: flex;
   width: 35%;
@@ -91,4 +178,18 @@
   min-width: 0;
   border-radius: 0.75vw;
   background-color: var(--color-darkGrey);
+}
+
+@media (max-width: 1024px) {
+  .modulesSection {
+    width: 40%;
+    border-radius: 1vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .modulesSection {
+    width: 100%;
+    border-radius: 1vw;
+  }
 }

@@ -4,6 +4,18 @@
   max-width: 100%;
 }
 
+@media (max-width: 1024px) {
+  .container {
+    width: 92vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    width: 90vw;
+  }
+}
+
 .header {
   background-color: #111111;
 }
@@ -140,6 +152,136 @@
 
         &:hover {
           opacity: 0.7;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .navigationBlock {
+    border-bottom: 0.1vw solid var(--color-darkGrey);
+    padding: 1.5vw 0;
+    padding-bottom: 1vw;
+
+    & .logoBlock {
+      & img {
+        width: 10vw;
+      }
+    }
+
+    & ul {
+      gap: 1.5vw;
+
+      & li {
+        font-size: 1.4vw;
+        padding: 0 3vw;
+
+        &.active {
+          &::after {
+            bottom: -1.4vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+            height: 0.05vw;
+          }
+        }
+      }
+    }
+
+    & .profileAndIcons {
+      gap: 3vw;
+
+      & .avatarNameContainer {
+        gap: 1vw;
+
+        & .avatar {
+          width: 1.8vw;
+        }
+
+        & .studentName {
+          font-size: 1.4vw;
+        }
+      }
+
+      & .profileIcons {
+        gap: 2.5vw;
+
+        & .notificationWrapper {
+          & .notificationBadge {
+            top: -0.5vw;
+            left: 0.5vw;
+            font-size: 0.9vw;
+            border-radius: 50%;
+            padding: 0.15vw 0.42vw;
+          }
+        }
+
+        & .profileIcon {
+          width: 1.4vw;
+          height: 1.4vw;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .navigationBlock {
+    border-bottom: 0.1vw solid var(--color-darkGrey);
+    padding: 2.5vw 0;
+    padding-bottom: 1.5vw;
+
+    & .logoBlock {
+      & img {
+        width: 16vw;
+      }
+    }
+
+    & ul {
+      gap: 0vw;
+
+      & li {
+        font-size: 1.8vw;
+        padding: 0 3vw;
+
+        &.active {
+          &::after {
+            bottom: -2.4vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+            height: 0.05vw;
+          }
+        }
+      }
+    }
+
+    & .profileAndIcons {
+      gap: 4vw;
+
+      & .avatarNameContainer {
+        gap: 1.5vw;
+
+        & .avatar {
+          width: 2.4vw;
+        }
+
+        & .studentName {
+          font-size: 1.8vw;
+        }
+      }
+
+      & .profileIcons {
+        gap: 3.5vw;
+
+        & .notificationWrapper {
+          & .notificationBadge {
+            top: -0.8vw;
+            left: 0.8vw;
+            font-size: 1.2vw;
+            border-radius: 50%;
+            padding: 0.2vw 0.55vw;
+          }
+        }
+
+        & .profileIcon {
+          width: 2vw;
+          height: 2vw;
         }
       }
     }

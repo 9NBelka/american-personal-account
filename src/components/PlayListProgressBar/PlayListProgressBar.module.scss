@@ -20,3 +20,21 @@
   line-height: var(--font-lineh-small) !important;
   text-align: center;
 }
+
+@media (max-width: 1024px) {
+  .progressBar {
+    width: 5.5vw;
+    height: 5.5vw;
+    min-width: 5.5vw;
+    min-height: 5.5vw;
+  }
+
+  .customText {
+    font-size: 2.8vw !important;
+    color: var(--color-lightGrey) !important;
+    font-family: var(--font-main-for-account) !important;
+    font-weight: var(--font-weight-small) !important;
+    line-height: var(--font-lineh-small) !important;
+    text-align: center;
+  }
+}

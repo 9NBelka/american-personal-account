@@ -159,7 +159,6 @@ export default function CoursePlaylist() {
     navigate,
     findFirstAvailableLesson,
     dispatch,
-    // Убрали completedLessons из зависимостей
   ]);
 
   const handleLessonClick = useCallback(

@@ -8,6 +8,18 @@
   max-width: 100%;
 }
 
+@media (max-width: 1024px) {
+  .container {
+    width: 92vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    width: 90vw;
+  }
+}
+
 .mainHalfToHalfBlock {
   display: flex;
   flex-direction: row;
@@ -25,6 +37,16 @@
   display: flex;
   flex-direction: column;
   width: 60%;
+}
+
+@media (max-width: 1024px) {
+  .courseLessonsContainer {
+    width: 45%;
+  }
+
+  .courseRightContainer {
+    width: 55%;
+  }
 }
 
 .courseAccessBlock {
@@ -48,5 +70,20 @@
     line-height: var(--font-lineh-small);
     margin: 0;
     margin-top: 0.5vw;
+  }
+}
+
+@media (max-width: 1024px) {
+  .courseAccessBlock {
+    margin-top: 4vw;
+
+    & .courseAccessTitle {
+      font-size: 2.4vw;
+    }
+
+    & .courseAccessDescrtiption {
+      font-size: 1.6vw;
+      margin-top: 0.75vw;
+    }
   }
 }

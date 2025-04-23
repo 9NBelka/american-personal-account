@@ -69,6 +69,80 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .moduleTitleAndIconBlock {
+    padding: 1.4vw 1.4vw;
+    padding-left: 1.4vw;
+    border-top: 0.05vw solid var(--color-lightGrey);
+
+    & .lockMessage {
+      position: absolute;
+      top: 70%;
+      left: 47%;
+      font-size: 0.7vw;
+
+      &.lockMessagePlayList {
+        left: 39%;
+      }
+    }
+
+    & .moduleTitleAndCountBlock {
+      gap: 0.75vw;
+
+      & .moduleTitle {
+        font-size: 1.7vw;
+      }
+
+      & .moduleCompletionCount {
+        font-size: 1.4vw;
+        padding-left: 1.9vw;
+      }
+    }
+
+    & .icon {
+      width: 1.8vw;
+      height: 1.8vw;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .moduleTitleAndIconBlock {
+    padding: 2vw 2vw;
+    padding-left: 2vw;
+    border-top: 0.05vw solid var(--color-lightGrey);
+
+    & .lockMessage {
+      position: absolute;
+      top: 70%;
+      left: 47%;
+      font-size: 0.7vw;
+
+      &.lockMessagePlayList {
+        left: 39%;
+      }
+    }
+
+    & .moduleTitleAndCountBlock {
+      gap: 0.75vw;
+
+      & .moduleTitle {
+        font-size: 2.2vw;
+      }
+
+      & .moduleCompletionCount {
+        font-size: 1.8vw;
+        padding-left: 2.4vw;
+      }
+    }
+
+    & .icon {
+      width: 2.2vw;
+      height: 2.2vw;
+    }
+  }
+}
+
 .lessonsList {
   display: flex;
   flex-direction: column;
@@ -147,6 +221,76 @@
 
     .checkbox:checked + .checkmark:before {
       opacity: 1;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .lessonsList {
+    padding: 0.75vw 1.5vw;
+    padding-left: 1.6vw;
+
+    & .lesson {
+      font-size: 1.5vw;
+      padding: 0.85vw 0vw;
+
+      & .checkboxAndTitleLesson {
+        gap: 1vw;
+
+        & .checkmark {
+          width: 1.6vw;
+          height: 1.6vw;
+          border: 0.05vw solid var(--color-white);
+          border-radius: 0.25vw;
+
+          &:before {
+            font-size: 1.25vw;
+          }
+        }
+      }
+
+      & .lessonTime {
+        font-size: 1.6vw;
+      }
+
+      .checkbox:checked + .checkmark {
+        border: 0.1vw solid var(--color-lightGreen);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .lessonsList {
+    padding: 1vw 1.5vw;
+    padding-left: 2.4vw;
+
+    & .lesson {
+      font-size: 2vw;
+      padding: 1vw 0vw;
+
+      & .checkboxAndTitleLesson {
+        gap: 1.5vw;
+
+        & .checkmark {
+          width: 2.2vw;
+          height: 2.2vw;
+          border: 0.05vw solid var(--color-white);
+          border-radius: 0.5vw;
+
+          &:before {
+            font-size: 1.25vw;
+          }
+        }
+      }
+
+      & .lessonTime {
+        font-size: 1.8vw;
+      }
+
+      .checkbox:checked + .checkmark {
+        border: 0.1vw solid var(--color-lightGreen);
+      }
     }
   }
 }

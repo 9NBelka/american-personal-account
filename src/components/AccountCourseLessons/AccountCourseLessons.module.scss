@@ -5,10 +5,22 @@
   border-radius: 0.75vw;
 }
 
+@media (max-width: 1024px) {
+  .courseSection {
+    border-radius: 1vw;
+  }
+}
+
 .courseHeader {
   display: flex;
   flex-direction: column;
   padding: 1.2vw;
+}
+
+@media (max-width: 1024px) {
+  .courseHeader {
+    padding: 1.4vw;
+  }
 }
 
 .courseHeaderPackageTimeNubmStud {
@@ -63,6 +75,34 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .courseHeaderPackageTimeNubmStud {
+    & .courseHeaderPackage {
+      font-size: 1.6vw;
+
+      & span {
+        font-size: 1.6vw;
+      }
+    }
+    & .iconAndTimeBlocks {
+      gap: 1.5vw;
+
+      & .iconAndTimeBlock {
+        gap: 0.5vw;
+
+        & .iconClock {
+          width: 1.4vw;
+          height: 1.4vw;
+        }
+
+        & .courseHeaderTime {
+          font-size: 1.6vw;
+        }
+      }
+    }
+  }
+}
+
 .courseNameAndProgressBar {
   display: flex;
   flex-direction: row;
@@ -80,6 +120,18 @@
     line-height: var(--font-lineh-center);
     text-transform: uppercase;
     text-align: left;
+  }
+}
+
+@media (max-width: 1024px) {
+  .courseNameAndProgressBar {
+    width: 100%;
+    margin-top: 2vw;
+
+    & .courseName {
+      width: 60%;
+      font-size: 2.2vw;
+    }
   }
 }
 
@@ -118,6 +170,29 @@
       width: 0.85vw;
       height: 0.85vw;
       fill: var(--color-lightGreen);
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .expandToStandartAndGitHubLinkBlock {
+    margin-top: 1.6vw;
+
+    & .expandToStandart {
+      font-size: 1.4vw;
+      border: 0.05vw solid var(--color-orange);
+      padding: 0.85vw 1.8vw;
+      border-radius: 0.75vw;
+    }
+
+    & .gitHubLink {
+      font-size: 1.4vw;
+      gap: 1vw;
+
+      & .gitHubLinkIcon {
+        width: 1.4vw;
+        height: 1.4vw;
+      }
     }
   }
 }

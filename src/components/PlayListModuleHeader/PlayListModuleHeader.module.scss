@@ -22,3 +22,31 @@
     line-height: var(--font-lineh-normal);
   }
 }
+
+@media (max-width: 1024px) {
+  .courseHeader {
+    padding: 1.8vw 1.4vw;
+
+    & .courseTitle {
+      font-size: 2vw;
+    }
+
+    & .lessonsCount {
+      font-size: 1.4vw;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .courseHeader {
+    padding: 2vw 2vw;
+
+    & .courseTitle {
+      font-size: 2.4vw;
+    }
+
+    & .lessonsCount {
+      font-size: 1.8vw;
+    }
+  }
+}
