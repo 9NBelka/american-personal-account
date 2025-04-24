@@ -116,7 +116,7 @@ const CourseLessonsList = ({
         </div>
         {isModuleLocked && (
           <span className={clsx(scss.lockMessage, playlistPage && scss.lockMessagePlayList)}>
-            The module will open on {formatUnlockDate(module.unlockDate)}
+            Module opens {formatUnlockDate(module.unlockDate)}
           </span>
         )}
         {expandedModule === index ? (

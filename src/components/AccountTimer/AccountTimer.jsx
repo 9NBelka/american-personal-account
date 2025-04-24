@@ -112,7 +112,7 @@ export default function AccountTimer({ courseId, modules }) {
 
   return (
     <div className={scss.timerContainer}>
-      <div>
+      <div className={scss.timerContainerBlock}>
         <h4 className={scss.timerTitle}>Time left until the lesson opens:</h4>
         <div className={scss.timer}>
           <div className={scss.timeBlock}>
@@ -155,19 +155,21 @@ export default function AccountTimer({ courseId, modules }) {
           Next module: <span>{currentModule.moduleTitle}</span>
         </p>
       </div>
-      <div className={scss.moduleInfoAboutMeet}>
-        <h3 className={scss.moduleInfoAboutMeetTitle}>STUDENT MEET</h3>
-        <p className={scss.moduleInfoAboutMeetDescription}>
-          Where?{' '}
-          <a href='#' target='_blank'>
-            Here!
-          </a>
-        </p>
+      <div className={scss.moduleInfoAboutMeetAndCalendar}>
+        <div className={scss.moduleInfoAboutMeet}>
+          <h3 className={scss.moduleInfoAboutMeetTitle}>STUDENT MEET</h3>
+          <p className={scss.moduleInfoAboutMeetDescription}>
+            Where?{' '}
+            <a href='#' target='_blank'>
+              Here!
+            </a>
+          </p>
+        </div>
+        <BsCalendar3WeekFill
+          className={scss.moduleInfoAboutMeetCalendar}
+          onClick={addToGoogleCalendarLink}
+        />
       </div>
-      <BsCalendar3WeekFill
-        className={scss.moduleInfoAboutMeetCalendar}
-        onClick={addToGoogleCalendarLink}
-      />
     </div>
   );
 }

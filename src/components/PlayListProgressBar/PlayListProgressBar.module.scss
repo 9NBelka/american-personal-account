@@ -38,3 +38,21 @@
     text-align: center;
   }
 }
+
+@media (max-width: 980px) {
+  .progressBar {
+    width: 9vw;
+    height: 9vw;
+    min-width: 9vw;
+    min-height: 9vw;
+  }
+
+  .customText {
+    font-size: 4vw !important;
+    color: var(--color-lightGrey) !important;
+    font-family: var(--font-main-for-account) !important;
+    font-weight: var(--font-weight-small) !important;
+    line-height: var(--font-lineh-small) !important;
+    text-align: center;
+  }
+}

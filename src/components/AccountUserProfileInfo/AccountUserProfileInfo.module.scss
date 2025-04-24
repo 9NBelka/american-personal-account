@@ -22,6 +22,16 @@
   }
 }
 
+@media (max-width: 980px) {
+  .userProfileMain {
+    padding-top: 5vw;
+
+    & h1 {
+      font-size: 4vw;
+    }
+  }
+}
+
 .userProfileBlock {
   display: flex;
   flex-direction: row;
@@ -97,6 +107,30 @@
         border: 0.2vw solid #1e1e1e;
         border-radius: 50%;
         padding: 0.6vw;
+      }
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .userProfileBlock {
+    & .welcomeText {
+      font-size: 2.4vw;
+      margin-top: 1.5vw;
+    }
+
+    & .userProfileSocialBlock {
+      gap: 3vw;
+
+      & a:hover {
+        transform: translateY(-0.2vw);
+      }
+
+      & .icon {
+        width: 5.75vw;
+        height: 5.75vw;
+        border: 0.3vw solid #1e1e1e;
+        padding: 1.15vw;
       }
     }
   }

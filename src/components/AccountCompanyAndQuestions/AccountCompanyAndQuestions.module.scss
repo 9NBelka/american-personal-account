@@ -9,3 +9,24 @@
     margin-top: 1vw;
   }
 }
+
+@media (max-width: 1024px) {
+  .accountCompanyAndQuestionsBlock {
+    gap: 1.5vw;
+
+    &.accountCompanyAndQuestionsBlockMarg {
+      margin-top: 1.5vw;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .accountCompanyAndQuestionsBlock {
+    flex-direction: column;
+    gap: 3vw;
+
+    &.accountCompanyAndQuestionsBlockMarg {
+      margin-top: 3vw;
+    }
+  }
+}

@@ -76,3 +76,64 @@
     margin-top: 0.5vw;
   }
 }
+
+@media (max-width: 1024px) {
+  .formGroup {
+    & .avatarPreview {
+      width: 15vw;
+    }
+
+    & label {
+      font-size: 1.8vw;
+      margin-top: 2vw;
+    }
+
+    & .customFileButton {
+      font-size: 1.8vw;
+      margin-top: 1vw;
+    }
+
+    & .submitButton {
+      width: 100%;
+      padding: 1.5vw 0;
+      border-radius: 0.5vw;
+      font-size: 1.8vw;
+      margin-top: 1.75vw;
+    }
+
+    & .error {
+      font-size: 1.8vw;
+      margin-top: 1vw;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .formGroup {
+    & .avatarPreview {
+      width: 25vw;
+    }
+
+    & label {
+      font-size: 2.4vw;
+      margin-top: 3vw;
+    }
+
+    & .customFileButton {
+      font-size: 2.4vw;
+      margin-top: 2vw;
+    }
+
+    & .submitButton {
+      padding: 2vw 0;
+      border-radius: 1vw;
+      font-size: 2.4vw;
+      margin-top: 3vw;
+    }
+
+    & .error {
+      font-size: 2.4vw;
+      margin-top: 1.5vw;
+    }
+  }
+}

@@ -45,20 +45,20 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
   .videoSection {
     border-radius: 1vw;
-    height: 35vh;
+    height: 45vh;
     width: 100%;
 
     & iframe {
       width: 100%;
-      height: 35vh;
+      height: 45vh;
       border-radius: 1vw;
     }
 
     & .lockMessage {
-      font-size: 1.8vw;
+      font-size: 2.4vw;
     }
   }
 }

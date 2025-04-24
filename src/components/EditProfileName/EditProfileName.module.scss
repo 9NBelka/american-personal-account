@@ -76,3 +76,59 @@
     margin-top: 0.5vw;
   }
 }
+
+@media (max-width: 1024px) {
+  .formGroup {
+    & label {
+      font-size: 1.8vw;
+    }
+
+    & input {
+      padding: 1.5vw 2vw;
+      border-radius: 0.5vw;
+      font-size: 1.8vw;
+      margin-top: 1.5vw;
+    }
+
+    & .submitButton {
+      width: 100%;
+      padding: 1.5vw 0;
+      border-radius: 0.5vw;
+      font-size: 1.8vw;
+      margin-top: 1.75vw;
+    }
+
+    & .error {
+      font-size: 1.8vw;
+      margin-top: 1vw;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .formGroup {
+    & label {
+      font-size: 2.4vw;
+    }
+
+    & input {
+      padding: 2vw 2.5vw;
+      border-radius: 1vw;
+      font-size: 2.4vw;
+      margin-top: 1.5vw;
+    }
+
+    & .submitButton {
+      width: 100%;
+      padding: 2vw 0;
+      border-radius: 1vw;
+      font-size: 2.4vw;
+      margin-top: 4vw;
+    }
+
+    & .error {
+      font-size: 2.4vw;
+      margin-top: 1.5vw;
+    }
+  }
+}

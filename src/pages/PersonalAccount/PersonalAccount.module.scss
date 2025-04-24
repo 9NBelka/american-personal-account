@@ -2,6 +2,12 @@
   background-color: #111111;
 }
 
+@media (max-width: 1024px) {
+  .personalAccountBackground {
+    padding-bottom: 20vw;
+  }
+}
+
 .container {
   width: 68.75vw;
   margin: 0 auto;
@@ -23,8 +29,17 @@
 .mainHalfToHalfBlock {
   display: flex;
   flex-direction: row;
-  gap: 1.3vw;
+  gap: 1.5vw;
   margin-top: 2.2vw;
+}
+
+@media (max-width: 980px) {
+  .mainHalfToHalfBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 3vw;
+    margin-top: 5vw;
+  }
 }
 
 .courseLessonsContainer {
@@ -41,11 +56,21 @@
 
 @media (max-width: 1024px) {
   .courseLessonsContainer {
-    width: 45%;
+    width: 50%;
   }
 
   .courseRightContainer {
-    width: 55%;
+    width: 50%;
+  }
+}
+
+@media (max-width: 980px) {
+  .courseLessonsContainer {
+    width: 100%;
+  }
+
+  .courseRightContainer {
+    width: 100%;
   }
 }
 
@@ -84,6 +109,21 @@
     & .courseAccessDescrtiption {
       font-size: 1.6vw;
       margin-top: 0.75vw;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .courseAccessBlock {
+    margin-top: 5vw;
+
+    & .courseAccessTitle {
+      font-size: 4vw;
+    }
+
+    & .courseAccessDescrtiption {
+      font-size: 2.4vw;
+      margin-top: 2vw;
     }
   }
 }

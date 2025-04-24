@@ -137,6 +137,85 @@
     }
   }
 }
+
+@media (max-width: 1024px) {
+  .courseCard {
+    width: 48%;
+    border: 0.05vw solid var(--color-orange);
+    border-radius: 1vw;
+    padding: 1.5vw 1.5vw;
+
+    & .categoryText {
+      font-size: 1.6vw;
+    }
+
+    & .courseNameBlock {
+      margin-top: 1vw;
+      & .courseName {
+        font-size: 2vw;
+      }
+    }
+
+    & .completedCourseBlock {
+      margin-top: 1vw;
+
+      & .completedCourse {
+        font-size: 1.6vw;
+      }
+    }
+
+    & .watchButtonBlock {
+      margin-top: 2.5vw;
+
+      & .watchButton {
+        padding: 0.8vw 2.25vw;
+        border: 0.05vw solid var(--color-lightGrey);
+        border-radius: 0.5vw;
+        font-size: 1.6vw;
+      }
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .courseCard {
+    width: 48%;
+    border: 0.05vw solid var(--color-orange);
+    border-radius: 1.5vw;
+    padding: 3vw 3vw;
+
+    & .categoryText {
+      font-size: 2.4vw;
+    }
+
+    & .courseNameBlock {
+      margin-top: 1vw;
+      & .courseName {
+        font-size: 3.6vw;
+      }
+    }
+
+    & .completedCourseBlock {
+      margin-top: 2vw;
+
+      & .completedCourse {
+        font-size: 2.4vw;
+      }
+    }
+
+    & .watchButtonBlock {
+      margin-top: 4vw;
+
+      & .watchButton {
+        border: 0.05vw solid var(--color-lightGrey);
+        padding: 1.25vw 4vw;
+        border-radius: 1vw;
+        font-size: 2.6vw;
+      }
+    }
+  }
+}
+
 @keyframes pulseOrange {
   0% {
     box-shadow: 0 0 0 0px var(--color-orange);

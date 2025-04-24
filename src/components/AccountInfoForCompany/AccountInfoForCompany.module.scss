@@ -59,3 +59,66 @@
     }
   }
 }
+
+@media (max-width: 1024px) {
+  .accountCompanyBlock {
+    border: 0.05vw solid var(--color-darkGrey);
+    border-radius: 1vw;
+    padding: 1.5vw;
+    width: 66.66%;
+
+    & .title {
+      font-size: 2.1vw;
+    }
+
+    & .desciption {
+      font-size: 1.6vw;
+      margin-top: 2vw;
+
+      &.margTop {
+        margin-top: 1.5vw;
+      }
+    }
+    & .buttonBlock {
+      margin-top: 2.5vw;
+
+      & .button {
+        padding: 0.7vw 2.25vw;
+        border-radius: 0.5vw;
+        font-size: 1.6vw;
+      }
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .accountCompanyBlock {
+    border: 0.05vw solid var(--color-darkGrey);
+    border-radius: 1.5vw;
+    padding: 3vw;
+    width: 100%;
+
+    & .title {
+      font-size: 4vw;
+    }
+
+    & .desciption {
+      font-size: 2.6vw;
+      margin-top: 3vw;
+
+      &.margTop {
+        margin-top: 1.5vw;
+      }
+    }
+    & .buttonBlock {
+      justify-content: center;
+      margin-top: 4vw;
+
+      & .button {
+        padding: 1.25vw 4vw;
+        border-radius: 1vw;
+        font-size: 2.6vw;
+      }
+    }
+  }
+}

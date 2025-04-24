@@ -18,6 +18,42 @@
     & img {
       display: flex;
       width: 11.9vw;
+
+      &.imageDragon {
+        display: none;
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .accountAnyQuestionsBlock {
+    border: 0.05vw solid var(--color-orange);
+    border-radius: 1vw;
+    & .accountAnyQuestionsBlockImage {
+      & img {
+        margin-top: 4vw;
+        width: 15vw;
+      }
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .accountAnyQuestionsBlock {
+    width: 100%;
+    border: 0.05vw solid var(--color-orange);
+    border-radius: 1.5vw;
+    & .accountAnyQuestionsBlockImage {
+      & img {
+        display: none;
+        margin-top: 0vw;
+        width: 65vw;
+
+        &.imageDragon {
+          display: flex;
+        }
+      }
     }
   }
 }
@@ -59,6 +95,50 @@
 
       &:hover {
         transform: scale(0.96);
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .titleAndButtonBlock {
+    padding: 1.5vw;
+
+    & h4 {
+      width: 50%;
+      font-size: 2.1vw;
+    }
+
+    & .buttonAskBlock {
+      margin-top: 2vw;
+
+      & .buttonAsk {
+        padding: 0.7vw 2.25vw;
+        border: 0.05vw solid var(--color-orange);
+        border-radius: 0.5vw;
+        font-size: 1.6vw;
+      }
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .titleAndButtonBlock {
+    padding: 3vw;
+
+    & h4 {
+      width: 100%;
+      font-size: 4vw;
+    }
+
+    & .buttonAskBlock {
+      margin-top: 3vw;
+
+      & .buttonAsk {
+        border: 0.05vw solid var(--color-orange);
+        padding: 1.25vw 4vw;
+        border-radius: 1vw;
+        font-size: 2.6vw;
       }
     }
   }

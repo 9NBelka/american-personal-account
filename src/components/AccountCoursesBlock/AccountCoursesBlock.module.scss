@@ -7,3 +7,17 @@
   gap: 1vw;
   margin-top: 2.25vw;
 }
+
+@media (max-width: 1024px) {
+  .coursesBlock {
+    gap: 1.5vw;
+    margin-top: 2vw;
+  }
+}
+
+@media (max-width: 980px) {
+  .coursesBlock {
+    gap: 3vw;
+    margin-top: 3vw;
+  }
+}

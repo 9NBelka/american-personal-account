@@ -37,16 +37,16 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
   .courseHeader {
-    padding: 2vw 2vw;
+    padding: 2.8vw 2.25vw;
 
     & .courseTitle {
-      font-size: 2.4vw;
+      font-size: 3.6vw;
     }
 
     & .lessonsCount {
-      font-size: 1.8vw;
+      font-size: 2.6vw;
     }
   }
 }

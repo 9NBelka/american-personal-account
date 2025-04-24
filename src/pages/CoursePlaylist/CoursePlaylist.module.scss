@@ -2,6 +2,12 @@
   background-color: #111111;
 }
 
+@media (max-width: 1024px) {
+  .personalAccountBackground {
+    padding-bottom: 20vw;
+  }
+}
+
 .container {
   width: 68.75vw;
   margin: 0 auto;
@@ -34,10 +40,10 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
   .playlistContainer {
     flex-direction: column;
-    gap: 1.5vw;
+    gap: 3vw;
     padding-top: 3vw;
   }
 }
@@ -58,7 +64,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
   .videoSection {
     width: 100%;
   }
@@ -132,20 +138,20 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
   .videoSectionMenu {
-    margin-top: 1vw;
+    margin-top: 1.8vw;
     border-bottom: 0.1vw solid var(--color-darkGrey);
 
     & .tabButton {
-      font-size: 1.6vw;
-      padding: 1.4vw 0vw;
-      width: 14vw;
+      font-size: 2.4vw;
+      padding: 2vw 0vw;
+      width: 20vw;
 
       &.active {
         &::after {
           bottom: -0.05vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
-          height: 0.1vw;
+          height: 0.2vw;
         }
       }
     }
@@ -171,6 +177,14 @@
   }
 }
 
+@media (max-width: 980px) {
+  .videoSectionMenuResults {
+    border-radius: 1vw;
+    padding: 2.8vw 2.25vw;
+    margin-top: 3vw;
+  }
+}
+
 .modulesSection {
   display: flex;
   width: 35%;
@@ -187,7 +201,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
   .modulesSection {
     width: 100%;
     border-radius: 1vw;

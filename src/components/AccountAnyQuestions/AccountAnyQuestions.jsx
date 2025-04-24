@@ -5,6 +5,7 @@ export default function AccountAnyQuestions() {
     <div className={scss.accountAnyQuestionsBlock}>
       <div className={scss.accountAnyQuestionsBlockImage}>
         <img src='/img/AnyQuestionsGirl.png' />
+        <img className={scss.imageDragon} src='/img/AnyQuestionsDragon.png' />
       </div>
       <div className={scss.titleAndButtonBlock}>
         <h4>Any questions?</h4>
