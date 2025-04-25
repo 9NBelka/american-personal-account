@@ -50,3 +50,17 @@
     }
   }
 }
+
+@media (max-width: 576px) {
+  .courseHeader {
+    padding: 5vw 5vw;
+
+    & .courseTitle {
+      font-size: 5vw;
+    }
+
+    & .lessonsCount {
+      font-size: 3.6vw;
+    }
+  }
+}

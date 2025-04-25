@@ -13,6 +13,7 @@ import scss from './PersonalAccount.module.scss';
 import AccountCompanyAndQuestions from '../../components/AccountCompanyAndQuestions/AccountCompanyAndQuestions';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase'; // Импортируй db из твоей firebase-конфигурации
+import clsx from 'clsx';
 
 export default function PersonalAccount() {
   const navigate = useNavigate();
@@ -146,6 +147,15 @@ export default function PersonalAccount() {
             registrationDate={registrationDate}
           />
           <div className={scss.mainHalfToHalfBlock}>
+            <div className={clsx(scss.courseTimer, scss.courseTimerTablet)}>
+              {activeCourse && (
+                <AccountTimer
+                  key={activeCourse.id}
+                  courseId={activeCourse.id}
+                  modules={activeCourse.modules}
+                />
+              )}
+            </div>
             {activeCourse && (
               <div key={activeCourse.id} className={scss.courseLessonsContainer}>
                 <AccountCourseLessons
@@ -191,13 +201,15 @@ export default function PersonalAccount() {
               </div>
             )}
             <div className={scss.courseRightContainer}>
-              {activeCourse && (
-                <AccountTimer
-                  key={activeCourse.id}
-                  courseId={activeCourse.id}
-                  modules={activeCourse.modules}
-                />
-              )}
+              <div className={scss.courseTimer}>
+                {activeCourse && (
+                  <AccountTimer
+                    key={activeCourse.id}
+                    courseId={activeCourse.id}
+                    modules={activeCourse.modules}
+                  />
+                )}
+              </div>
               <AccountCompanyAndQuestions
                 activeTimer={
                   activeCourse && timers.find((timer) => timer.courseId === activeCourse.id)

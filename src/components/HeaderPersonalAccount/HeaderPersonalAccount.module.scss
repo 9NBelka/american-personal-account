@@ -226,12 +226,12 @@
 @media (max-width: 980px) {
   .navigationBlock {
     border-bottom: 0.1vw solid var(--color-darkGrey);
-    padding: 2.5vw 0;
-    padding-bottom: 1.5vw;
+    padding: 4vw 0;
+    padding-bottom: 2vw;
 
     & .logoBlock {
       & img {
-        width: 16vw;
+        width: 19vw;
       }
     }
 
@@ -239,13 +239,13 @@
       gap: 0vw;
 
       & li {
-        font-size: 1.8vw;
-        padding: 0 3vw;
+        font-size: 2.4vw;
+        padding: 0 3.5vw;
 
         &.active {
           &::after {
-            bottom: -2.4vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
-            height: 0.05vw;
+            bottom: -3vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+            height: 0.1vw;
           }
         }
       }
@@ -255,35 +255,103 @@
       gap: 4vw;
 
       & .avatarNameContainer {
-        gap: 1.5vw;
-
-        & .avatar {
-          width: 2.4vw;
-        }
-
-        & .studentName {
-          font-size: 1.8vw;
-        }
+        display: none;
       }
 
       & .profileIcons {
-        gap: 3.5vw;
+        gap: 4.5vw;
 
         & .notificationWrapper {
           & .notificationBadge {
-            top: -0.8vw;
-            left: 0.8vw;
-            font-size: 1.2vw;
+            top: -0.35vw;
+            left: 1.15vw;
+            content: ' ';
+            font-size: 0;
             border-radius: 50%;
-            padding: 0.2vw 0.55vw;
+            padding: 0.5vw 0.6vw;
           }
         }
 
         & .profileIcon {
-          width: 2vw;
-          height: 2vw;
+          width: 2.5vw;
+          height: 2.5vw;
         }
       }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .navigationBlock {
+    padding: 8vw 0;
+    padding-bottom: 3vw;
+
+    & .logoBlock {
+      display: none;
+      & img {
+        width: 19vw;
+      }
+    }
+
+    & ul {
+      gap: 0vw;
+
+      & li {
+        font-size: 3.6vw;
+        padding: 0 4vw;
+
+        &.active {
+          &::after {
+            bottom: -3vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+            height: 0.2vw;
+          }
+        }
+      }
+    }
+
+    & .profileAndIcons {
+      & .avatarNameContainer {
+        display: none;
+      }
+
+      & .profileIcons {
+        gap: 6vw;
+
+        & .notificationWrapper {
+          & .notificationBadge {
+            top: -0.3vw;
+            left: 1.6vw;
+            content: ' ';
+            font-size: 0;
+            border-radius: 50%;
+            padding: 0.75vw 0.75vw;
+          }
+        }
+
+        & .profileIcon {
+          width: 3.4vw;
+          height: 3.4vw;
+        }
+      }
+    }
+  }
+}
+
+.logoBlock {
+  display: none;
+  & img {
+    width: 19vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .logoBlockPhone {
+    display: flex;
+    justify-content: center;
+    margin-top: 4vw;
+
+    & img {
+      width: 35vw;
     }
   }
 }

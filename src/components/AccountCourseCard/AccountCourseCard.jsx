@@ -39,7 +39,6 @@ export default function AccountCourseCard({ course, progress, index, onClick }) 
         if (onClick) {
           onClick(course.id);
         }
-        // Переходим на страницу плейлиста курса
       })
       .catch((error) => {
         console.error('Ошибка при обновлении данных курса:', error);

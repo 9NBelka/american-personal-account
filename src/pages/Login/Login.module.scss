@@ -51,6 +51,16 @@
   }
 }
 
+@media (max-width: 980px) {
+  .mainBlock {
+    flex-direction: column;
+    padding: 3vw 3vw;
+    border-radius: 1.5vw;
+    padding-right: 3vw;
+    gap: 5vw;
+  }
+}
+
 @media (max-width: 576px) {
   .mainBlock {
     border-radius: 1.5vw;
@@ -120,6 +130,37 @@
   }
 }
 
+@media (max-width: 980px) {
+  .imageAndLinkBlock {
+    width: 100%;
+    height: 25vw; /* высота контейнера */
+    overflow: hidden; /* обрезает всё, что выходит за границы контейнера */
+    border-radius: 1vw; /* скругление углов */
+
+    & img {
+      width: 100%; /* растягивает изображение по ширине контейнера */
+      height: auto; /* сохраняет пропорции изображения */
+      object-fit: cover; /* обрезает изображение, заполняя контейнер */
+      object-position: center; /* центрирует изображение */
+      border-radius: 1vw;
+    }
+
+    & a {
+      top: 10%;
+      right: 3.5%;
+      font-size: 2.4vw;
+      padding: 1vw 3vw;
+      border-radius: 0.75vw;
+      gap: 1.5vw;
+
+      & .icon {
+        width: 2.4vw;
+        height: 2.4vw;
+      }
+    }
+  }
+}
+
 @media (max-width: 576px) {
   .imageAndLinkBlock {
     display: none;
@@ -129,6 +170,13 @@
 .formBlock {
   display: flex;
   width: 50%;
+}
+
+@media (max-width: 980px) {
+  .formBlock {
+    display: flex;
+    width: 100%;
+  }
 }
 
 @media (max-width: 576px) {

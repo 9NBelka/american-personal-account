@@ -21,3 +21,10 @@
     margin-top: 3vw;
   }
 }
+
+@media (max-width: 576px) {
+  .coursesBlock {
+    gap: 5vw;
+    margin-top: 5vw;
+  }
+}

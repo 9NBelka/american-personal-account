@@ -32,6 +32,17 @@
   }
 }
 
+@media (max-width: 576px) {
+  .userProfileMain {
+    align-items: center;
+    padding-top: 7vw;
+
+    & h1 {
+      font-size: 6vw;
+    }
+  }
+}
+
 .userProfileBlock {
   display: flex;
   flex-direction: row;
@@ -131,6 +142,32 @@
         height: 5.75vw;
         border: 0.3vw solid #1e1e1e;
         padding: 1.15vw;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .userProfileBlock {
+    flex-direction: column;
+    align-items: center;
+    margin-top: 3vw;
+    & .welcomeText {
+      text-align: center;
+      font-size: 3.6vw;
+      margin-top: 2vw;
+      line-height: var(--font-lineh-normal);
+    }
+
+    & .userProfileSocialBlock {
+      margin-top: 4vw;
+      gap: 5vw;
+
+      & .icon {
+        width: 7.5vw;
+        height: 7.5vw;
+        border: 0.4vw solid #1e1e1e;
+        padding: 1.5vw;
       }
     }
   }

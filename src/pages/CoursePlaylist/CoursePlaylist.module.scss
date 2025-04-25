@@ -48,6 +48,14 @@
   }
 }
 
+@media (max-width: 576px) {
+  .playlistContainer {
+    flex-direction: column;
+    gap: 5vw;
+    padding-top: 7vw;
+  }
+}
+
 .videoSection {
   display: flex;
   flex-direction: column;
@@ -158,6 +166,26 @@
   }
 }
 
+@media (max-width: 576px) {
+  .videoSectionMenu {
+    margin-top: 3vw;
+    border-bottom: 0.1vw solid var(--color-darkGrey);
+
+    & .tabButton {
+      font-size: 3.6vw;
+      padding: 3vw 0vw;
+      width: 25vw;
+
+      &.active {
+        &::after {
+          bottom: -0.1vw; // Смещаем ниже, чтобы перекрыть бордер хеддера
+          height: 0.3vw;
+        }
+      }
+    }
+  }
+}
+
 .videoSectionMenuResults {
   display: flex;
   flex-direction: column;
@@ -185,6 +213,14 @@
   }
 }
 
+@media (max-width: 576px) {
+  .videoSectionMenuResults {
+    border-radius: 1.5vw;
+    padding: 5vw 5vw;
+    margin-top: 3vw;
+  }
+}
+
 .modulesSection {
   display: flex;
   width: 35%;
@@ -205,5 +241,11 @@
   .modulesSection {
     width: 100%;
     border-radius: 1vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .modulesSection {
+    border-radius: 1.5vw;
   }
 }

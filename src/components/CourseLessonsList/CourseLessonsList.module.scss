@@ -145,6 +145,44 @@
   }
 }
 
+@media (max-width: 576px) {
+  .moduleTitleAndIconBlock {
+    padding: 5vw 5vw;
+    padding-left: 5vw;
+    border-top: 0.1vw solid var(--color-lightGrey);
+
+    & .lockMessage {
+      position: absolute;
+      top: 77%;
+      left: 60%;
+      font-size: 3.6vw;
+
+      &.lockMessagePlayList {
+        left: 39%;
+        font-size: 3.6vw;
+      }
+    }
+
+    & .moduleTitleAndCountBlock {
+      gap: 2vw;
+
+      & .moduleTitle {
+        font-size: 5vw;
+      }
+
+      & .moduleCompletionCount {
+        font-size: 3.6vw;
+        padding-left: 5.6vw;
+      }
+    }
+
+    & .icon {
+      width: 4.5vw;
+      height: 4.5vw;
+    }
+  }
+}
+
 .lessonsList {
   display: flex;
   flex-direction: column;
@@ -288,6 +326,42 @@
 
       & .lessonTime {
         font-size: 2.4vw;
+      }
+
+      .checkbox:checked + .checkmark {
+        border: 0.1vw solid var(--color-lightGreen);
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .lessonsList {
+    padding: 5vw 5vw;
+    padding-top: 0;
+    padding-left: 6vw;
+
+    & .lesson {
+      font-size: 4vw;
+      padding: 2vw 0vw;
+
+      & .checkboxAndTitleLesson {
+        gap: 3vw;
+
+        & .checkmark {
+          width: 3.6vw;
+          height: 3.6vw;
+          border: 0.1vw solid var(--color-white);
+          border-radius: 0.75vw;
+
+          &:before {
+            font-size: 3vw;
+          }
+        }
+      }
+
+      & .lessonTime {
+        font-size: 3.6vw;
       }
 
       .checkbox:checked + .checkmark {

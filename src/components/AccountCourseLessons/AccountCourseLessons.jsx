@@ -83,22 +83,24 @@ export default function AccountCourseLessons({
           })()}
         </div>
       </div>
-      {sortedModules.map((module, index) => (
-        <CourseLessonsList
-          key={module.id}
-          courseId={courseId}
-          module={module}
-          index={index}
-          expandedModule={expandedModule}
-          toggleModule={toggleModule}
-          handleLessonClick={handleLessonClick}
-          completedLessons={completedLessons[courseId] || {}} // Передаём только данные для текущего курса
-          toggleLessonCompletion={toggleLessonCompletion}
-          getCompletedCount={getCompletedCount}
-          getTotalDuration={getTotalDuration}
-          playlistPage={false}
-        />
-      ))}
+      <div className={scss.courseLessonsListPhone}>
+        {sortedModules.map((module, index) => (
+          <CourseLessonsList
+            key={module.id}
+            courseId={courseId}
+            module={module}
+            index={index}
+            expandedModule={expandedModule}
+            toggleModule={toggleModule}
+            handleLessonClick={handleLessonClick}
+            completedLessons={completedLessons[courseId] || {}} // Передаём только данные для текущего курса
+            toggleLessonCompletion={toggleLessonCompletion}
+            getCompletedCount={getCompletedCount}
+            getTotalDuration={getTotalDuration}
+            playlistPage={false}
+          />
+        ))}
+      </div>
     </div>
   );
 }

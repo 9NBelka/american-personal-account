@@ -55,6 +55,22 @@
   }
 }
 
+@media (max-width: 980px) {
+  .lsInputField {
+    input {
+      padding: 2vw 2.5vw;
+      border-radius: 0.75vw;
+      font-size: 2.4vw;
+      margin-top: 3vw;
+    }
+
+    & p {
+      font-size: 2.4vw;
+      margin-top: 1.5vw;
+    }
+  }
+}
+
 @media (max-width: 576px) {
   .lsInputField {
     & input {

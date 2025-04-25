@@ -30,3 +30,14 @@
     }
   }
 }
+
+@media (max-width: 576px) {
+  .accountCompanyAndQuestionsBlock {
+    flex-direction: column;
+    gap: 5vw;
+
+    &.accountCompanyAndQuestionsBlockMarg {
+      margin-top: 5vw;
+    }
+  }
+}

@@ -122,3 +122,35 @@
     }
   }
 }
+
+@media (max-width: 576px) {
+  .accountCompanyBlock {
+    border: 0.1vw solid var(--color-darkGrey);
+    border-radius: 2vw;
+    padding: 5vw;
+    width: 100%;
+
+    & .title {
+      font-size: 5vw;
+    }
+
+    & .desciption {
+      font-size: 3.6vw;
+      margin-top: 4vw;
+
+      &.margTop {
+        margin-top: 4vw;
+      }
+    }
+    & .buttonBlock {
+      justify-content: center;
+      margin-top: 7vw;
+
+      & .button {
+        padding: 2vw 6vw;
+        border-radius: 1.5vw;
+        font-size: 3.6vw;
+      }
+    }
+  }
+}

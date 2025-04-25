@@ -61,12 +61,31 @@
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 980px) {
   .checkboxContainer {
     margin-top: 5vw;
 
     label {
-      gap: 2vw;
+      gap: 1.5vw;
+    }
+
+    .text {
+      font-size: 2.4vw;
+    }
+
+    & p {
+      font-size: 2.4vw;
+      margin-top: 1.5vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .checkboxContainer {
+    margin-top: 7vw;
+
+    label {
+      gap: 2.5vw;
     }
 
     .text {
@@ -75,7 +94,7 @@
 
     & p {
       font-size: 3.2vw;
-      margin-top: 1.5vw;
+      margin-top: 2vw;
     }
   }
 }
@@ -113,6 +132,18 @@
 
     &:before {
       font-size: 1.4vw;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .checkmark {
+    width: 2.4vw;
+    height: 2.4vw;
+    border-radius: 0.5vw;
+
+    &:before {
+      font-size: 2vw;
     }
   }
 }

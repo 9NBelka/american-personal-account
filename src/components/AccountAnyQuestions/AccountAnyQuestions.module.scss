@@ -58,6 +58,31 @@
   }
 }
 
+@media (max-width: 576px) {
+  .accountAnyQuestionsBlock {
+    width: 100%;
+    border: 0.05vw solid var(--color-orange);
+    border-radius: 2vw;
+    & .accountAnyQuestionsBlockImage {
+      width: 100%; /* или нужная ширина контейнера */
+      height: 30vw; /* высота контейнера */
+      overflow: hidden;
+      & img {
+        display: flex;
+        width: 100%; /* растягивает изображение по ширине контейнера */
+        height: auto; /* сохраняет пропорции изображения */
+        object-fit: cover; /* обрезает изображение, заполняя контейнер */
+        object-position: 0vw -20vw; /* центрирует изображение */
+        margin-top: 0vw;
+
+        &.imageDragon {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
 .titleAndButtonBlock {
   display: flex;
   flex-direction: column;
@@ -139,6 +164,28 @@
         padding: 1.25vw 4vw;
         border-radius: 1vw;
         font-size: 2.6vw;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .titleAndButtonBlock {
+    padding: 5vw;
+
+    & h4 {
+      width: 100%;
+      font-size: 5vw;
+    }
+
+    & .buttonAskBlock {
+      margin-top: 4vw;
+
+      & .buttonAsk {
+        border: 0.1vw solid var(--color-orange);
+        padding: 2vw 5vw;
+        border-radius: 1.5vw;
+        font-size: 3.6vw;
       }
     }
   }

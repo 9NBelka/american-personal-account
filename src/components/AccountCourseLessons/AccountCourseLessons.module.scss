@@ -17,6 +17,12 @@
   }
 }
 
+@media (max-width: 576px) {
+  .courseSection {
+    border-radius: 2vw;
+  }
+}
+
 .courseHeader {
   display: flex;
   flex-direction: column;
@@ -32,6 +38,12 @@
 @media (max-width: 980px) {
   .courseHeader {
     padding: 2.5vw 2.25vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .courseHeader {
+    padding: 5vw 5vw;
   }
 }
 
@@ -143,6 +155,34 @@
   }
 }
 
+@media (max-width: 576px) {
+  .courseHeaderPackageTimeNubmStud {
+    & .courseHeaderPackage {
+      font-size: 3.6vw;
+
+      & span {
+        font-size: 3.6vw;
+      }
+    }
+    & .iconAndTimeBlocks {
+      gap: 5vw;
+
+      & .iconAndTimeBlock {
+        gap: 1vw;
+
+        & .iconClock {
+          width: 3.4vw;
+          height: 3.4vw;
+        }
+
+        & .courseHeaderTime {
+          font-size: 3.6vw;
+        }
+      }
+    }
+  }
+}
+
 .courseNameAndProgressBar {
   display: flex;
   flex-direction: row;
@@ -183,6 +223,18 @@
     & .courseName {
       width: 60%;
       font-size: 4.4vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .courseNameAndProgressBar {
+    width: 100%;
+    margin-top: 5vw;
+
+    & .courseName {
+      width: 60%;
+      font-size: 6vw;
     }
   }
 }
@@ -269,5 +321,36 @@
         height: 2.4vw;
       }
     }
+  }
+}
+
+@media (max-width: 576px) {
+  .expandToStandartAndGitHubLinkBlock {
+    flex-direction: column;
+    align-items: start;
+    gap: 5vw;
+    margin-top: 4vw;
+
+    & .expandToStandart {
+      font-size: 3.4vw;
+      border: 0.1vw solid var(--color-orange);
+      padding: 2vw 4vw;
+      border-radius: 1.5vw;
+    }
+
+    & .gitHubLink {
+      font-size: 3.6vw;
+      gap: 2vw;
+
+      & .gitHubLinkIcon {
+        width: 3.4vw;
+        height: 3.4vw;
+      }
+    }
+  }
+}
+@media (max-width: 576px) {
+  .courseLessonsListPhone {
+    display: none;
   }
 }

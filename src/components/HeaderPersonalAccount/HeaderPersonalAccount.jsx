@@ -7,6 +7,7 @@ import scss from './HeaderPersonalAccount.module.scss';
 import { BsBellFill, BsBoxArrowInRight } from 'react-icons/bs';
 import AccountLoadingIndicator from '../AccountLoadingIndicator/AccountLoadingIndicator';
 import NotificationDrop from './NotificationDrop/NotificationDrop';
+import clsx from 'clsx';
 
 export default function HeaderPersonalAccount({ handleLogout }) {
   const navigate = useNavigate();
@@ -103,6 +104,9 @@ export default function HeaderPersonalAccount({ handleLogout }) {
   return (
     <header className={scss.header}>
       <div className={scss.container}>
+        <div className={clsx(scss.logoBlock, scss.logoBlockPhone)}>
+          <img src='/img/knowledgeSyndicateLogo.png' alt='Logo' />
+        </div>
         <nav className={scss.navigationBlock}>
           <div className={scss.logoBlock}>
             <img src='/img/knowledgeSyndicateLogo.png' alt='Logo' />

@@ -216,6 +216,45 @@
   }
 }
 
+@media (max-width: 576px) {
+  .courseCard {
+    width: 100%;
+    border: 0.1vw solid var(--color-orange);
+    border-radius: 2vw;
+    padding: 5vw 5vw;
+
+    & .categoryText {
+      font-size: 3.6vw;
+    }
+
+    & .courseNameBlock {
+      margin-top: 2vw;
+      & .courseName {
+        font-size: 5vw;
+      }
+    }
+
+    & .completedCourseBlock {
+      margin-top: 2vw;
+
+      & .completedCourse {
+        font-size: 3.6vw;
+      }
+    }
+
+    & .watchButtonBlock {
+      margin-top: 7vw;
+
+      & .watchButton {
+        border: 0.1vw solid var(--color-lightGrey);
+        padding: 2vw 4vw;
+        border-radius: 1.5vw;
+        font-size: 3.6vw;
+      }
+    }
+  }
+}
+
 @keyframes pulseOrange {
   0% {
     box-shadow: 0 0 0 0px var(--color-orange);

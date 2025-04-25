@@ -23,9 +23,15 @@
   }
 }
 
+@media (max-width: 980px) {
+  .titleLS {
+    font-size: 4.4vw;
+  }
+}
+
 @media (max-width: 576px) {
   .titleLS {
-    font-size: 6vw;
+    font-size: 6.5vw;
   }
 }
 
@@ -51,6 +57,13 @@
   .answerAboutAccount {
     font-size: 1.75vw;
     margin-top: 1vw;
+  }
+}
+
+@media (max-width: 980px) {
+  .answerAboutAccount {
+    font-size: 2.4vw;
+    margin-top: 2.5vw;
   }
 }
 
@@ -104,6 +117,13 @@
   }
 }
 
+@media (max-width: 980px) {
+  .nameContainerHalf {
+    gap: 2.4vw;
+    margin-top: 5vw;
+  }
+}
+
 @media (max-width: 576px) {
   .nameContainerHalf {
     gap: 2.6vw;
@@ -141,12 +161,21 @@
   }
 }
 
+@media (max-width: 980px) {
+  .buttonSubmit {
+    padding: 2vw 0;
+    border-radius: 0.75vw;
+    font-size: 2.4vw;
+    margin-top: 5vw;
+  }
+}
+
 @media (max-width: 576px) {
   .buttonSubmit {
     padding: 2.4vw 0;
     border-radius: 0.75vw;
     font-size: 3.6vw;
-    margin-top: 5vw;
+    margin-top: 6vw;
   }
 }
 
@@ -205,6 +234,22 @@
   }
 }
 
+@media (max-width: 980px) {
+  .orSeparator {
+    margin-top: 4vw;
+
+    span {
+      padding: 0 2vw;
+      font-size: 2.4vw;
+    }
+
+    &::before,
+    &::after {
+      height: 0.15vw;
+    }
+  }
+}
+
 @media (max-width: 576px) {
   .orSeparator {
     margin-top: 5vw;
@@ -229,7 +274,7 @@
 
 @media (max-width: 1024px) {
   .socialButtonsBlock {
-    gap: 2vw;
+    gap: 2.4vw;
   }
 }
 
@@ -284,6 +329,21 @@
   }
 }
 
+@media (max-width: 980px) {
+  .socialButton {
+    gap: 1.5vw;
+    padding: 2vw 0;
+    border-radius: 0.75vw;
+    font-size: 2.4vw;
+    margin-top: 4vw;
+
+    & .iconSocial {
+      width: 2.4vw;
+      height: 2.4vw;
+    }
+  }
+}
+
 @media (max-width: 576px) {
   .socialButton {
     gap: 1.5vw;
@@ -329,9 +389,19 @@
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 980px) {
   .forgotPassword {
     margin-top: 3vw;
+
+    & a {
+      font-size: 2.4vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .forgotPassword {
+    margin-top: 5vw;
 
     & a {
       font-size: 3.4vw;
