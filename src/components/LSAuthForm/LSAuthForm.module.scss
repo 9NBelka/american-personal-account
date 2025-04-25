@@ -31,7 +31,7 @@
 
 @media (max-width: 576px) {
   .titleLS {
-    font-size: 6.5vw;
+    font-size: 7vw;
   }
 }
 
@@ -69,8 +69,8 @@
 
 @media (max-width: 576px) {
   .answerAboutAccount {
-    font-size: 3.2vw;
-    margin-top: 2vw;
+    font-size: 3.6vw;
+    margin-top: 3vw;
   }
 }
 
@@ -172,8 +172,8 @@
 
 @media (max-width: 576px) {
   .buttonSubmit {
-    padding: 2.4vw 0;
-    border-radius: 0.75vw;
+    padding: 3vw 0;
+    border-radius: 1.5vw;
     font-size: 3.6vw;
     margin-top: 6vw;
   }
@@ -252,11 +252,11 @@
 
 @media (max-width: 576px) {
   .orSeparator {
-    margin-top: 5vw;
+    margin-top: 7vw;
 
     span {
-      padding: 0 2vw;
-      font-size: 3.4vw;
+      padding: 0 3vw;
+      font-size: 3.6vw;
     }
 
     &::before,
@@ -346,11 +346,11 @@
 
 @media (max-width: 576px) {
   .socialButton {
-    gap: 1.5vw;
-    padding: 2.4vw 0;
-    border-radius: 0.75vw;
+    gap: 2vw;
+    padding: 3vw 0;
+    border-radius: 1.5vw;
     font-size: 3.6vw;
-    margin-top: 5vw;
+    margin-top: 7vw;
 
     & .iconSocial {
       width: 3vw;
@@ -404,7 +404,7 @@
     margin-top: 5vw;
 
     & a {
-      font-size: 3.4vw;
+      font-size: 3.6vw;
     }
   }
 }

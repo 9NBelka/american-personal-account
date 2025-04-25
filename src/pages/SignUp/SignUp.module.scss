@@ -19,7 +19,7 @@
 
 @media (max-width: 576px) {
   .container {
-    width: 90vw;
+    width: 100%;
   }
 }
 
@@ -65,8 +65,10 @@
   .mainBlock {
     border-radius: 1.5vw;
     padding-right: 0vw;
-    padding: 10vw 5vw;
+    padding: 15vw 5vw;
     gap: 0vw;
+    border-bottom: 0.5vw solid #1e1e1e;
+    border-top: 0.5vw solid #1e1e1e;
   }
 }
 
