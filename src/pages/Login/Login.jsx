@@ -15,6 +15,7 @@ export default function Login() {
   const dispatch = useDispatch();
   const { userRole, isLoading } = useSelector((state) => state.auth); // Replaced useAuth
   const [showResetModal, setShowResetModal] = useState(false);
+  const [generalError, setGeneralError] = useState(null); // Новое состояние для ошибки
 
   useEffect(() => {
     if (userRole) {
@@ -34,18 +35,20 @@ export default function Login() {
     agreeToPrivacy: Yup.boolean().oneOf([true], '*You must agree to the Privacy Policy'),
   });
 
-  const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
+  const handleSubmit = async (values, { setSubmitting }) => {
     try {
       await dispatch(login({ email: values.email, password: values.password })).unwrap();
+      setGeneralError(null); // Сбрасываем ошибку при успешном логине
     } catch (error) {
+      // Устанавливаем общую ошибку
       if (
         error.code === 'auth/user-not-found' ||
         error.code === 'auth/wrong-password' ||
         error.code === 'auth/invalid-credential'
       ) {
-        setFieldError('general', '*Incorrect email or password');
+        setGeneralError('*Incorrect email or password');
       } else {
-        setFieldError('general', '*Login error: ' + error.message);
+        setGeneralError('*Login error: ' + error.message);
       }
     }
     setSubmitting(false);
@@ -97,7 +100,8 @@ export default function Login() {
               linkTo='/signUp'
               isSubmitting={isLoading}
               otherPointsText='Log in'
-              onForgotPassword={handleForgotPassword}>
+              onForgotPassword={handleForgotPassword}
+              generalError={generalError}>
               <LSPrivacyCheckbox />
             </LSAuthForm>
             <LSResetPasswordModal

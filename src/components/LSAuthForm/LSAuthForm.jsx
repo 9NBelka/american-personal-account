@@ -23,6 +23,7 @@ export default function LSAuthForm({
   otherPointsText,
   onForgotPassword, // Новый пропс
   children,
+  generalError,
 }) {
   return (
     <div className={scss.mainLSBlock}>
@@ -34,6 +35,7 @@ export default function LSAuthForm({
         {({ errors, isSubmitting: formikSubmitting }) => (
           <Form>
             <div className={clsx(scss.nameContainer, halfInput && scss.nameContainerHalf)}>
+              {generalError && <div className={scss.errorText}>{generalError}</div>}{' '}
               {fields
                 .slice(0, 2)
                 .map((field, index) =>
@@ -69,6 +71,7 @@ export default function LSAuthForm({
               )}
             <LSFormError error={errors.general} />
             {children}
+            {/* Отображаем общую ошибку */}
             {/* Добавляем ссылку "Забыл пароль?" */}
             {onForgotPassword && (
               <div className={scss.forgotPassword}>

@@ -29,6 +29,7 @@ import { initializeAuth, logout } from './store/slices/authSlice';
 import Orders from './components/DashBoardComponents/Orders/Orders';
 import CurrencySelector from './components/DashBoardComponents/CurrencySelector/CurrencySelector';
 import StorageForImages from './components/DashBoardComponents/StorageForImages/StorageForImages';
+import AccountCertificateForm from './components/AccountCertificateForm/AccountCertificateForm';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -70,6 +71,7 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        <Route path='/certificate/:courseId' element={<AccountCertificateForm />} />
         <Route
           path='/dashboard'
           element={
