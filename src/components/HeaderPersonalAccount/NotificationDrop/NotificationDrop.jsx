@@ -2,6 +2,7 @@ import { BsBellFill } from 'react-icons/bs';
 import { useSelector, useDispatch } from 'react-redux'; // Добавляем useSelector и useDispatch
 import { markNotificationAsRead } from '../../../store/slices/authSlice'; // Импортируем действие
 import scss from './NotificationDrop.module.scss';
+import clsx from 'clsx';
 
 export default function NotificationDrop({ sortedNotifications, formatDate }) {
   const dispatch = useDispatch(); // Добавляем useDispatch
@@ -51,7 +52,7 @@ export default function NotificationDrop({ sortedNotifications, formatDate }) {
                       {notification.accessLevels.map((level) => (
                         <span
                           key={level}
-                          className={scss.accessTag}
+                          className={clsx(scss.accessTag, level && scss.accessTagColor)}
                           data-level={level.toLowerCase()}>
                           {getAccessLevelName(level)}
                         </span>

@@ -8,6 +8,12 @@
   }
 }
 
+@media (max-width: 576px) {
+  .editProfileBackground {
+    padding-bottom: 30vw;
+  }
+}
+
 .container {
   width: 68.75vw;
   margin: 0 auto;
@@ -66,6 +72,16 @@
   }
 }
 
+@media (max-width: 576px) {
+  .editProfile {
+    padding-top: 7vw;
+
+    h1 {
+      font-size: 6vw;
+    }
+  }
+}
+
 .form {
   display: flex;
   flex-direction: column;
@@ -114,6 +130,23 @@
       .error {
         color: red;
         font-size: 2.4vw;
+        margin-top: 1.5vw; // Небольшой отступ для ошибки
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .form {
+    gap: 10vw;
+    margin-top: 7vw;
+
+    .formGroup {
+      gap: 0.5rem;
+
+      .error {
+        color: red;
+        font-size: 3.6vw;
         margin-top: 1.5vw; // Небольшой отступ для ошибки
       }
     }

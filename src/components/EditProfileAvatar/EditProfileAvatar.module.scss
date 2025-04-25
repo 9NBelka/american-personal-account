@@ -137,3 +137,33 @@
     }
   }
 }
+
+@media (max-width: 576px) {
+  .formGroup {
+    & .avatarPreview {
+      width: 35vw;
+    }
+
+    & label {
+      font-size: 3.6vw;
+      margin-top: 4vw;
+    }
+
+    & .customFileButton {
+      font-size: 3.6vw;
+      margin-top: 3vw;
+    }
+
+    & .submitButton {
+      padding: 3vw 0;
+      border-radius: 1.5vw;
+      font-size: 3.6vw;
+      margin-top: 4vw;
+    }
+
+    & .error {
+      font-size: 3.4vw;
+      margin-top: 2vw;
+    }
+  }
+}
