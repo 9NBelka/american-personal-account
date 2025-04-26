@@ -131,6 +131,8 @@ export default function PersonalAccount() {
     dispatch(setLastCourseId(courseId));
   };
 
+  const activeTimer = activeCourse && timers.find((timer) => timer.courseId === activeCourse.id);
+
   if (authLoading) {
     return <AccountLoadingIndicator />;
   }
@@ -156,7 +158,7 @@ export default function PersonalAccount() {
           />
           <div className={scss.mainHalfToHalfBlock}>
             <div className={clsx(scss.courseTimer, scss.courseTimerTablet)}>
-              {activeCourse && (
+              {activeCourse && activeTimer && (
                 <AccountTimer
                   key={activeCourse.id}
                   courseId={activeCourse.id}
@@ -210,7 +212,7 @@ export default function PersonalAccount() {
             )}
             <div className={scss.courseRightContainer}>
               <div className={scss.courseTimer}>
-                {activeCourse && (
+                {activeCourse && activeTimer && (
                   <AccountTimer
                     key={activeCourse.id}
                     courseId={activeCourse.id}
