@@ -11,7 +11,15 @@ import {
   EmailAuthProvider,
   signOut,
 } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc, getDocs, collection } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  setDoc,
+  getDocs,
+  collection,
+  onSnapshot,
+} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Храним currentUser вне Redux
@@ -46,7 +54,7 @@ export const login = createAsyncThunk(
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      firebaseCurrentUser = user; // Сохраняем Firebase User в глобальной переменной
+      firebaseCurrentUser = user;
       return { uid: user.uid, email: user.email, displayName: user.displayName };
     } catch (error) {
       return rejectWithValue(error);
@@ -54,7 +62,6 @@ export const login = createAsyncThunk(
   },
 );
 
-// Обновляем initializeAuth для корректной инициализации
 export const initializeAuth = createAsyncThunk(
   'auth/initializeAuth',
   async (_, { dispatch, rejectWithValue }) => {
@@ -67,11 +74,11 @@ export const initializeAuth = createAsyncThunk(
               email: firebaseUser.email,
               displayName: firebaseUser.displayName,
             };
-            firebaseCurrentUser = firebaseUser; // Сохраняем Firebase User
-            dispatch(setUser(userData)); // Передаем только сериализуемые данные
+            firebaseCurrentUser = firebaseUser;
+            dispatch(setUser(userData));
             const userDataResult = await dispatch(fetchUserData(firebaseUser.uid)).unwrap();
             dispatch(setUserRole(userDataResult.role));
-            dispatch(fetchCourses(userDataResult.purchasedCourses));
+            dispatch(subscribeToCourses(userDataResult.purchasedCourses));
             resolve(userData);
           } else {
             firebaseCurrentUser = null;
@@ -93,14 +100,13 @@ export const initializeAuth = createAsyncThunk(
 export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
   try {
     await signOut(auth);
-    firebaseCurrentUser = null; // Очищаем при выходе
+    firebaseCurrentUser = null;
     return null;
   } catch (error) {
     return rejectWithValue(error.message);
   }
 });
 
-// Экспортируем функцию для получения currentUser
 export const getFirebaseCurrentUser = () => firebaseCurrentUser;
 
 export const signUp = createAsyncThunk(
@@ -169,16 +175,13 @@ export const fetchUserData = createAsyncThunk(
   },
 );
 
-// Остальные thunks (fetchCourses, updateUserAvatar и т.д.) остаются без изменений
-export const fetchCourses = createAsyncThunk(
-  'auth/fetchCourses',
-  async (purchasedCourses, { rejectWithValue }) => {
+// Новая функция для подписки на курсы
+export const subscribeToCourses = createAsyncThunk(
+  'auth/subscribeToCourses',
+  async (purchasedCourses, { dispatch, rejectWithValue }) => {
     try {
-      const courseDocs = await getDocs(collection(db, 'courses'));
-      if (courseDocs.empty) return [];
-
-      const courseList = await Promise.all(
-        courseDocs.docs.map(async (doc) => {
+      const unsubscribe = onSnapshot(collection(db, 'courses'), (snapshot) => {
+        const courseList = snapshot.docs.map((doc) => {
           const courseData = doc.data();
           const hasModules = courseData.modules && Object.keys(courseData.modules).length > 0;
           const courseAccess = purchasedCourses[doc.id]?.access || 'denied';
@@ -190,11 +193,17 @@ export const fetchCourses = createAsyncThunk(
           const modulesArray = sortedModuleKeys.map((moduleId) => ({
             id: moduleId,
             moduleTitle: modulesData[moduleId].title,
-            links: modulesData[moduleId].lessons || [],
+            links: modulesData[moduleId].lessons
+              ? Object.values(modulesData[moduleId].lessons)
+              : [],
             unlockDate: modulesData[moduleId].unlockDate || null,
+            order: modulesData[moduleId].order || null,
           }));
 
-          const totalLessons = modulesArray.reduce((sum, module) => sum + module.links.length, 0);
+          const totalLessons = modulesArray.reduce(
+            (sum, module) => sum + (module.links.length || 0),
+            0,
+          );
           const courseCompletedLessons = purchasedCourses[doc.id]?.completedLessons || {};
           const completedLessonsCount = Object.values(courseCompletedLessons).reduce(
             (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
@@ -227,8 +236,78 @@ export const fetchCourses = createAsyncThunk(
             totalDuration,
             userCount: courseData.userCount || 0,
           };
-        }),
-      );
+        });
+        dispatch(setCourses(courseList));
+      });
+
+      return () => unsubscribe;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+// Оставляем fetchCourses для случаев, когда подписка не нужна
+export const fetchCourses = createAsyncThunk(
+  'auth/fetchCourses',
+  async (purchasedCourses = {}, { rejectWithValue }) => {
+    try {
+      const courseDocs = await getDocs(collection(db, 'courses'));
+      if (courseDocs.empty) return [];
+
+      const courseList = courseDocs.docs.map((doc) => {
+        const courseData = doc.data();
+        const hasModules = courseData.modules && Object.keys(courseData.modules).length > 0;
+        const courseAccess = purchasedCourses[doc.id]?.access || 'denied';
+        const isAccessible = courseAccess !== 'denied' && hasModules;
+
+        const modulesData = courseData.modules || {};
+        const sortedModuleKeys = Object.keys(modulesData).sort((a, b) => a.localeCompare(b));
+
+        const modulesArray = sortedModuleKeys.map((moduleId) => ({
+          id: moduleId,
+          moduleTitle: modulesData[moduleId].title,
+          links: modulesData[moduleId].lessons ? Object.values(modulesData[moduleId].lessons) : [],
+          unlockDate: modulesData[moduleId].unlockDate || null,
+          order: modulesData[moduleId].order || null,
+        }));
+
+        const totalLessons = modulesArray.reduce(
+          (sum, module) => sum + (module.links.length || 0),
+          0,
+        );
+        const courseCompletedLessons = purchasedCourses[doc.id]?.completedLessons || {};
+        const completedLessonsCount = Object.values(courseCompletedLessons).reduce(
+          (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
+          0,
+        );
+
+        const allLessons = modulesArray.flatMap((module) => module.links);
+        const totalMinutes = allLessons.reduce((sum, lesson) => {
+          const time = parseInt(lesson.videoTime, 10) || 0;
+          return sum + (isNaN(time) ? 0 : time);
+        }, 0);
+        const totalDuration =
+          totalMinutes >= 60
+            ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+            : `${totalMinutes}m`;
+
+        return {
+          id: doc.id,
+          title:
+            courseData.title || doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          category: courseData.category || 'Uncategorized',
+          gitHubRepLink: courseData.gitHubRepLink,
+          description: courseData.description || ' ',
+          available: isAccessible,
+          access: courseAccess,
+          modules: modulesArray,
+          totalLessons,
+          completedLessonsCount,
+          totalDuration,
+          userCount: courseData.userCount || 0,
+        };
+      });
       return courseList;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -268,6 +347,7 @@ export const toggleLessonCompletion = createAsyncThunk(
       if (userDoc.exists()) {
         const purchasedCourses = userDoc.data().purchasedCourses || {};
         const courseData = purchasedCourses[courseId] || { completedLessons: {} };
+
         const currentModuleLessons = courseData.completedLessons[moduleId] || [];
         const newLessons = currentModuleLessons.includes(lessonIndex)
           ? currentModuleLessons.filter((index) => index !== lessonIndex)
@@ -282,11 +362,14 @@ export const toggleLessonCompletion = createAsyncThunk(
           (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
           0,
         );
-        const newProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
+        const newProgress =
+          totalLessons > 0
+            ? Math.min(Math.round((completedLessonsCount / totalLessons) * 100), 100)
+            : 0;
 
         await updateDoc(userRef, {
           [`purchasedCourses.${courseId}.completedLessons`]: updatedCompletedLessons,
-          [`purchasedCourses.${courseId}.progress`]: Math.round(newProgress),
+          [`purchasedCourses.${courseId}.progress`]: newProgress,
         });
 
         return { courseId, moduleId, lessonIndex, progress: newProgress };
@@ -459,6 +542,9 @@ const authSlice = createSlice({
     setUserAccessLevels: (state, action) => {
       state.userAccessLevels = action.payload;
     },
+    setCourses: (state, action) => {
+      state.courses = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -523,6 +609,9 @@ const authSlice = createSlice({
       })
       .addCase(fetchCourses.fulfilled, (state, action) => {
         state.courses = action.payload;
+      })
+      .addCase(subscribeToCourses.fulfilled, (state) => {
+        // Ничего не делаем, так как данные обновляются через setCourses
       })
       .addCase(updateUserAvatar.fulfilled, (state, action) => {
         state.avatarUrl = action.payload;
@@ -595,6 +684,7 @@ export const {
   setAccessLevels,
   setTimers,
   setUserAccessLevels,
+  setCourses,
 } = authSlice.actions;
 
 export default authSlice.reducer;

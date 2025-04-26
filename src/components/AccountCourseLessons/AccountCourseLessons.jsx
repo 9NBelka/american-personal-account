@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 export default function AccountCourseLessons({
   courseId,
   modules,
-  completedLessons, // Получаем полный объект completedLessons
+  completedLessons,
   completedLessonsCount,
   totalLessons,
   totalDuration,
@@ -27,7 +27,8 @@ export default function AccountCourseLessons({
     setExpandedModule(expandedModule === moduleIndex ? null : moduleIndex);
   };
 
-  const sortedModules = [...modules].sort((a, b) => a.id.localeCompare(b.id));
+  // Сортируем модули по полю order
+  const sortedModules = [...modules].sort((a, b) => a.order - b.order);
 
   return (
     <div className={scss.courseSection}>
@@ -93,7 +94,7 @@ export default function AccountCourseLessons({
             expandedModule={expandedModule}
             toggleModule={toggleModule}
             handleLessonClick={handleLessonClick}
-            completedLessons={completedLessons[courseId] || {}} // Передаём только данные для текущего курса
+            completedLessons={completedLessons[courseId] || {}}
             toggleLessonCompletion={toggleLessonCompletion}
             getCompletedCount={getCompletedCount}
             getTotalDuration={getTotalDuration}

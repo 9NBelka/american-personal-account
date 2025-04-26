@@ -12,11 +12,11 @@ const CourseLessonsList = ({
   expandedModule,
   toggleModule,
   handleLessonClick,
-  completedLessons = {}, // Значение по умолчанию
+  completedLessons = {},
   toggleLessonCompletion,
   getCompletedCount,
   getTotalDuration,
-  playlistPage = false, // Значение по умолчанию
+  playlistPage = false,
 }) => {
   const dispatch = useDispatch();
 
@@ -108,7 +108,7 @@ const CourseLessonsList = ({
       <div className={scss.moduleTitleAndIconBlock} onClick={handleToggle}>
         <div className={scss.moduleTitleAndCountBlock}>
           <h3 className={scss.moduleTitle}>
-            {index + 1}. module | {module.moduleTitle}
+            {module.order}. module | {module.moduleTitle}
           </h3>
           <span className={scss.moduleCompletionCount}>
             {completed}/{total} | {totalDuration}

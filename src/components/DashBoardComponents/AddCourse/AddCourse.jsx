@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux'; // Добавили Redux хуки
-import { addCourse, addAccessLevel, setError } from '../../../store/slices/adminSlice'; // Импортируем действия
+import { useDispatch, useSelector } from 'react-redux';
+import { addCourse, addAccessLevel, setError } from '../../../store/slices/adminSlice';
 import scss from './AddCourse.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
@@ -24,8 +24,7 @@ export default function AddCourse() {
   });
 
   // Состояние для управления модулями и уроками
-  const [moduleCount, setModuleCount] = useState(0);
-  const [modules, setModules] = useState({});
+  const [moduleList, setModuleList] = useState([]); // Массив модулей вместо объекта modules
 
   // Состояние для выпадающего списка категорий
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -65,14 +64,14 @@ export default function AddCourse() {
   // Обработчик добавления нового уровня доступа
   const handleAddAccessLevel = async () => {
     if (!newAccessName.trim()) {
-      dispatch(setError('Название уровня доступа не может быть пустым')); // Используем dispatch
+      dispatch(setError('Название уровня доступа не может быть пустым'));
       toast.error('Название уровня доступа не может быть пустым');
       return;
     }
 
     const accessId = newAccessName.toLowerCase().replace(/\s+/g, '');
     if (accessLevels.some((level) => level.id === accessId)) {
-      dispatch(setError('Уровень доступа с таким названием уже существует')); // Используем dispatch
+      dispatch(setError('Уровень доступа с таким названием уже существует'));
       toast.error('Уровень доступа с таким названием уже существует');
       return;
     }
@@ -89,130 +88,144 @@ export default function AddCourse() {
       setShowNewAccessInput(false);
       toast.success('Уровень доступа успешно добавлен!');
     } catch (err) {
-      dispatch(setError('Ошибка при добавлении уровня доступа: ' + err)); // Используем dispatch
+      dispatch(setError('Ошибка при добавлении уровня доступа: ' + err));
       toast.error('Ошибка при добавлении уровня доступа: ' + err);
     }
   };
 
   // Добавление нового модуля
   const addModule = () => {
-    const newModuleId = `module${moduleCount + 1}`;
-    setModules((prev) => ({
+    const newModuleId = `module_${Date.now()}`; // Используем формат module_${timestamp}
+    setModuleList((prev) => [
       ...prev,
-      [newModuleId]: {
+      {
+        id: newModuleId,
         title: '',
         unlockDate: '',
         lessons: [],
+        order: prev.length + 1, // Присваиваем order
       },
-    }));
-    setModuleCount((prev) => prev + 1);
+    ]);
   };
 
   // Добавление нового урока в модуль
   const addLesson = (moduleId) => {
-    setModules((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        lessons: [
-          ...prev[moduleId].lessons,
-          {
-            title: '',
-            videoUrl: '',
-            videoTime: 0,
-          },
-        ],
-      },
-    }));
+    setModuleList((prev) =>
+      prev.map((module) =>
+        module.id === moduleId
+          ? {
+              ...module,
+              lessons: [
+                ...module.lessons,
+                {
+                  title: '',
+                  videoUrl: '',
+                  videoTime: 0,
+                },
+              ],
+            }
+          : module,
+      ),
+    );
   };
 
   // Обработчик изменения данных модуля
   const handleModuleChange = (moduleId, field, value) => {
-    setModules((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        [field]: value,
-      },
-    }));
+    setModuleList((prev) =>
+      prev.map((module) => (module.id === moduleId ? { ...module, [field]: value } : module)),
+    );
   };
 
   // Обработчик изменения данных урока
   const handleLessonChange = (moduleId, lessonIndex, field, value) => {
-    setModules((prev) => {
-      const updatedLessons = [...prev[moduleId].lessons];
-      updatedLessons[lessonIndex] = {
-        ...updatedLessons[lessonIndex],
-        [field]: field === 'videoTime' ? Number(value) : value,
-      };
-      return {
-        ...prev,
-        [moduleId]: {
-          ...prev[moduleId],
-          lessons: updatedLessons,
-        },
-      };
-    });
+    setModuleList((prev) =>
+      prev.map((module) =>
+        module.id === moduleId
+          ? {
+              ...module,
+              lessons: module.lessons.map((lesson, index) =>
+                index === lessonIndex
+                  ? {
+                      ...lesson,
+                      [field]: field === 'videoTime' ? Number(value) : value,
+                    }
+                  : lesson,
+              ),
+            }
+          : module,
+      ),
+    );
   };
 
   // Удаление модуля
   const removeModule = (moduleId) => {
-    setModules((prev) => {
-      const newModules = { ...prev };
-      delete newModules[moduleId];
-      return newModules;
+    setModuleList((prev) => {
+      const newList = prev.filter((module) => module.id !== moduleId);
+      // Пересчитываем order для оставшихся модулей
+      return newList.map((module, index) => ({
+        ...module,
+        order: index + 1,
+      }));
     });
   };
 
   // Удаление урока
   const removeLesson = (moduleId, lessonIndex) => {
-    setModules((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        lessons: prev[moduleId].lessons.filter((_, index) => index !== lessonIndex),
-      },
-    }));
+    setModuleList((prev) =>
+      prev.map((module) =>
+        module.id === moduleId
+          ? {
+              ...module,
+              lessons: module.lessons.filter((_, index) => index !== lessonIndex),
+            }
+          : module,
+      ),
+    );
   };
 
   // Обработчик отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!courseData.id.trim()) {
-      dispatch(setError('ID курса не может быть пустым')); // Используем dispatch
+      dispatch(setError('ID курса не может быть пустым'));
       toast.error('ID курса не может быть пустым');
       return;
     }
     if (!courseData.title.trim()) {
-      dispatch(setError('Название курса не может быть пустым')); // Используем dispatch
+      dispatch(setError('Название курса не может быть пустым'));
       toast.error('Название курса не может быть пустым');
       return;
     }
     if (!courseData.description.trim()) {
-      dispatch(setError('Описание курса не может быть пустым')); // Используем dispatch
+      dispatch(setError('Описание курса не может быть пустым'));
       toast.error('Описание курса не может быть пустым');
       return;
     }
     if (!courseData.access) {
-      dispatch(setError('Пожалуйста, выберите или добавьте уровень доступа')); // Используем dispatch
+      dispatch(setError('Пожалуйста, выберите или добавьте уровень доступа'));
       toast.error('Пожалуйста, выберите или добавьте уровень доступа');
       return;
     }
 
     try {
+      // Преобразуем moduleList в объект modules для сохранения в Firestore
+      const modulesObject = moduleList.reduce((acc, module) => {
+        acc[module.id] = {
+          title: module.title || `Module ${module.order}`, // Запасное название, если title не задано
+          unlockDate: module.unlockDate
+            ? new Date(module.unlockDate).toISOString()
+            : new Date().toISOString(),
+          lessons: module.lessons,
+          order: module.order, // Сохраняем порядок
+        };
+        return acc;
+      }, {});
+
       // Формируем данные курса для отправки в базу
       const formattedCourseData = {
         ...courseData,
         createdAt: new Date().toISOString(),
-        modules: Object.keys(modules).reduce((acc, moduleId) => {
-          const module = modules[moduleId];
-          acc[moduleId] = {
-            title: module.title,
-            unlockDate: module.unlockDate || new Date().toISOString(),
-            lessons: module.lessons,
-          };
-          return acc;
-        }, {}),
+        modules: modulesObject,
       };
 
       await dispatch(addCourse(formattedCourseData)).unwrap();
@@ -227,10 +240,9 @@ export default function AddCourse() {
         access: '',
         modules: {},
       });
-      setModules({});
-      setModuleCount(0);
+      setModuleList([]); // Сбрасываем moduleList
     } catch (err) {
-      dispatch(setError('Ошибка при добавлении курса: ' + err)); // Используем dispatch
+      dispatch(setError('Ошибка при добавлении курса: ' + err));
       toast.error('Ошибка при добавлении курса: ' + err);
     }
   };
@@ -366,44 +378,46 @@ export default function AddCourse() {
         {/* Модули и уроки */}
         <div className={scss.modulesSection}>
           <h3>Модули</h3>
-          {Object.keys(modules).map((moduleId) => (
-            <div key={moduleId} className={scss.module}>
+          {moduleList.map((module) => (
+            <div key={module.id} className={scss.module}>
               <div className={scss.moduleHeader}>
                 <input
                   type='text'
-                  value={modules[moduleId].title}
-                  onChange={(e) => handleModuleChange(moduleId, 'title', e.target.value)}
-                  placeholder={`Название модуля ${moduleId.replace('module', '')}`}
+                  value={module.title}
+                  onChange={(e) => handleModuleChange(module.id, 'title', e.target.value)}
+                  placeholder={`Модуль ${module.order}`} // Используем order для плейсхолдера
                   required
                 />
                 <input
                   type='datetime-local'
-                  value={modules[moduleId].unlockDate}
-                  onChange={(e) => handleModuleChange(moduleId, 'unlockDate', e.target.value)}
+                  value={module.unlockDate}
+                  onChange={(e) => handleModuleChange(module.id, 'unlockDate', e.target.value)}
                   placeholder='Дата разблокировки модуля...'
                 />
                 <button
                   type='button'
                   className={scss.deleteButton}
-                  onClick={() => removeModule(moduleId)}>
+                  onClick={() => removeModule(module.id)}>
                   <BsTrash />
                 </button>
               </div>
               <div className={scss.lessons}>
-                {modules[moduleId].lessons.map((lesson, index) => (
-                  <div key={index} className={scss.lesson}>
+                {module.lessons.map((lesson, lessonIndex) => (
+                  <div key={lessonIndex} className={scss.lesson}>
                     <input
                       type='text'
                       value={lesson.title}
-                      onChange={(e) => handleLessonChange(moduleId, index, 'title', e.target.value)}
-                      placeholder={`Название урока ${index + 1}`}
+                      onChange={(e) =>
+                        handleLessonChange(module.id, lessonIndex, 'title', e.target.value)
+                      }
+                      placeholder={`Урок ${lessonIndex + 1}`}
                       required
                     />
                     <input
                       type='text'
                       value={lesson.videoUrl}
                       onChange={(e) =>
-                        handleLessonChange(moduleId, index, 'videoUrl', e.target.value)
+                        handleLessonChange(module.id, lessonIndex, 'videoUrl', e.target.value)
                       }
                       placeholder='Токен видео урока (например, ac1f5fa0-2dd2-68d0-ebaf-ba5967d0e07d/a909a0c3-2224-70ae-f4c9-ee26818cb414)'
                       required
@@ -413,7 +427,7 @@ export default function AddCourse() {
                       min='0'
                       value={lesson.videoTime}
                       onChange={(e) =>
-                        handleLessonChange(moduleId, index, 'videoTime', e.target.value)
+                        handleLessonChange(module.id, lessonIndex, 'videoTime', e.target.value)
                       }
                       placeholder='Длительность урока (в минутах)'
                       required
@@ -421,7 +435,7 @@ export default function AddCourse() {
                     <button
                       type='button'
                       className={scss.deleteButton}
-                      onClick={() => removeLesson(moduleId, index)}>
+                      onClick={() => removeLesson(module.id, lessonIndex)}>
                       <BsTrash />
                     </button>
                   </div>
@@ -429,7 +443,7 @@ export default function AddCourse() {
                 <button
                   type='button'
                   className={scss.addLessonButton}
-                  onClick={() => addLesson(moduleId)}>
+                  onClick={() => addLesson(module.id)}>
                   <BsPlus /> Добавить урок
                 </button>
               </div>

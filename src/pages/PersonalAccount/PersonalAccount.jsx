@@ -12,7 +12,7 @@ import AccountTimer from '../../components/AccountTimer/AccountTimer';
 import scss from './PersonalAccount.module.scss';
 import AccountCompanyAndQuestions from '../../components/AccountCompanyAndQuestions/AccountCompanyAndQuestions';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../firebase'; // Импортируй db из твоей firebase-конфигурации
+import { db } from '../../firebase';
 import clsx from 'clsx';
 
 export default function PersonalAccount() {
@@ -64,7 +64,17 @@ export default function PersonalAccount() {
       return;
     }
 
-    const modulesArray = initialActiveCourse.modules || [];
+    // Поскольку initialActiveCourse.modules — это уже массив, используем его напрямую
+    const modulesArray = [...(initialActiveCourse.modules || [])]
+      .map((module) => ({
+        id: module.id,
+        moduleTitle: module.moduleTitle || `Module ${module.order || 0}`,
+        unlockDate: module.unlockDate,
+        links: module.links || [],
+        order: module.order || 0,
+      }))
+      .sort((a, b) => a.order - b.order);
+
     const totalLessons = modulesArray.reduce((sum, module) => sum + (module.links?.length || 0), 0);
     const courseCompletedLessons = completedLessons[defaultCourseId] || {};
     const completedLessonsCount = Object.values(courseCompletedLessons).reduce(
@@ -101,7 +111,6 @@ export default function PersonalAccount() {
 
     setActiveCourse(updatedCourse);
 
-    // Подписка на изменения userCount в реальном времени
     const courseRef = doc(db, 'courses', defaultCourseId);
     const unsubscribe = onSnapshot(courseRef, (doc) => {
       if (doc.exists()) {
@@ -115,7 +124,6 @@ export default function PersonalAccount() {
       dispatch(setLastCourseId(defaultCourseId));
     }
 
-    // Отписываемся при размонтировании компонента
     return () => unsubscribe();
   }, [lastCourseId, courses, completedLessons, dispatch]);
 

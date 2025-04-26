@@ -4,8 +4,11 @@ import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateCourse, addAccessLevel, setError } from '../../../store/slices/adminSlice'; // Добавили setError
+import { updateCourse, addAccessLevel, setError } from '../../../store/slices/adminSlice';
+import { db } from '../../../firebase'; // Импортируем Firestore
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
+// Компонент EditCourse
 export default function EditCourse({ courseId, onBack }) {
   const dispatch = useDispatch();
 
@@ -28,6 +31,12 @@ export default function EditCourse({ courseId, onBack }) {
   // Состояние для управления модулями и уроками
   const [moduleList, setModuleList] = useState([]); // Массив модулей
 
+  // Состояние для отслеживания удаленных модулей и уроков
+  const [deletedItems, setDeletedItems] = useState({
+    modules: [], // Массив удаленных moduleId
+    lessons: [], // Массив объектов { moduleId, lessonIndex }
+  });
+
   // Состояние для выпадающего списка категорий
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const categoryOptions = [
@@ -40,6 +49,81 @@ export default function EditCourse({ courseId, onBack }) {
   const [newAccessName, setNewAccessName] = useState('');
   const [showNewAccessInput, setShowNewAccessInput] = useState(false);
 
+  // Функция для очистки прогресса пользователей
+  const cleanUserProgress = async (courseId, deletedModules, deletedLessons) => {
+    try {
+      // Получаем всех пользователей
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const batchUpdates = [];
+
+      usersSnapshot.forEach((userDoc) => {
+        const userData = userDoc.data();
+        const purchasedCourses = userData.purchasedCourses || {};
+        const courseProgress = purchasedCourses[courseId];
+
+        if (courseProgress && courseProgress.completedLessons) {
+          const updatedCompletedLessons = { ...courseProgress.completedLessons };
+
+          // Удаляем прогресс для удаленных модулей
+          deletedModules.forEach((moduleId) => {
+            delete updatedCompletedLessons[moduleId];
+          });
+
+          // Удаляем прогресс для удаленных уроков
+          deletedLessons.forEach(({ moduleId, lessonIndex }) => {
+            if (updatedCompletedLessons[moduleId]) {
+              updatedCompletedLessons[moduleId] = updatedCompletedLessons[moduleId].filter(
+                (index) => index !== lessonIndex,
+              );
+              if (updatedCompletedLessons[moduleId].length === 0) {
+                delete updatedCompletedLessons[moduleId];
+              }
+            }
+          });
+
+          // Обновляем прогресс пользователя
+          const updatedPurchasedCourses = {
+            ...purchasedCourses,
+            [courseId]: {
+              ...courseProgress,
+              completedLessons: updatedCompletedLessons,
+              // Пересчитываем прогресс
+              progress: calculateProgress(updatedCompletedLessons, courseId),
+            },
+          };
+
+          // Подготавливаем обновление документа пользователя
+          const userRef = doc(db, 'users', userDoc.id);
+          batchUpdates.push(updateDoc(userRef, { purchasedCourses: updatedPurchasedCourses }));
+        }
+      });
+
+      // Выполняем все обновления
+      await Promise.all(batchUpdates);
+      console.log('User progress cleaned successfully');
+    } catch (error) {
+      console.error('Error cleaning user progress:', error);
+      dispatch(setError('Ошибка при очистке прогресса пользователей: ' + error));
+    }
+  };
+
+  // Функция для пересчета прогресса
+  const calculateProgress = (completedLessons, courseId) => {
+    const course = courses.find((c) => c.id === courseId);
+    if (!course || !course.modules) return 0;
+
+    const totalLessons = Object.values(course.modules).reduce(
+      (sum, module) => sum + (module.lessons?.length || 0),
+      0,
+    );
+    const completedCount = Object.values(completedLessons).reduce(
+      (sum, indices) => sum + (Array.isArray(indices) ? indices.length : 0),
+      0,
+    );
+
+    return totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  };
+
   // Инициализация данных курса при загрузке компонента
   useEffect(() => {
     if (!courseToEdit) {
@@ -48,22 +132,22 @@ export default function EditCourse({ courseId, onBack }) {
       return;
     }
 
-    // Преобразуем объект modules в массив moduleList
+    // Преобразуем объект modules в массив moduleList и сортируем по полю order
     const formattedModules = Object.entries(courseToEdit.modules || {})
-      .sort(([, moduleA], [, moduleB]) => {
-        if (moduleA.createdAt && moduleB.createdAt) {
-          return new Date(moduleA.createdAt) - new Date(moduleB.createdAt);
-        }
-        const numA = parseInt(moduleA.title.replace(/\D/g, ''), 10) || 0;
-        const numB = parseInt(moduleB.title.replace(/\D/g, ''), 10) || 0;
-        return numA - numB;
-      })
       .map(([moduleId, module]) => ({
         id: moduleId,
         title: module.title || '',
         unlockDate: module.unlockDate ? new Date(module.unlockDate).toISOString().slice(0, 16) : '',
         lessons: module.lessons || [],
-      }));
+        order: module.order || 0, // Если order не задан, используем 0
+      }))
+      .sort((a, b) => a.order - b.order);
+
+    // Если у некоторых модулей order не задан, пересчитываем порядок
+    const updatedModules = formattedModules.map((module, index) => ({
+      ...module,
+      order: index + 1, // Присваиваем порядок 1, 2, 3, ...
+    }));
 
     setCourseData({
       id: courseToEdit.id,
@@ -75,7 +159,7 @@ export default function EditCourse({ courseId, onBack }) {
       modules: courseToEdit.modules || {},
     });
 
-    setModuleList(formattedModules);
+    setModuleList(updatedModules);
   }, [courseToEdit, dispatch, onBack]);
 
   // Обработчик изменения полей курса
@@ -127,7 +211,16 @@ export default function EditCourse({ courseId, onBack }) {
   // Добавление нового модуля
   const addModule = () => {
     const newModuleId = `module_${Date.now()}`;
-    setModuleList((prev) => [...prev, { id: newModuleId, title: '', unlockDate: '', lessons: [] }]);
+    setModuleList((prev) => [
+      ...prev,
+      {
+        id: newModuleId,
+        title: '',
+        unlockDate: '',
+        lessons: [],
+        order: prev.length + 1, // Новый модуль получает order равный количеству модулей + 1
+      },
+    ]);
   };
 
   // Добавление нового урока в модуль
@@ -181,7 +274,19 @@ export default function EditCourse({ courseId, onBack }) {
 
   // Удаление модуля
   const removeModule = (moduleId) => {
-    setModuleList((prev) => prev.filter((module) => module.id !== moduleId));
+    setModuleList((prev) => {
+      const newList = prev.filter((module) => module.id !== moduleId);
+      // Пересчитываем order для оставшихся модулей
+      return newList.map((module, index) => ({
+        ...module,
+        order: index + 1,
+      }));
+    });
+    setDeletedItems((prev) => ({
+      ...prev,
+      modules: [...prev.modules, moduleId],
+      lessons: prev.lessons.filter((lesson) => lesson.moduleId !== moduleId), // Удаляем связанные уроки
+    }));
   };
 
   // Удаление урока
@@ -196,6 +301,10 @@ export default function EditCourse({ courseId, onBack }) {
           : module,
       ),
     );
+    setDeletedItems((prev) => ({
+      ...prev,
+      lessons: [...prev.lessons, { moduleId, lessonIndex }],
+    }));
   };
 
   // Обработчик отправки формы
@@ -209,11 +318,13 @@ export default function EditCourse({ courseId, onBack }) {
       // Преобразуем moduleList обратно в объект modules для сохранения в Firestore
       const modulesObject = moduleList.reduce((acc, module) => {
         acc[module.id] = {
+          // Используем module.id (например, module_1745666065626) как ключ
           title: module.title,
           unlockDate: module.unlockDate
             ? new Date(module.unlockDate).toISOString()
             : new Date().toISOString(),
           lessons: module.lessons,
+          order: module.order, // Сохраняем порядок
         };
         return acc;
       }, {});
@@ -223,9 +334,19 @@ export default function EditCourse({ courseId, onBack }) {
         modules: modulesObject,
       };
 
+      // Сохраняем изменения курса
       await dispatch(
         updateCourse({ courseId: courseData.id, updatedData: updatedCourseData }),
       ).unwrap();
+
+      // Очищаем прогресс пользователей для удаленных модулей и уроков
+      if (deletedItems.modules.length > 0 || deletedItems.lessons.length > 0) {
+        await cleanUserProgress(courseId, deletedItems.modules, deletedItems.lessons);
+      }
+
+      // Сбрасываем список удаленных элементов
+      setDeletedItems({ modules: [], lessons: [] });
+
       toast.success('Курс успешно обновлен!');
       onBack();
     } catch (err) {
@@ -239,9 +360,11 @@ export default function EditCourse({ courseId, onBack }) {
       ...prev,
       modules: moduleList.reduce((acc, module) => {
         acc[module.id] = {
+          // Используем module.id как ключ
           title: module.title,
           unlockDate: module.unlockDate ? new Date(module.unlockDate).toISOString() : '',
           lessons: module.lessons,
+          order: module.order,
         };
         return acc;
       }, {}),
@@ -395,7 +518,7 @@ export default function EditCourse({ courseId, onBack }) {
                   type='text'
                   value={module.title}
                   onChange={(e) => handleModuleChange(module.id, 'title', e.target.value)}
-                  placeholder={`Модуль ${moduleIndex + 1}`}
+                  placeholder={`Модуль ${module.order}`} // Используем order для плейсхолдера
                   required
                 />
                 <input
