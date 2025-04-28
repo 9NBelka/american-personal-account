@@ -9,8 +9,6 @@ import {
   loginWithGithub,
   linkAccount,
 } from '../../store/slices/authSlice';
-import { GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider, githubProvider } from '../../firebase';
 import scss from './Login.module.scss';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import { BsBoxArrowInRight } from 'react-icons/bs';
@@ -24,8 +22,7 @@ export default function Login() {
   const { userRole, isLoading, error } = useSelector((state) => state.auth);
   const [showResetModal, setShowResetModal] = useState(false);
   const [generalError, setGeneralError] = useState(null);
-  const [linkAccountData, setLinkAccountData] = useState(null);
-  const [tempCredential, setTempCredential] = useState(null); // Для временного хранения credential
+  const [linkAccountData, setLinkAccountData] = useState(null); // Для хранения данных для связывания
 
   useEffect(() => {
     if (userRole) {
@@ -35,12 +32,12 @@ export default function Login() {
 
   useEffect(() => {
     if (error && error.code === 'auth/account-exists-with-different-credential') {
-      setLinkAccountData({ email: error.email });
+      setLinkAccountData({ email: error.email, credential: error.credential });
       setGeneralError(
         'This email is already used with another provider. Please log in with your existing account to link them.',
       );
     } else if (error) {
-      setGeneralError(error.message || 'Login error');
+      setGeneralError(error);
     }
   }, [error]);
 
@@ -58,12 +55,11 @@ export default function Login() {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      if (linkAccountData && tempCredential) {
+      if (linkAccountData) {
         // Если нужно связать аккаунт
         await dispatch(login({ email: values.email, password: values.password })).unwrap();
-        await dispatch(linkAccount({ email: values.email, credential: tempCredential })).unwrap();
+        await dispatch(linkAccount(linkAccountData)).unwrap();
         setLinkAccountData(null);
-        setTempCredential(null);
         setGeneralError(null);
       } else {
         await dispatch(login({ email: values.email, password: values.password })).unwrap();
@@ -88,10 +84,7 @@ export default function Login() {
       await dispatch(loginWithGoogle()).unwrap();
       setGeneralError(null);
     } catch (error) {
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        setTempCredential(credential);
-      }
+      // Ошибка обрабатывается в useEffect
     }
   };
 
@@ -100,10 +93,7 @@ export default function Login() {
       await dispatch(loginWithGithub()).unwrap();
       setGeneralError(null);
     } catch (error) {
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        const credential = GithubAuthProvider.credentialFromError(error);
-        setTempCredential(credential);
-      }
+      // Ошибка обрабатывается в useEffect
     }
   };
 
@@ -153,8 +143,9 @@ export default function Login() {
               isSubmitting={isLoading}
               onForgotPassword={handleForgotPassword}
               generalError={generalError}
-              handleGoogleLogin={handleGoogleLogin}
-              handleGithubLogin={handleGithubLogin}>
+              handleGoogleLogin={handleGoogleLogin} // Передаем обработчик
+              handleGithubLogin={handleGithubLogin} // Передаем обработчик
+            >
               <LSPrivacyCheckbox />
             </LSAuthForm>
             <LSResetPasswordModal
