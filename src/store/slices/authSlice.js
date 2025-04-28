@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { auth, db, storage, googleProvider, githubProvider } from '../../firebase';
+import { auth, db, storage } from '../../firebase';
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -10,10 +10,6 @@ import {
   updatePassword,
   EmailAuthProvider,
   signOut,
-  signInWithPopup,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  linkWithCredential,
 } from 'firebase/auth';
 import {
   doc,
@@ -97,115 +93,6 @@ export const initializeAuth = createAsyncThunk(
     } catch (error) {
       dispatch(setAuthInitialized(true));
       return rejectWithValue(error.message);
-    }
-  },
-);
-
-// Async Thunk для входа через Google
-
-export const loginWithGoogle = createAsyncThunk(
-  'auth/loginWithGoogle',
-  async (_, { rejectWithValue, dispatch }) => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      firebaseCurrentUser = user;
-
-      // Проверяем, существует ли пользователь в Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (!userDoc.exists()) {
-        // Если пользователь новый, создаем запись
-        await setDoc(doc(db, 'users', user.uid), {
-          name: user.displayName?.split(' ')[0] || '',
-          lastName: user.displayName?.split(' ')[1] || '',
-          email: user.email,
-          role: 'guest',
-          registrationDate: new Date().toISOString(),
-          avatarUrl: user.photoURL || null,
-          readNotifications: [],
-        });
-      }
-
-      return {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        name: user.displayName?.split(' ')[0] || '',
-        lastName: user.displayName?.split(' ')[1] || '',
-      };
-    } catch (error) {
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        return rejectWithValue({
-          code: error.code,
-          email: error.email,
-          credential: GoogleAuthProvider.credentialFromError(error),
-        });
-      }
-      return rejectWithValue(error);
-    }
-  },
-);
-
-// Функция loginWithGithub (обновим аналогично)
-export const loginWithGithub = createAsyncThunk(
-  'auth/loginWithGithub',
-  async (_, { rejectWithValue, dispatch }) => {
-    try {
-      const result = await signInWithPopup(auth, githubProvider);
-      const user = result.user;
-      firebaseCurrentUser = user;
-
-      // Проверяем, существует ли пользователь в Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (!userDoc.exists()) {
-        // Если пользователь новый, создаем запись
-        await setDoc(doc(db, 'users', user.uid), {
-          name: user.displayName || '',
-          lastName: '',
-          email: user.email,
-          role: 'guest',
-          registrationDate: new Date().toISOString(),
-          avatarUrl: user.photoURL || null,
-          readNotifications: [],
-        });
-      }
-
-      return {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        name: user.displayName || '',
-        lastName: '',
-      };
-    } catch (error) {
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        return rejectWithValue({
-          code: error.code,
-          email: error.email,
-          credential: GithubAuthProvider.credentialFromError(error),
-        });
-      }
-      return rejectWithValue(error);
-    }
-  },
-);
-
-// Async Thunk для связывания аккаунтов
-export const linkAccount = createAsyncThunk(
-  'auth/linkAccount',
-  async ({ email, credential }, { rejectWithValue }) => {
-    try {
-      // Находим пользователя с этим email
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error('No authenticated user found');
-      }
-
-      // Связываем аккаунт
-      await linkWithCredential(user, credential);
-      return { uid: user.uid, email: user.email, displayName: user.displayName };
-    } catch (error) {
-      return rejectWithValue(error);
     }
   },
 );
@@ -686,44 +573,6 @@ const authSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload.message;
         state.isLoading = false;
-      })
-      .addCase(loginWithGoogle.pending, (state) => {
-        state.status = 'loading';
-        state.isLoading = true;
-      })
-      .addCase(loginWithGoogle.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.isLoading = false;
-        state.user = action.payload;
-      })
-      .addCase(loginWithGoogle.rejected, (state, action) => {
-        state.status = 'failed';
-        state.isLoading = false;
-        state.error = action.payload.message || 'Google login failed';
-      })
-      .addCase(loginWithGithub.pending, (state) => {
-        state.status = 'loading';
-        state.isLoading = true;
-      })
-      .addCase(loginWithGithub.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.isLoading = false;
-        state.user = action.payload;
-      })
-      .addCase(loginWithGithub.rejected, (state, action) => {
-        state.status = 'failed';
-        state.isLoading = false;
-        state.error = action.payload.message || 'GitHub login failed';
-      })
-      .addCase(linkAccount.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.isLoading = false;
-        state.user = action.payload;
-      })
-      .addCase(linkAccount.rejected, (state, action) => {
-        state.status = 'failed';
-        state.isLoading = false;
-        state.error = action.payload.message || 'Account linking failed';
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
