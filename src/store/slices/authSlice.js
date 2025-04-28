@@ -101,8 +101,7 @@ export const initializeAuth = createAsyncThunk(
   },
 );
 
-// Async Thunk для входа через Google
-
+// Функция loginWithGoogle
 export const loginWithGoogle = createAsyncThunk(
   'auth/loginWithGoogle',
   async (_, { rejectWithValue, dispatch }) => {
@@ -135,10 +134,10 @@ export const loginWithGoogle = createAsyncThunk(
       };
     } catch (error) {
       if (error.code === 'auth/account-exists-with-different-credential') {
+        // Передаём только сериализуемые данные
         return rejectWithValue({
           code: error.code,
           email: error.email,
-          credential: GoogleAuthProvider.credentialFromError(error),
         });
       }
       return rejectWithValue(error);
@@ -146,7 +145,7 @@ export const loginWithGoogle = createAsyncThunk(
   },
 );
 
-// Функция loginWithGithub (обновим аналогично)
+// Функция loginWithGithub
 export const loginWithGithub = createAsyncThunk(
   'auth/loginWithGithub',
   async (_, { rejectWithValue, dispatch }) => {
@@ -179,10 +178,10 @@ export const loginWithGithub = createAsyncThunk(
       };
     } catch (error) {
       if (error.code === 'auth/account-exists-with-different-credential') {
+        // Передаём только сериализуемые данные
         return rejectWithValue({
           code: error.code,
           email: error.email,
-          credential: GithubAuthProvider.credentialFromError(error),
         });
       }
       return rejectWithValue(error);

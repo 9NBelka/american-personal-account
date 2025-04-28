@@ -9,6 +9,7 @@ import {
   login,
   linkAccount,
 } from '../../store/slices/authSlice';
+import { GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import scss from './SignUp.module.scss';
 import { BsBoxArrowInRight } from 'react-icons/bs';
@@ -20,7 +21,8 @@ export default function SignUp() {
   const dispatch = useDispatch();
   const { userRole, isLoading, error } = useSelector((state) => state.auth);
   const [generalError, setGeneralError] = useState(null);
-  const [linkAccountData, setLinkAccountData] = useState(null); // Для хранения данных для связывания
+  const [linkAccountData, setLinkAccountData] = useState(null);
+  const [tempCredential, setTempCredential] = useState(null); // Для временного хранения credential
 
   useEffect(() => {
     if (userRole) {
@@ -30,7 +32,7 @@ export default function SignUp() {
 
   useEffect(() => {
     if (error && error.code === 'auth/account-exists-with-different-credential') {
-      setLinkAccountData({ email: error.email, credential: error.credential });
+      setLinkAccountData({ email: error.email });
       setGeneralError(
         'This email is already registered. Please log in with your existing account to link it.',
       );
@@ -81,11 +83,12 @@ export default function SignUp() {
 
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
-      if (linkAccountData) {
+      if (linkAccountData && tempCredential) {
         // Если нужно связать аккаунт
         await dispatch(login({ email: values.email, password: values.password })).unwrap();
-        await dispatch(linkAccount(linkAccountData)).unwrap();
+        await dispatch(linkAccount({ email: values.email, credential: tempCredential })).unwrap();
         setLinkAccountData(null);
+        setTempCredential(null);
         setGeneralError(null);
         navigate('/login');
       } else {
@@ -127,7 +130,10 @@ export default function SignUp() {
       await dispatch(loginWithGoogle()).unwrap();
       navigate('/login');
     } catch (error) {
-      // Ошибка обрабатывается в useEffect
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        setTempCredential(credential);
+      }
     }
   };
 
@@ -136,7 +142,10 @@ export default function SignUp() {
       await dispatch(loginWithGithub()).unwrap();
       navigate('/login');
     } catch (error) {
-      // Ошибка обрабатывается в useEffect
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        const credential = GithubAuthProvider.credentialFromError(error);
+        setTempCredential(credential);
+      }
     }
   };
 
