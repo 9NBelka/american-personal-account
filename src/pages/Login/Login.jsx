@@ -2,7 +2,13 @@ import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { login, resetPassword } from '../../store/slices/authSlice'; // Import thunks
+import {
+  login,
+  resetPassword,
+  loginWithGoogle,
+  loginWithGithub,
+  linkAccount,
+} from '../../store/slices/authSlice';
 import scss from './Login.module.scss';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import { BsBoxArrowInRight } from 'react-icons/bs';
@@ -13,15 +19,27 @@ import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetP
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { userRole, isLoading } = useSelector((state) => state.auth); // Replaced useAuth
+  const { userRole, isLoading, error } = useSelector((state) => state.auth);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [generalError, setGeneralError] = useState(null); // Новое состояние для ошибки
+  const [generalError, setGeneralError] = useState(null);
+  const [linkAccountData, setLinkAccountData] = useState(null); // Для хранения данных для связывания
 
   useEffect(() => {
     if (userRole) {
       navigate(userRole === 'admin' ? '/dashboard' : '/account');
     }
   }, [userRole, navigate]);
+
+  useEffect(() => {
+    if (error && error.code === 'auth/account-exists-with-different-credential') {
+      setLinkAccountData({ email: error.email, credential: error.credential });
+      setGeneralError(
+        'This email is already used with another provider. Please log in with your existing account to link them.',
+      );
+    } else if (error) {
+      setGeneralError(error);
+    }
+  }, [error]);
 
   const initialValues = {
     email: '',
@@ -37,10 +55,17 @@ export default function Login() {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      await dispatch(login({ email: values.email, password: values.password })).unwrap();
-      setGeneralError(null); // Сбрасываем ошибку при успешном логине
+      if (linkAccountData) {
+        // Если нужно связать аккаунт
+        await dispatch(login({ email: values.email, password: values.password })).unwrap();
+        await dispatch(linkAccount(linkAccountData)).unwrap();
+        setLinkAccountData(null);
+        setGeneralError(null);
+      } else {
+        await dispatch(login({ email: values.email, password: values.password })).unwrap();
+        setGeneralError(null);
+      }
     } catch (error) {
-      // Устанавливаем общую ошибку
       if (
         error.code === 'auth/user-not-found' ||
         error.code === 'auth/wrong-password' ||
@@ -54,6 +79,24 @@ export default function Login() {
     setSubmitting(false);
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      await dispatch(loginWithGoogle()).unwrap();
+      setGeneralError(null);
+    } catch (error) {
+      // Ошибка обрабатывается в useEffect
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    try {
+      await dispatch(loginWithGithub()).unwrap();
+      setGeneralError(null);
+    } catch (error) {
+      // Ошибка обрабатывается в useEffect
+    }
+  };
+
   const handleForgotPassword = () => {
     setShowResetModal(true);
   };
@@ -63,8 +106,7 @@ export default function Login() {
       const result = await dispatch(resetPassword(email)).unwrap();
       return result;
     } catch (error) {
-      console.error('Password reset failed:', error); // Log for debugging
-      throw new Error('Failed to reset password. Please try again.'); // User-friendly message
+      throw new Error('Failed to reset password. Please try again.');
     }
   };
 
@@ -92,22 +134,24 @@ export default function Login() {
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
-              title='Login to your account'
+              title={linkAccountData ? 'Link Your Account' : 'Login to your account'}
               fields={fields}
-              submitText='Login'
+              submitText={linkAccountData ? 'Link Account' : 'Login'}
               linkText='Don`t have an account?'
               linkToText='Sign In'
               linkTo='/signUp'
               isSubmitting={isLoading}
-              otherPointsText='Log in'
               onForgotPassword={handleForgotPassword}
-              generalError={generalError}>
+              generalError={generalError}
+              handleGoogleLogin={handleGoogleLogin} // Передаем обработчик
+              handleGithubLogin={handleGithubLogin} // Передаем обработчик
+            >
               <LSPrivacyCheckbox />
             </LSAuthForm>
             <LSResetPasswordModal
               isOpen={showResetModal}
               onClose={() => setShowResetModal(false)}
-              resetPassword={handleResetPassword} // Updated to use Redux thunk
+              resetPassword={handleResetPassword}
               isLoading={isLoading}
             />
           </div>

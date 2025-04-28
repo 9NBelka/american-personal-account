@@ -1,4 +1,3 @@
-// LSAuthForm.js
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
 import LSInputField from '../LSInputField/LSInputField';
@@ -21,9 +20,11 @@ export default function LSAuthForm({
   isSubmitting,
   halfInput,
   otherPointsText,
-  onForgotPassword, // Новый пропс
+  onForgotPassword,
   children,
   generalError,
+  handleGoogleLogin, // Новый пропс
+  handleGithubLogin, // Новый пропс
 }) {
   return (
     <div className={scss.mainLSBlock}>
@@ -35,7 +36,7 @@ export default function LSAuthForm({
         {({ errors, isSubmitting: formikSubmitting }) => (
           <Form>
             <div className={clsx(scss.nameContainer, halfInput && scss.nameContainerHalf)}>
-              {generalError && <div className={scss.errorText}>{generalError}</div>}{' '}
+              {generalError && <div className={scss.errorText}>{generalError}</div>}
               {fields
                 .slice(0, 2)
                 .map((field, index) =>
@@ -71,8 +72,6 @@ export default function LSAuthForm({
               )}
             <LSFormError error={errors.general} />
             {children}
-            {/* Отображаем общую ошибку */}
-            {/* Добавляем ссылку "Забыл пароль?" */}
             {onForgotPassword && (
               <div className={scss.forgotPassword}>
                 <Link
@@ -95,10 +94,18 @@ export default function LSAuthForm({
               <span>Or {otherPointsText} with</span>
             </div>
             <div className={scss.socialButtonsBlock}>
-              <button type='button' className={scss.socialButton}>
+              <button
+                type='button'
+                className={scss.socialButton}
+                onClick={handleGoogleLogin}
+                disabled={isSubmitting}>
                 <BsGoogle className={scss.iconSocial} /> Google
               </button>
-              <button type='button' className={scss.socialButton}>
+              <button
+                type='button'
+                className={scss.socialButton}
+                onClick={handleGithubLogin}
+                disabled={isSubmitting}>
                 <BsGithub className={scss.iconSocial} /> GitHub
               </button>
             </div>

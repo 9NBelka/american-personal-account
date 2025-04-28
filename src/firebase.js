@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 import { getStorage } from 'firebase/storage'; // Добавляем Storage
 
 const firebaseConfig = {
@@ -32,4 +32,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app); // Инициализируем Storage
 
-export { db, auth, storage }; // Экспортируем storage
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+
+export { db, auth, storage, googleProvider, githubProvider }; // Экспортируем storage
