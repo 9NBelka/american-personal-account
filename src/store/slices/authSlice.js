@@ -102,6 +102,7 @@ export const initializeAuth = createAsyncThunk(
 );
 
 // Async Thunk для входа через Google
+
 export const loginWithGoogle = createAsyncThunk(
   'auth/loginWithGoogle',
   async (_, { rejectWithValue, dispatch }) => {
@@ -125,7 +126,13 @@ export const loginWithGoogle = createAsyncThunk(
         });
       }
 
-      return { uid: user.uid, email: user.email, displayName: user.displayName };
+      return {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        name: user.displayName?.split(' ')[0] || '',
+        lastName: user.displayName?.split(' ')[1] || '',
+      };
     } catch (error) {
       if (error.code === 'auth/account-exists-with-different-credential') {
         return rejectWithValue({
@@ -139,7 +146,7 @@ export const loginWithGoogle = createAsyncThunk(
   },
 );
 
-// Async Thunk для входа через GitHub
+// Функция loginWithGithub (обновим аналогично)
 export const loginWithGithub = createAsyncThunk(
   'auth/loginWithGithub',
   async (_, { rejectWithValue, dispatch }) => {
@@ -163,7 +170,13 @@ export const loginWithGithub = createAsyncThunk(
         });
       }
 
-      return { uid: user.uid, email: user.email, displayName: user.displayName };
+      return {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        name: user.displayName || '',
+        lastName: '',
+      };
     } catch (error) {
       if (error.code === 'auth/account-exists-with-different-credential') {
         return rejectWithValue({

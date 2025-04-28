@@ -1,8 +1,14 @@
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { signUp } from '../../store/slices/authSlice'; // Import thunk
+import {
+  signUp,
+  loginWithGoogle,
+  loginWithGithub,
+  login,
+  linkAccount,
+} from '../../store/slices/authSlice';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import scss from './SignUp.module.scss';
 import { BsBoxArrowInRight } from 'react-icons/bs';
@@ -12,7 +18,9 @@ import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/Ac
 export default function SignUp() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { userRole, isLoading } = useSelector((state) => state.auth); // Replaced useAuth
+  const { userRole, isLoading, error } = useSelector((state) => state.auth);
+  const [generalError, setGeneralError] = useState(null);
+  const [linkAccountData, setLinkAccountData] = useState(null); // Для хранения данных для связывания
 
   useEffect(() => {
     if (userRole) {
@@ -20,68 +28,136 @@ export default function SignUp() {
     }
   }, [userRole, navigate]);
 
-  const initialValues = {
-    name: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    agreeToPrivacy: false,
-  };
+  useEffect(() => {
+    if (error && error.code === 'auth/account-exists-with-different-credential') {
+      setLinkAccountData({ email: error.email, credential: error.credential });
+      setGeneralError(
+        'This email is already registered. Please log in with your existing account to link it.',
+      );
+    } else if (error) {
+      setGeneralError(error.message || 'Registration error');
+    }
+  }, [error]);
 
-  const validationSchema = Yup.object({
-    name: Yup.string()
-      .min(2, '*The name must contain at least 2 letters')
-      .matches(/^[a-zA-Zа-яА-ЯёЁ\s]+$/, '*The name must contain only letters.')
-      .required('*Required field'),
-    lastName: Yup.string()
-      .min(2, '*Last name must contain at least 2 letters')
-      .matches(/^[a-zA-Zа-яА-ЯёЁ\s]+$/, '*The last name must contain only letters')
-      .notRequired(),
-    email: Yup.string().email('*Invalid email format').required('*Required field'),
-    password: Yup.string()
-      .min(6, '*Password must be at least 6 characters long')
-      .required('*Required field'),
-    confirmPassword: Yup.string()
-      .oneOf([Yup.ref('password'), null], '*Passwords must match')
-      .required('*Required field'),
-    agreeToPrivacy: Yup.boolean().oneOf([true], '*You must agree to the Privacy Policy'),
-  });
+  const initialValues = linkAccountData
+    ? {
+        email: linkAccountData.email || '',
+        password: '',
+        agreeToPrivacy: false,
+      }
+    : {
+        name: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        agreeToPrivacy: false,
+      };
+
+  const validationSchema = linkAccountData
+    ? Yup.object({
+        email: Yup.string().email('*Invalid email format').required('*Required field'),
+        password: Yup.string().required('*Required field'),
+        agreeToPrivacy: Yup.boolean().oneOf([true], '*You must agree to the Privacy Policy'),
+      })
+    : Yup.object({
+        name: Yup.string()
+          .min(2, '*The name must contain at least 2 letters')
+          .matches(/^[a-zA-Zа-яА-ЯёЁ\s]+$/, '*The name must contain only letters.')
+          .required('*Required field'),
+        lastName: Yup.string()
+          .min(2, '*Last name must contain at least 2 letters')
+          .matches(/^[a-zA-Zа-яА-ЯёЁ\s]+$/, '*The last name must contain only letters')
+          .notRequired(),
+        email: Yup.string().email('*Invalid email format').required('*Required field'),
+        password: Yup.string()
+          .min(6, '*Password must be at least 6 characters long')
+          .required('*Required field'),
+        confirmPassword: Yup.string()
+          .oneOf([Yup.ref('password'), null], '*Passwords must match')
+          .required('*Required field'),
+        agreeToPrivacy: Yup.boolean().oneOf([true], '*You must agree to the Privacy Policy'),
+      });
 
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
-      await dispatch(
-        signUp({
-          name: values.name,
-          lastName: values.lastName,
-          email: values.email,
-          password: values.password,
-        }),
-      ).unwrap();
-      navigate('/login');
-    } catch (error) {
-      if (error.code === 'auth/email-already-in-use') {
-        setFieldError('email', 'This email is already in use');
+      if (linkAccountData) {
+        // Если нужно связать аккаунт
+        await dispatch(login({ email: values.email, password: values.password })).unwrap();
+        await dispatch(linkAccount(linkAccountData)).unwrap();
+        setLinkAccountData(null);
+        setGeneralError(null);
+        navigate('/login');
       } else {
-        setFieldError('general', 'Registration error: ' + error.message);
+        // Обычная регистрация
+        await dispatch(
+          signUp({
+            name: values.name,
+            lastName: values.lastName,
+            email: values.email,
+            password: values.password,
+          }),
+        ).unwrap();
+        navigate('/login');
+      }
+    } catch (error) {
+      if (linkAccountData) {
+        if (
+          error.code === 'auth/user-not-found' ||
+          error.code === 'auth/wrong-password' ||
+          error.code === 'auth/invalid-credential'
+        ) {
+          setGeneralError('*Incorrect email or password');
+        } else {
+          setGeneralError('*Login error: ' + error.message);
+        }
+      } else {
+        if (error.code === 'auth/email-already-in-use') {
+          setFieldError('email', 'This email is already in use');
+        } else {
+          setFieldError('general', 'Registration error: ' + error.message);
+        }
       }
     }
     setSubmitting(false);
+  };
+
+  const handleGoogleSignUp = async () => {
+    try {
+      await dispatch(loginWithGoogle()).unwrap();
+      navigate('/login');
+    } catch (error) {
+      // Ошибка обрабатывается в useEffect
+    }
+  };
+
+  const handleGithubSignUp = async () => {
+    try {
+      await dispatch(loginWithGithub()).unwrap();
+      navigate('/login');
+    } catch (error) {
+      // Ошибка обрабатывается в useEffect
+    }
   };
 
   if (isLoading) {
     return <AccountLoadingIndicator />;
   }
 
-  const fields = [
-    { name: 'name', type: 'text', placeholder: 'First Name' },
-    { name: 'lastName', type: 'text', placeholder: 'Last Name' },
-    { name: 'email', type: 'email', placeholder: 'Email' },
-    { name: 'password', type: 'password', placeholder: 'Password' },
-    { name: 'confirmPassword', type: 'password', placeholder: 'Confirm password' },
-  ];
+  const fields = linkAccountData
+    ? [
+        { name: 'email', type: 'email', placeholder: 'Email' },
+        { name: 'password', type: 'password', placeholder: 'Password' },
+      ]
+    : [
+        { name: 'name', type: 'text', placeholder: 'First Name' },
+        { name: 'lastName', type: 'text', placeholder: 'Last Name' },
+        { name: 'email', type: 'email', placeholder: 'Email' },
+        { name: 'password', type: 'password', placeholder: 'Password' },
+        { name: 'confirmPassword', type: 'password', placeholder: 'Confirm password' },
+      ];
 
-  const halfInput = true;
+  const halfInput = !linkAccountData;
 
   return (
     <div className={scss.backgroundSignUp}>
@@ -98,15 +174,18 @@ export default function SignUp() {
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
-              title='Create an account'
+              title={linkAccountData ? 'Link Your Account' : 'Create an account'}
               fields={fields}
-              submitText='Create an account'
-              linkText='Already have an account?'
-              linkToText='Log in'
-              linkTo='/login'
+              submitText={linkAccountData ? 'Link Account' : 'Create an account'}
+              linkText={linkAccountData ? 'Don’t want to link?' : 'Already have an account?'}
+              linkToText={linkAccountData ? 'Cancel' : 'Log in'}
+              linkTo={linkAccountData ? '/signUp' : '/login'}
               isSubmitting={isLoading}
               halfInput={halfInput}
-              otherPointsText='Register'>
+              otherPointsText={linkAccountData ? 'Link' : 'Register'}
+              generalError={generalError}
+              handleGoogleLogin={handleGoogleSignUp}
+              handleGithubLogin={handleGithubSignUp}>
               <LSPrivacyCheckbox />
             </LSAuthForm>
           </div>
