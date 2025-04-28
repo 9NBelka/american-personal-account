@@ -63,7 +63,7 @@ export default function AccountCourseCard({ course, progress, index, onClick }) 
       <div className={scss.completedCourseBlock}>
         {progress === 100 ? (
           <Link
-            to={`/certificate/${course.id}`} // Предполагается, что courseId доступен в компоненте
+            to={`/certificate/${course.id}`}
             className={clsx(
               scss.completedCourse,
               index % 3 === 1 && progress === 100 && scss.completedCourseOrange,

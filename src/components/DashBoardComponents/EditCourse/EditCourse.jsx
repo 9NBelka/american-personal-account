@@ -5,16 +5,13 @@ import clsx from 'clsx';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateCourse, addAccessLevel, setError } from '../../../store/slices/adminSlice';
-import { db } from '../../../firebase'; // Импортируем Firestore
+import { db, storage } from '../../../firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
-// Компонент EditCourse
 export default function EditCourse({ courseId, onBack }) {
   const dispatch = useDispatch();
-
   const { courses, accessLevels } = useSelector((state) => state.admin);
-
-  // Находим курс для редактирования
   const courseToEdit = courses.find((course) => course.id === courseId);
 
   // Состояние для данных курса
@@ -26,33 +23,34 @@ export default function EditCourse({ courseId, onBack }) {
     gitHubRepLink: '',
     access: '',
     modules: {},
+    certificateImage: '',
   });
+
+  // Состояние для файла сертификата
+  const [certificateFile, setCertificateFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   // Состояние для управления модулями и уроками
-  const [moduleList, setModuleList] = useState([]); // Массив модулей
-
-  // Состояние для отслеживания удаленных модулей и уроков
+  const [moduleList, setModuleList] = useState([]);
   const [deletedItems, setDeletedItems] = useState({
-    modules: [], // Массив удаленных moduleId
-    lessons: [], // Массив объектов { moduleId, lessonIndex }
+    modules: [],
+    lessons: [],
   });
 
-  // Состояние для выпадающего списка категорий
+  // Состояние для выпадающих списков
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isAccessOpen, setIsAccessOpen] = useState(false);
+  const [newAccessName, setNewAccessName] = useState('');
+  const [showNewAccessInput, setShowNewAccessInput] = useState(false);
+
   const categoryOptions = [
     { value: 'Course', label: 'Course' },
     { value: 'Master class', label: 'Master class' },
   ];
 
-  // Состояние для выпадающего списка уровней доступа
-  const [isAccessOpen, setIsAccessOpen] = useState(false);
-  const [newAccessName, setNewAccessName] = useState('');
-  const [showNewAccessInput, setShowNewAccessInput] = useState(false);
-
   // Функция для очистки прогресса пользователей
   const cleanUserProgress = async (courseId, deletedModules, deletedLessons) => {
     try {
-      // Получаем всех пользователей
       const usersSnapshot = await getDocs(collection(db, 'users'));
       const batchUpdates = [];
 
@@ -64,12 +62,10 @@ export default function EditCourse({ courseId, onBack }) {
         if (courseProgress && courseProgress.completedLessons) {
           const updatedCompletedLessons = { ...courseProgress.completedLessons };
 
-          // Удаляем прогресс для удаленных модулей
           deletedModules.forEach((moduleId) => {
             delete updatedCompletedLessons[moduleId];
           });
 
-          // Удаляем прогресс для удаленных уроков
           deletedLessons.forEach(({ moduleId, lessonIndex }) => {
             if (updatedCompletedLessons[moduleId]) {
               updatedCompletedLessons[moduleId] = updatedCompletedLessons[moduleId].filter(
@@ -81,29 +77,25 @@ export default function EditCourse({ courseId, onBack }) {
             }
           });
 
-          // Обновляем прогресс пользователя
           const updatedPurchasedCourses = {
             ...purchasedCourses,
             [courseId]: {
               ...courseProgress,
               completedLessons: updatedCompletedLessons,
-              // Пересчитываем прогресс
               progress: calculateProgress(updatedCompletedLessons, courseId),
             },
           };
 
-          // Подготавливаем обновление документа пользователя
           const userRef = doc(db, 'users', userDoc.id);
           batchUpdates.push(updateDoc(userRef, { purchasedCourses: updatedPurchasedCourses }));
         }
       });
 
-      // Выполняем все обновления
       await Promise.all(batchUpdates);
       console.log('User progress cleaned successfully');
     } catch (error) {
       console.error('Error cleaning user progress:', error);
-      dispatch(setError('Ошибка при очистке прогресса пользователей: ' + error));
+      dispatch(setError('Ошибка при очистке прогресса пользователей: ' + error.message));
     }
   };
 
@@ -124,30 +116,27 @@ export default function EditCourse({ courseId, onBack }) {
     return totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
   };
 
-  // Инициализация данных курса при загрузке компонента
+  // Инициализация данных курса
   useEffect(() => {
     if (!courseToEdit) {
-      dispatch(setError('Курс не найден')); // Используем dispatch
+      dispatch(setError('Курс не найден'));
       onBack();
       return;
     }
 
-    // Преобразуем объект modules в массив moduleList и сортируем по полю order
     const formattedModules = Object.entries(courseToEdit.modules || {})
       .map(([moduleId, module]) => ({
         id: moduleId,
         title: module.title || '',
         unlockDate: module.unlockDate ? new Date(module.unlockDate).toISOString().slice(0, 16) : '',
         lessons: module.lessons || [],
-        order: module.order || 0, // Если order не задан, используем 0
+        order: module.order || 0,
       }))
-      .sort((a, b) => a.order - b.order);
-
-    // Если у некоторых модулей order не задан, пересчитываем порядок
-    const updatedModules = formattedModules.map((module, index) => ({
-      ...module,
-      order: index + 1, // Присваиваем порядок 1, 2, 3, ...
-    }));
+      .sort((a, b) => a.order - b.order)
+      .map((module, index) => ({
+        ...module,
+        order: index + 1,
+      }));
 
     setCourseData({
       id: courseToEdit.id,
@@ -157,15 +146,32 @@ export default function EditCourse({ courseId, onBack }) {
       gitHubRepLink: courseToEdit.gitHubRepLink || '',
       access: courseToEdit.access || '',
       modules: courseToEdit.modules || {},
+      certificateImage: courseToEdit.certificateImage || '',
     });
 
-    setModuleList(updatedModules);
+    setModuleList(formattedModules);
   }, [courseToEdit, dispatch, onBack]);
 
   // Обработчик изменения полей курса
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCourseData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Обработчик выбора файла сертификата
+  const handleCertificateFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        toast.error('Пожалуйста, выберите изображение в формате JPG или PNG');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Размер файла не должен превышать 5 МБ');
+        return;
+      }
+      setCertificateFile(file);
+    }
   };
 
   // Обработчик выбора категории
@@ -183,13 +189,13 @@ export default function EditCourse({ courseId, onBack }) {
   // Обработчик добавления нового уровня доступа
   const handleAddAccessLevel = async () => {
     if (!newAccessName.trim()) {
-      dispatch(setError('Название уровня доступа не может быть пустым')); // Используем dispatch
+      dispatch(setError('Название уровня доступа не может быть пустым'));
       return;
     }
 
     const accessId = newAccessName.toLowerCase().replace(/\s+/g, '');
     if (accessLevels.some((level) => level.id === accessId)) {
-      dispatch(setError('Уровень доступа с таким названием уже существует')); // Используем dispatch
+      dispatch(setError('Уровень доступа с таким названием уже существует'));
       return;
     }
 
@@ -204,11 +210,11 @@ export default function EditCourse({ courseId, onBack }) {
       setNewAccessName('');
       setShowNewAccessInput(false);
     } catch (err) {
-      dispatch(setError('Ошибка при добавлении уровня доступа: ' + err)); // Используем dispatch
+      dispatch(setError('Ошибка при добавлении уровня доступа: ' + err.message));
     }
   };
 
-  // Добавление нового модуля
+  // Добавление/удаление модулей и уроков
   const addModule = () => {
     const newModuleId = `module_${Date.now()}`;
     setModuleList((prev) => [
@@ -218,12 +224,11 @@ export default function EditCourse({ courseId, onBack }) {
         title: '',
         unlockDate: '',
         lessons: [],
-        order: prev.length + 1, // Новый модуль получает order равный количеству модулей + 1
+        order: prev.length + 1,
       },
     ]);
   };
 
-  // Добавление нового урока в модуль
   const addLesson = (moduleId) => {
     setModuleList((prev) =>
       prev.map((module) =>
@@ -244,14 +249,12 @@ export default function EditCourse({ courseId, onBack }) {
     );
   };
 
-  // Обработчик изменения данных модуля
   const handleModuleChange = (moduleId, field, value) => {
     setModuleList((prev) =>
       prev.map((module) => (module.id === moduleId ? { ...module, [field]: value } : module)),
     );
   };
 
-  // Обработчик изменения данных урока
   const handleLessonChange = (moduleId, lessonIndex, field, value) => {
     setModuleList((prev) =>
       prev.map((module) =>
@@ -272,11 +275,9 @@ export default function EditCourse({ courseId, onBack }) {
     );
   };
 
-  // Удаление модуля
   const removeModule = (moduleId) => {
     setModuleList((prev) => {
       const newList = prev.filter((module) => module.id !== moduleId);
-      // Пересчитываем order для оставшихся модулей
       return newList.map((module, index) => ({
         ...module,
         order: index + 1,
@@ -285,11 +286,10 @@ export default function EditCourse({ courseId, onBack }) {
     setDeletedItems((prev) => ({
       ...prev,
       modules: [...prev.modules, moduleId],
-      lessons: prev.lessons.filter((lesson) => lesson.moduleId !== moduleId), // Удаляем связанные уроки
+      lessons: prev.lessons.filter((lesson) => lesson.moduleId !== moduleId),
     }));
   };
 
-  // Удаление урока
   const removeLesson = (moduleId, lessonIndex) => {
     setModuleList((prev) =>
       prev.map((module) =>
@@ -311,20 +311,41 @@ export default function EditCourse({ courseId, onBack }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!courseData.access) {
-      dispatch(setError('Пожалуйста, выберите или добавьте уровень доступа')); // Используем dispatch
+      dispatch(setError('Пожалуйста, выберите или добавьте уровень доступа'));
+      toast.error('Пожалуйста, выберите или добавьте уровень доступа');
       return;
     }
+
     try {
-      // Преобразуем moduleList обратно в объект modules для сохранения в Firestore
+      setUploading(true);
+
+      // Загружаем файл сертификата, если он выбран
+      let certificateImageUrl = courseData.certificateImage;
+      if (certificateFile) {
+        // Удаляем старое изображение, если оно существует
+        if (courseData.certificateImage) {
+          try {
+            const oldRef = ref(storage, courseData.certificateImage);
+            await deleteObject(oldRef);
+          } catch (err) {
+            console.warn('Failed to delete old certificate:', err);
+          }
+        }
+
+        const storageRef = ref(storage, `certificates/${courseId}_${Date.now()}.jpg`);
+        await uploadBytes(storageRef, certificateFile);
+        certificateImageUrl = await getDownloadURL(storageRef);
+      }
+
+      // Формируем объект модулей
       const modulesObject = moduleList.reduce((acc, module) => {
         acc[module.id] = {
-          // Используем module.id (например, module_1745666065626) как ключ
           title: module.title,
           unlockDate: module.unlockDate
             ? new Date(module.unlockDate).toISOString()
             : new Date().toISOString(),
           lessons: module.lessons,
-          order: module.order, // Сохраняем порядок
+          order: module.order,
         };
         return acc;
       }, {});
@@ -332,6 +353,7 @@ export default function EditCourse({ courseId, onBack }) {
       const updatedCourseData = {
         ...courseData,
         modules: modulesObject,
+        certificateImage: certificateImageUrl,
       };
 
       // Сохраняем изменения курса
@@ -339,19 +361,20 @@ export default function EditCourse({ courseId, onBack }) {
         updateCourse({ courseId: courseData.id, updatedData: updatedCourseData }),
       ).unwrap();
 
-      // Очищаем прогресс пользователей для удаленных модулей и уроков
+      // Очищаем прогресс пользователей
       if (deletedItems.modules.length > 0 || deletedItems.lessons.length > 0) {
         await cleanUserProgress(courseId, deletedItems.modules, deletedItems.lessons);
       }
 
-      // Сбрасываем список удаленных элементов
       setDeletedItems({ modules: [], lessons: [] });
-
+      setCertificateFile(null);
       toast.success('Курс успешно обновлен!');
       onBack();
     } catch (err) {
-      dispatch(setError('Ошибка при обновлении курса: ' + err)); // Используем dispatch
-      toast.error('Ошибка при обновлении: ' + err);
+      dispatch(setError('Ошибка при обновлении курса: ' + err.message));
+      toast.error('Ошибка при обновлении: ' + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -360,7 +383,6 @@ export default function EditCourse({ courseId, onBack }) {
       ...prev,
       modules: moduleList.reduce((acc, module) => {
         acc[module.id] = {
-          // Используем module.id как ключ
           title: module.title,
           unlockDate: module.unlockDate ? new Date(module.unlockDate).toISOString() : '',
           lessons: module.lessons,
@@ -384,7 +406,6 @@ export default function EditCourse({ courseId, onBack }) {
         </button>
       </div>
       <form onSubmit={handleSubmit} className={scss.form}>
-        {/* Основные поля курса */}
         <div className={scss.field}>
           <label htmlFor='id'>ID курса</label>
           <input
@@ -507,6 +528,22 @@ export default function EditCourse({ courseId, onBack }) {
             placeholder='Введите ссылку на GitHub...'
           />
         </div>
+        <div className={scss.field}>
+          <label htmlFor='certificateImage'>Изображение сертификата</label>
+          <input
+            type='file'
+            id='certificateImage'
+            accept='image/jpeg,image/png'
+            onChange={handleCertificateFileChange}
+            className={scss.fileInput}
+          />
+          {courseData.certificateImage && (
+            <div className={scss.certificatePreview}>
+              <img src={courseData.certificateImage} alt='Certificate Preview' />
+            </div>
+          )}
+          {certificateFile && <p>Выбрано: {certificateFile.name}</p>}
+        </div>
 
         {/* Модули и уроки */}
         <div className={scss.modulesSection}>
@@ -518,7 +555,7 @@ export default function EditCourse({ courseId, onBack }) {
                   type='text'
                   value={module.title}
                   onChange={(e) => handleModuleChange(module.id, 'title', e.target.value)}
-                  placeholder={`Модуль ${module.order}`} // Используем order для плейсхолдера
+                  placeholder={`Модуль ${module.order}`}
                   required
                 />
                 <input
@@ -552,7 +589,7 @@ export default function EditCourse({ courseId, onBack }) {
                       onChange={(e) =>
                         handleLessonChange(module.id, lessonIndex, 'videoUrl', e.target.value)
                       }
-                      placeholder='Токен видео урока (например, ac1f5fa0-2dd2-68d0-ebaf-ba5967d0e07d/a909a0c3-2224-70ae-f4c9-ee26818cb414)'
+                      placeholder='Токен видео урока...'
                       required
                     />
                     <input
@@ -587,9 +624,8 @@ export default function EditCourse({ courseId, onBack }) {
           </button>
         </div>
 
-        {/* Кнопка отправки */}
-        <button type='submit' className={scss.submitButton}>
-          Сохранить изменения
+        <button type='submit' className={scss.submitButton} disabled={uploading}>
+          {uploading ? 'Сохранение...' : 'Сохранить изменения'}
         </button>
       </form>
     </div>

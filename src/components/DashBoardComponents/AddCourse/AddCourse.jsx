@@ -1,16 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addCourse, addAccessLevel, setError } from '../../../store/slices/adminSlice';
 import scss from './AddCourse.module.scss';
 import { BsPlus, BsTrash, BsChevronDown } from 'react-icons/bs';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
+import { storage } from '../../../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function AddCourse() {
   const dispatch = useDispatch();
-
-  // Получаем данные из Redux store
-  const { accessLevels, error } = useSelector((state) => state.admin);
+  const { accessLevels } = useSelector((state) => state.admin);
 
   // Состояние для данных курса
   const [courseData, setCourseData] = useState({
@@ -21,24 +21,28 @@ export default function AddCourse() {
     gitHubRepLink: '',
     access: '',
     modules: {},
+    certificateImage: '',
   });
 
-  // Состояние для управления модулями и уроками
-  const [moduleList, setModuleList] = useState([]); // Массив модулей вместо объекта modules
+  // Состояние для файла сертификата и предпросмотра
+  const [certificateFile, setCertificateFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
-  // Состояние для выпадающего списка категорий
+  // Состояние для управления модулями и уроками
+  const [moduleList, setModuleList] = useState([]);
+
+  // Состояние для выпадающих списков
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isAccessOpen, setIsAccessOpen] = useState(false);
+  const [newAccessName, setNewAccessName] = useState('');
+  const [showNewAccessInput, setShowNewAccessInput] = useState(false);
+
   const categoryOptions = [
     { value: 'Course', label: 'Course' },
     { value: 'Master class', label: 'Master class' },
   ];
 
-  // Состояние для выпадающего списка уровней доступа
-  const [isAccessOpen, setIsAccessOpen] = useState(false);
-  const [newAccessName, setNewAccessName] = useState('');
-  const [showNewAccessInput, setShowNewAccessInput] = useState(false);
-
-  // Удаляем дубликаты из accessLevels
   const uniqueAccessLevels = Array.from(
     new Map(accessLevels.map((level) => [level.id, level])).values(),
   );
@@ -48,6 +52,32 @@ export default function AddCourse() {
     const { name, value } = e.target;
     setCourseData((prev) => ({ ...prev, [name]: value }));
   };
+
+  // Обработчик выбора файла сертификата
+  const handleCertificateFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        toast.error('Пожалуйста, выберите изображение в формате JPG или PNG');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Размер файла не должен превышать 5 МБ');
+        return;
+      }
+      setCertificateFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  // Очистка временного URL для предпросмотра
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // Обработчик выбора категории
   const handleCategorySelect = (value) => {
@@ -88,14 +118,14 @@ export default function AddCourse() {
       setShowNewAccessInput(false);
       toast.success('Уровень доступа успешно добавлен!');
     } catch (err) {
-      dispatch(setError('Ошибка при добавлении уровня доступа: ' + err));
-      toast.error('Ошибка при добавлении уровня доступа: ' + err);
+      dispatch(setError('Ошибка при добавлении уровня доступа: ' + err.message));
+      toast.error('Ошибка при добавлении уровня доступа: ' + err.message);
     }
   };
 
-  // Добавление нового модуля
+  // Добавление/удаление модулей и уроков
   const addModule = () => {
-    const newModuleId = `module_${Date.now()}`; // Используем формат module_${timestamp}
+    const newModuleId = `module_${Date.now()}`;
     setModuleList((prev) => [
       ...prev,
       {
@@ -103,12 +133,11 @@ export default function AddCourse() {
         title: '',
         unlockDate: '',
         lessons: [],
-        order: prev.length + 1, // Присваиваем order
+        order: prev.length + 1,
       },
     ]);
   };
 
-  // Добавление нового урока в модуль
   const addLesson = (moduleId) => {
     setModuleList((prev) =>
       prev.map((module) =>
@@ -129,14 +158,12 @@ export default function AddCourse() {
     );
   };
 
-  // Обработчик изменения данных модуля
   const handleModuleChange = (moduleId, field, value) => {
     setModuleList((prev) =>
       prev.map((module) => (module.id === moduleId ? { ...module, [field]: value } : module)),
     );
   };
 
-  // Обработчик изменения данных урока
   const handleLessonChange = (moduleId, lessonIndex, field, value) => {
     setModuleList((prev) =>
       prev.map((module) =>
@@ -157,11 +184,9 @@ export default function AddCourse() {
     );
   };
 
-  // Удаление модуля
   const removeModule = (moduleId) => {
     setModuleList((prev) => {
       const newList = prev.filter((module) => module.id !== moduleId);
-      // Пересчитываем order для оставшихся модулей
       return newList.map((module, index) => ({
         ...module,
         order: index + 1,
@@ -169,7 +194,6 @@ export default function AddCourse() {
     });
   };
 
-  // Удаление урока
   const removeLesson = (moduleId, lessonIndex) => {
     setModuleList((prev) =>
       prev.map((module) =>
@@ -208,29 +232,38 @@ export default function AddCourse() {
     }
 
     try {
-      // Преобразуем moduleList в объект modules для сохранения в Firestore
+      setUploading(true);
+
+      // Загружаем файл сертификата, если он выбран
+      let certificateImageUrl = courseData.certificateImage;
+      if (certificateFile) {
+        const storageRef = ref(storage, `certificates/${courseData.id}_${Date.now()}.jpg`);
+        await uploadBytes(storageRef, certificateFile);
+        certificateImageUrl = await getDownloadURL(storageRef);
+      }
+
+      // Формируем объект модулей
       const modulesObject = moduleList.reduce((acc, module) => {
         acc[module.id] = {
-          title: module.title || `Module ${module.order}`, // Запасное название, если title не задано
+          title: module.title || `Module ${module.order}`,
           unlockDate: module.unlockDate
             ? new Date(module.unlockDate).toISOString()
             : new Date().toISOString(),
           lessons: module.lessons,
-          order: module.order, // Сохраняем порядок
+          order: module.order,
         };
         return acc;
       }, {});
 
-      // Формируем данные курса для отправки в базу
       const formattedCourseData = {
         ...courseData,
         createdAt: new Date().toISOString(),
         modules: modulesObject,
+        certificateImage: certificateImageUrl,
       };
 
       await dispatch(addCourse(formattedCourseData)).unwrap();
       toast.success('Курс успешно добавлен!');
-      // Сбрасываем форму
       setCourseData({
         id: '',
         title: '',
@@ -239,20 +272,23 @@ export default function AddCourse() {
         gitHubRepLink: '',
         access: '',
         modules: {},
+        certificateImage: '',
       });
-      setModuleList([]); // Сбрасываем moduleList
+      setModuleList([]);
+      setCertificateFile(null);
+      setPreviewUrl(null);
     } catch (err) {
-      dispatch(setError('Ошибка при добавлении курса: ' + err));
-      toast.error('Ошибка при добавлении курса: ' + err);
+      dispatch(setError('Ошибка при добавлении курса: ' + err.message));
+      toast.error('Ошибка при добавлении курса: ' + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
     <div className={scss.addCourse}>
       <h2 className={scss.title}>Добавить новый курс</h2>
-      {error && <div className={scss.error}>{error}</div>}
       <form onSubmit={handleSubmit} className={scss.form}>
-        {/* Основные поля курса */}
         <div className={scss.field}>
           <label htmlFor='id'>ID курса</label>
           <input
@@ -374,6 +410,22 @@ export default function AddCourse() {
             placeholder='Введите ссылку на GitHub...'
           />
         </div>
+        <div className={scss.field}>
+          <label htmlFor='certificateImage'>Изображение сертификата</label>
+          <input
+            type='file'
+            id='certificateImage'
+            accept='image/jpeg,image/png'
+            onChange={handleCertificateFileChange}
+            className={scss.fileInput}
+          />
+          {previewUrl && (
+            <div className={scss.certificatePreview}>
+              <img src={previewUrl} alt='Certificate Preview' />
+            </div>
+          )}
+          {certificateFile && <p>Выбрано: {certificateFile.name}</p>}
+        </div>
 
         {/* Модули и уроки */}
         <div className={scss.modulesSection}>
@@ -385,7 +437,7 @@ export default function AddCourse() {
                   type='text'
                   value={module.title}
                   onChange={(e) => handleModuleChange(module.id, 'title', e.target.value)}
-                  placeholder={`Модуль ${module.order}`} // Используем order для плейсхолдера
+                  placeholder={`Модуль ${module.order}`}
                   required
                 />
                 <input
@@ -419,7 +471,7 @@ export default function AddCourse() {
                       onChange={(e) =>
                         handleLessonChange(module.id, lessonIndex, 'videoUrl', e.target.value)
                       }
-                      placeholder='Токен видео урока (например, ac1f5fa0-2dd2-68d0-ebaf-ba5967d0e07d/a909a0c3-2224-70ae-f4c9-ee26818cb414)'
+                      placeholder='Токен видео урока...'
                       required
                     />
                     <input
@@ -454,9 +506,8 @@ export default function AddCourse() {
           </button>
         </div>
 
-        {/* Кнопка отправки */}
-        <button type='submit' className={scss.submitButton}>
-          Добавить курс
+        <button type='submit' className={scss.submitButton} disabled={uploading}>
+          {uploading ? 'Добавление...' : 'Добавить курс'}
         </button>
       </form>
     </div>

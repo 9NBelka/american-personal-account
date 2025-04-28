@@ -94,6 +94,17 @@
       min-height: 5vw;
       resize: vertical;
     }
+
+    & .certificatePreview {
+      margin-top: 10px;
+      max-width: 200px;
+    }
+
+    & .certificatePreview img {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
   }
 
   & .categoryContainer {

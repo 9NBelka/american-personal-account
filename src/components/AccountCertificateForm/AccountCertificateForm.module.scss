@@ -67,7 +67,6 @@
 .certificate {
   width: 297mm; // Размер A4 в landscape
   height: 210mm;
-  background-image: url('/img/ECSCertificate.jpg');
   background-size: cover;
   background-position: center;
   position: relative;
@@ -77,15 +76,16 @@
   align-items: center;
   text-align: center;
   color: #000;
-  font-family: 'Arial', sans-serif;
+
   padding: 20mm;
   box-sizing: border-box;
 }
 
 .certificate h2 {
-  font-size: 28px;
+  font-size: 2vw;
   margin: 10px 0;
-  color: #007bff;
+  color: var(--color-white);
+  font-family: var(--font-forCertificate);
 }
 
 .certificate h3 {
@@ -96,6 +96,8 @@
 .certificate p {
   font-size: 18px;
   margin: 5px 0;
+  color: var(--color-white);
+  font-family: var(--font-forCertificate);
 }
 
 .downloadButton {

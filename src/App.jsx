@@ -49,7 +49,7 @@ function AppContent() {
     }
   };
 
-  const headerRoutes = ['/account', '/playlist/:courseId', '/edit'];
+  const headerRoutes = ['/account', '/playlist/:courseId', '/edit', '/certificate/:courseId'];
 
   const shouldRenderHeader = headerRoutes.some((route) =>
     matchPath({ path: route, exact: true }, location.pathname),

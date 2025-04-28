@@ -175,12 +175,11 @@ export const fetchUserData = createAsyncThunk(
   },
 );
 
-// Новая функция для подписки на курсы
 export const subscribeToCourses = createAsyncThunk(
   'auth/subscribeToCourses',
   async (purchasedCourses, { dispatch, rejectWithValue }) => {
     try {
-      const unsubscribe = onSnapshot(collection(db, 'courses'), (snapshot) => {
+      onSnapshot(collection(db, 'courses'), (snapshot) => {
         const courseList = snapshot.docs.map((doc) => {
           const courseData = doc.data();
           const hasModules = courseData.modules && Object.keys(courseData.modules).length > 0;
@@ -235,12 +234,14 @@ export const subscribeToCourses = createAsyncThunk(
             completedLessonsCount,
             totalDuration,
             userCount: courseData.userCount || 0,
+            certificateImage: courseData.certificateImage || '/img/DefaultCertificate.jpg',
           };
         });
         dispatch(setCourses(courseList));
       });
 
-      return () => unsubscribe;
+      // Возвращаем null или другой сериализуемый payload
+      return null;
     } catch (error) {
       return rejectWithValue(error.message);
     }

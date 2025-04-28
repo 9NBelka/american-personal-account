@@ -1,14 +1,64 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import styles from './AccountCertificateForm.module.scss';
+import { toast } from 'react-toastify';
 
 export default function AccountCertificateForm() {
   const { courseId } = useParams();
+  const navigate = useNavigate();
   const [certificateData, setCertificateData] = useState({ firstName: '', lastName: '' });
+  const [hasAccess, setHasAccess] = useState(null);
+
+  // Получаем данные курса из Redux
+  const course = useSelector((state) => state.auth.courses.find((c) => c.id === courseId));
+  const certificateImage = course?.certificateImage || '/img/DefaultCertificate.jpg';
+
+  const user = useSelector((state) => state.auth.user);
+  const isAuthInitialized = useSelector((state) => state.auth.isAuthInitialized);
+
+  // Проверяем доступ пользователя
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!user || !user.uid) {
+        setHasAccess(false);
+        return;
+      }
+
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const purchasedCourses = userDoc.data().purchasedCourses || {};
+          const courseProgress = purchasedCourses[courseId]?.progress || 0;
+          setHasAccess(courseProgress === 100);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Ошибка проверки доступа:', error);
+        setHasAccess(false);
+      }
+    };
+
+    if (isAuthInitialized) {
+      checkAccess();
+    }
+  }, [isAuthInitialized, user, courseId]);
+
+  // Редирект, если доступ запрещен
+  useEffect(() => {
+    if (isAuthInitialized && hasAccess === false) {
+      toast.info('You have not completed this course to receive a certificate.');
+      navigate('/account', { replace: true });
+    }
+  }, [isAuthInitialized, hasAccess, navigate]);
 
   const validationSchema = Yup.object({
     firstName: Yup.string()
@@ -21,35 +71,55 @@ export default function AccountCertificateForm() {
 
   const downloadCertificate = async () => {
     const certificateElement = document.getElementById('certificate');
-    const canvas = await html2canvas(certificateElement, {
-      scale: 4, // Увеличенный масштаб для высокого качества
-      useCORS: true,
-      logging: false,
-    });
-    const imgData = canvas.toDataURL('image/png', 1.0);
+    try {
+      const canvas = await html2canvas(certificateElement, {
+        scale: 4,
+        useCORS: true,
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png', 1.0);
 
-    const pdf = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4',
-      compress: false,
-    });
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+        compress: false,
+      });
 
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'NONE');
-    pdf.save(
-      `certificate_${courseId}_${certificateData.firstName}_${certificateData.lastName}.pdf`,
-    );
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'NONE');
+      pdf.save(
+        `certificate_${courseId}_${certificateData.firstName}_${certificateData.lastName}.pdf`,
+      );
+    } catch (error) {
+      console.error('Ошибка генерации сертификата:', error);
+      toast.error('Failed to generate certificate. Please try again.');
+    }
   };
+
+  // Показываем загрузку, пока проверяем доступ
+  if (!isAuthInitialized || hasAccess === null) {
+    return <div>Loading...</div>;
+  }
+
+  // Если доступ запрещен, не рендерим форму
+  if (!hasAccess) {
+    return null;
+  }
 
   return (
     <div className={styles.container}>
       <h2>Generate Your Certificate</h2>
+
+      <h3>
+        Congratulations on successfully completing the course{' '}
+        {course?.title || courseId.replace(/-/g, ' ').toUpperCase()}
+      </h3>
       <div className={styles.formAndPreview}>
         <Formik
-          initialValues={{ firstName: '', lastName: '' }}
+          initialValues={{ firstName: user?.firstName || '', lastName: user?.lastName || '' }}
           validationSchema={validationSchema}
           onSubmit={(values) => {
             setCertificateData(values);
@@ -74,16 +144,20 @@ export default function AccountCertificateForm() {
         </Formik>
 
         <div className={styles.preview}>
-          <div id='certificate' className={styles.certificate}>
-            <h1>Certificate of Completion</h1>
-            <p>This certifies that</p>
-            <h2>
-              {certificateData.firstName} {certificateData.lastName}
-            </h2>
-            <p>has successfully completed the course</p>
-            <h3>{courseId.replace(/-/g, ' ').toUpperCase()}</h3>
-            <p>Date: {new Date().toLocaleDateString()}</p>
-          </div>
+          {certificateImage ? (
+            <div
+              id='certificate'
+              className={styles.certificate}
+              style={{ backgroundImage: `url(${certificateImage})` }}>
+              <h2>
+                {certificateData.firstName} {certificateData.lastName}
+              </h2>
+
+              <p>{new Date().toLocaleDateString()}</p>
+            </div>
+          ) : (
+            <p>At the moment it is not possible to download the certificate.</p>
+          )}
           {certificateData.firstName && certificateData.lastName && (
             <button onClick={downloadCertificate} className={styles.downloadButton}>
               Download Certificate
