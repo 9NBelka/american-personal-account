@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux'; // Добавляем useSelector и useDispatch
-import { updateUserName, updateUserPassword, updateUserAvatar } from '../../store/slices/authSlice'; // Импортируем действия
+import {
+  updateUserName,
+  updateUserPassword,
+  updateUserAvatar,
+  unlinkGoogleProvider,
+} from '../../store/slices/authSlice'; // Импортируем действия
 import { toast } from 'react-toastify';
 import scss from './EditProfile.module.scss';
 import EditProfilePassword from '../../components/EditProfilePassword/EditProfilePassword';
@@ -13,7 +18,7 @@ export default function EditProfile() {
   const navigate = useNavigate();
 
   // Получаем данные из Redux store
-  const { user, userName, avatarUrl } = useSelector((state) => state.auth);
+  const { user, userName, avatarUrl, error } = useSelector((state) => state.auth);
 
   const [name, setName] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -158,6 +163,15 @@ export default function EditProfile() {
     }
   };
 
+  const handleUnlinkGoogle = async () => {
+    try {
+      await dispatch(unlinkGoogleProvider()).unwrap();
+      alert('Google-аккаунт успешно отвязан');
+    } catch (err) {
+      alert(`Ошибка: ${err}`);
+    }
+  };
+
   return (
     <div className={scss.editProfileBackground}>
       <div className={scss.container}>
@@ -174,6 +188,11 @@ export default function EditProfile() {
               handleCustomButtonClick={handleCustomButtonClick}
               avatarError={avatarError}
             />
+            {user &&
+              user.providerData?.some((provider) => provider.providerId === 'google.com') && (
+                <button onClick={handleUnlinkGoogle}>Отвязать Google-аккаунт</button>
+              )}
+            {error && <p style={{ color: 'red' }}>{error}</p>}
 
             <EditProfileName
               MAX_NAME_LENGTH={MAX_NAME_LENGTH}

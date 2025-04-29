@@ -1,4 +1,3 @@
-// LSAuthForm.js
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
 import LSInputField from '../LSInputField/LSInputField';
@@ -6,12 +5,15 @@ import LSFormError from '../LSFormError/LSFormError';
 import LSPasswordField from '../LSPasswordField/LSPasswordField';
 import scss from './LSAuthForm.module.scss';
 import clsx from 'clsx';
-import { BsGithub, BsGoogle } from 'react-icons/bs';
+import { BsGoogle } from 'react-icons/bs';
+import { useState } from 'react';
+import * as Yup from 'yup';
 
 export default function LSAuthForm({
   initialValues,
   validationSchema,
   onSubmit,
+  onGoogleSignIn,
   title,
   fields,
   submitText,
@@ -21,10 +23,27 @@ export default function LSAuthForm({
   isSubmitting,
   halfInput,
   otherPointsText,
-  onForgotPassword, // Новый пропс
+  onForgotPassword,
   children,
   generalError,
 }) {
+  const [showGoogleEmailPrompt, setShowGoogleEmailPrompt] = useState(false);
+  const [googleEmail, setGoogleEmail] = useState('');
+
+  const googleEmailValidationSchema = Yup.object({
+    googleEmail: Yup.string().email('*Неверный формат email').required('*Обязательное поле'),
+  });
+
+  const handleGoogleSignIn = async (values, { setSubmitting }) => {
+    try {
+      await onGoogleSignIn(values.googleEmail);
+      setShowGoogleEmailPrompt(false);
+      setGoogleEmail('');
+    } catch (error) {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className={scss.mainLSBlock}>
       <h2 className={scss.titleLS}>{title}</h2>
@@ -35,7 +54,7 @@ export default function LSAuthForm({
         {({ errors, isSubmitting: formikSubmitting }) => (
           <Form>
             <div className={clsx(scss.nameContainer, halfInput && scss.nameContainerHalf)}>
-              {generalError && <div className={scss.errorText}>{generalError}</div>}{' '}
+              {generalError && <div className={scss.errorText}>{generalError}</div>}
               {fields
                 .slice(0, 2)
                 .map((field, index) =>
@@ -71,8 +90,6 @@ export default function LSAuthForm({
               )}
             <LSFormError error={errors.general} />
             {children}
-            {/* Отображаем общую ошибку */}
-            {/* Добавляем ссылку "Забыл пароль?" */}
             {onForgotPassword && (
               <div className={scss.forgotPassword}>
                 <Link
@@ -81,7 +98,7 @@ export default function LSAuthForm({
                     e.preventDefault();
                     onForgotPassword();
                   }}>
-                  Forgot password?
+                  Забыли пароль?
                 </Link>
               </div>
             )}
@@ -92,19 +109,57 @@ export default function LSAuthForm({
               {submitText}
             </button>
             <div className={scss.orSeparator}>
-              <span>Or {otherPointsText} with</span>
+              <span>Или {otherPointsText} через</span>
             </div>
             <div className={scss.socialButtonsBlock}>
-              <button type='button' className={scss.socialButton}>
+              <button
+                type='button'
+                onClick={() => setShowGoogleEmailPrompt(true)}
+                className={scss.socialButton}
+                disabled={isSubmitting}>
                 <BsGoogle className={scss.iconSocial} /> Google
-              </button>
-              <button type='button' className={scss.socialButton}>
-                <BsGithub className={scss.iconSocial} /> GitHub
               </button>
             </div>
           </Form>
         )}
       </Formik>
+
+      {showGoogleEmailPrompt && (
+        <div className={scss.googleEmailPrompt}>
+          <h3>Введите ваш email для входа через Google</h3>
+          <Formik
+            initialValues={{ googleEmail: '' }}
+            validationSchema={googleEmailValidationSchema}
+            onSubmit={handleGoogleSignIn}>
+            {({ errors, touched, isSubmitting: googleSubmitting }) => (
+              <Form>
+                <LSInputField
+                  name='googleEmail'
+                  type='email'
+                  placeholder='Email'
+                  value={googleEmail}
+                  onChange={(e) => setGoogleEmail(e.target.value)}
+                />
+                {errors.googleEmail && touched.googleEmail && (
+                  <div className={scss.errorText}>{errors.googleEmail}</div>
+                )}
+                <button
+                  type='submit'
+                  disabled={googleSubmitting || isSubmitting}
+                  className={scss.buttonSubmit}>
+                  Продолжить с Google
+                </button>
+                <button
+                  type='button'
+                  onClick={() => setShowGoogleEmailPrompt(false)}
+                  className={scss.buttonCancel}>
+                  Отмена
+                </button>
+              </Form>
+            )}
+          </Formik>
+        </div>
+      )}
     </div>
   );
 }
