@@ -10,12 +10,6 @@ import {
   updatePassword,
   EmailAuthProvider,
   signOut,
-  signInWithPopup,
-  GoogleAuthProvider,
-  linkWithCredential,
-  fetchSignInMethodsForEmail,
-  getRedirectResult,
-  signInWithRedirect,
 } from 'firebase/auth';
 import {
   doc,
@@ -25,8 +19,6 @@ import {
   getDocs,
   collection,
   onSnapshot,
-  query,
-  where,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -60,146 +52,12 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      // Попробуем войти через email/пароль
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       firebaseCurrentUser = user;
       return { uid: user.uid, email: user.email, displayName: user.displayName };
     } catch (error) {
-      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        return rejectWithValue({ code: error.code, message: 'Неверный пароль' });
-      } else if (error.code === 'auth/user-not-found') {
-        return rejectWithValue({ code: error.code, message: 'Пользователь не найден' });
-      } else {
-        return rejectWithValue({
-          code: error.code,
-          message: `Ошибка входа: ${error.message}`,
-        });
-      }
-    }
-  },
-);
-
-export const signInWithGoogle = createAsyncThunk(
-  'auth/signInWithGoogle',
-  async (email, { rejectWithValue }) => {
-    try {
-      // Проверяем, существует ли пользователь с этим email в Firestore
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', email));
-      const querySnapshot = await getDocs(q);
-      const userExistsInFirestore = !querySnapshot.empty;
-
-      // Проверяем методы входа для email
-      const methods = await fetchSignInMethodsForEmail(auth, email);
-      console.log('Sign-in methods for email:', methods);
-
-      // Если пользователь существует в Firestore или email уже используется с password
-      if (
-        (userExistsInFirestore || methods.includes('password')) &&
-        !methods.includes('google.com')
-      ) {
-        return rejectWithValue({
-          code: 'auth/account-exists-with-different-credential',
-          message: `Этот email (${email}) уже используется с провайдером password. Войдите через email/пароль, чтобы привязать Google-аккаунт.`,
-          email,
-          methods,
-        });
-      }
-
-      // Если email не используется или уже имеет Google-провайдер, продолжаем
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ login_hint: email });
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      console.log('User provider data1:', user.providerData);
-
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (!userDoc.exists()) {
-        const registrationDate = new Date().toISOString();
-        const name = user.displayName?.split(' ')[0] || '';
-        const lastName = user.displayName?.split(' ').slice(1).join(' ') || '';
-        await setDoc(userDocRef, {
-          name,
-          lastName,
-          email: user.email,
-          role: 'guest',
-          registrationDate,
-          avatarUrl: user.photoURL || null,
-          readNotifications: [],
-        });
-      }
-
-      firebaseCurrentUser = user;
-      return { uid: user.uid, email: user.email, displayName: user.displayName };
-    } catch (error) {
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        const email = error.email;
-        const methods = await fetchSignInMethodsForEmail(auth, email);
-        return rejectWithValue({
-          code: error.code,
-          message: `Этот email уже используется с провайдером: ${methods.join(
-            ', ',
-          )}. Пожалуйста, войдите через email/пароль и привяжите Google-аккаунт.`,
-          email,
-          methods,
-          credential: error.credential,
-        });
-      }
-      console.log('Ошибка входа через Google:', error);
-      return rejectWithValue({ code: error.code, message: error.message });
-    }
-  },
-);
-
-export const linkGoogleAccount = createAsyncThunk(
-  'auth/linkGoogleAccount',
-  async ({ credential }, { getState, rejectWithValue }) => {
-    const { user } = getState().auth;
-    if (!user || !firebaseCurrentUser) {
-      return rejectWithValue('Нет авторизованного пользователя');
-    }
-    try {
-      console.log('Связываем Google-провайдер с текущим пользователем');
-      console.log('User provider data3:', firebaseCurrentUser.providerData);
-      await firebaseCurrentUser.linkWithCredential(credential);
-      return { success: true };
-    } catch (error) {
-      if (error.code === 'auth/credential-already-in-use') {
-        return rejectWithValue(
-          'Этот Google-аккаунт уже привязан к другому пользователю. Используйте другой Google-аккаунт.',
-        );
-      }
-      console.log('Ошибка связывания Google:', error);
-      return rejectWithValue(error.message);
-    }
-  },
-);
-
-export const unlinkGoogleProvider = createAsyncThunk(
-  'auth/unlinkGoogleProvider',
-  async (_, { getState, rejectWithValue }) => {
-    const { user } = getState().auth;
-    if (!user || !firebaseCurrentUser) {
-      return rejectWithValue('Нет авторизованного пользователя');
-    }
-    try {
-      // Проверяем, сколько провайдеров связано с аккаунтом
-      const providerData = firebaseCurrentUser.providerData;
-      if (providerData.length <= 1) {
-        return rejectWithValue(
-          'Нельзя отвязать Google, так как это единственный способ входа. Добавьте другой способ входа перед отвязкой.',
-        );
-      }
-
-      // Отвязываем Google-провайдер
-      await firebaseCurrentUser.unlink('google.com');
-      return { success: true };
-    } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error);
     }
   },
 );
@@ -208,103 +66,29 @@ export const initializeAuth = createAsyncThunk(
   'auth/initializeAuth',
   async (_, { dispatch, rejectWithValue }) => {
     try {
-      return new Promise((resolve, reject) => {
-        // Проверяем результат редиректа (например, после Google Sign-In)
-        getRedirectResult(auth)
-          .then(async (result) => {
-            if (result) {
-              const user = result.user;
-              console.log('Результат редиректа Google:', user.providerData);
-
-              // Проверяем методы входа для email
-              const methods = await fetchSignInMethodsForEmail(auth, user.email);
-              console.log('Sign-in methods for email:', methods);
-
-              if (methods.includes('password') && !methods.includes('google.com')) {
-                // Email уже используется с password, но Google не привязан
-                return reject({
-                  code: 'auth/account-exists-with-different-credential',
-                  message: `Этот email (${user.email}) уже используется с провайдером password. Войдите через email/пароль, чтобы привязать Google-аккаунт.`,
-                  email: user.email,
-                  methods,
-                  credential: result.credential,
-                });
-              }
-
-              const userDocRef = doc(db, 'users', user.uid);
-              const userDoc = await getDoc(userDocRef);
-
-              if (!userDoc.exists()) {
-                const registrationDate = new Date().toISOString();
-                const name = user.displayName?.split(' ')[0] || '';
-                const lastName = user.displayName?.split(' ').slice(1).join(' ') || '';
-                await setDoc(userDocRef, {
-                  name,
-                  lastName,
-                  email: user.email,
-                  role: 'guest',
-                  registrationDate,
-                  avatarUrl: user.photoURL || null,
-                  readNotifications: [],
-                });
-              }
-
-              firebaseCurrentUser = user;
-              const userData = {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-              };
-              dispatch(setUser(userData));
-              const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
-              dispatch(setUserRole(userDataResult.role));
-              dispatch(subscribeToCourses(userDataResult.purchasedCourses));
-              resolve(userData);
-            }
-
-            // Обычная проверка состояния авторизации
-            const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-              if (firebaseUser) {
-                const userData = {
-                  uid: firebaseUser.uid,
-                  email: firebaseUser.email,
-                  displayName: firebaseUser.displayName,
-                };
-                firebaseCurrentUser = firebaseUser;
-                dispatch(setUser(userData));
-                const userDataResult = await dispatch(fetchUserData(firebaseUser.uid)).unwrap();
-                dispatch(setUserRole(userDataResult.role));
-                dispatch(subscribeToCourses(userDataResult.purchasedCourses));
-                resolve(userData);
-              } else {
-                firebaseCurrentUser = null;
-                dispatch(setUser(null));
-                dispatch(setUserRole(null));
-                resolve(null);
-              }
-              dispatch(setAuthInitialized(true));
-              unsubscribe();
-            });
-          })
-          .catch((error) => {
-            console.log('Ошибка обработки редиректа:', error);
-            if (error.code === 'auth/account-exists-with-different-credential') {
-              const email = error.email;
-              fetchSignInMethodsForEmail(auth, email).then((methods) => {
-                reject({
-                  code: error.code,
-                  message: `Этот email (${email}) уже используется с провайдером: ${methods.join(
-                    ', ',
-                  )}. Войдите через email/пароль и привяжите Google-аккаунт.`,
-                  email,
-                  methods,
-                  credential: error.credential,
-                });
-              });
-            } else {
-              reject(error);
-            }
-          });
+      return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            const userData = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+            };
+            firebaseCurrentUser = firebaseUser;
+            dispatch(setUser(userData));
+            const userDataResult = await dispatch(fetchUserData(firebaseUser.uid)).unwrap();
+            dispatch(setUserRole(userDataResult.role));
+            dispatch(subscribeToCourses(userDataResult.purchasedCourses));
+            resolve(userData);
+          } else {
+            firebaseCurrentUser = null;
+            dispatch(setUser(null));
+            dispatch(setUserRole(null));
+            resolve(null);
+          }
+          dispatch(setAuthInitialized(true));
+          unsubscribe();
+        });
       });
     } catch (error) {
       dispatch(setAuthInitialized(true));
@@ -456,6 +240,7 @@ export const subscribeToCourses = createAsyncThunk(
         dispatch(setCourses(courseList));
       });
 
+      // Возвращаем null или другой сериализуемый payload
       return null;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -463,6 +248,7 @@ export const subscribeToCourses = createAsyncThunk(
   },
 );
 
+// Оставляем fetchCourses для случаев, когда подписка не нужна
 export const fetchCourses = createAsyncThunk(
   'auth/fetchCourses',
   async (purchasedCourses = {}, { rejectWithValue }) => {
@@ -716,9 +502,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action) => {
-      state.user = action.payload
-        ? { ...action.payload, providerData: firebaseCurrentUser?.providerData || [] }
-        : null;
+      state.user = action.payload;
       state.isLoading = false;
     },
     setUserRole: (state, action) => {
@@ -778,7 +562,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-
       .addCase(login.pending, (state) => {
         state.status = 'loading';
         state.isLoading = true;
@@ -788,33 +571,6 @@ const authSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(login.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload.message;
-        state.isLoading = false;
-      })
-      .addCase(unlinkGoogleProvider.fulfilled, (state) => {
-        state.status = 'succeeded';
-        state.isLoading = false;
-      })
-      .addCase(unlinkGoogleProvider.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload;
-        state.isLoading = false;
-      })
-      .addCase(signInWithGoogle.fulfilled, (state, action) => {
-        if (action.payload.redirectInitiated) {
-          state.status = 'redirecting';
-          state.isLoading = true;
-        } else {
-          state.status = 'succeeded';
-          state.isLoading = false;
-        }
-      })
-      .addCase(linkGoogleAccount.fulfilled, (state) => {
-        state.status = 'succeeded';
-        state.isLoading = false;
-      })
-      .addCase(linkGoogleAccount.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload.message;
         state.isLoading = false;
