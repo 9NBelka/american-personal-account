@@ -1,7 +1,7 @@
 import scss from './EditUser.module.scss';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateUser, fetchUsers } from '../../../store/slices/adminSlice'; // Импортируем действия
+import { updateUser, fetchUsers } from '../../../store/slices/adminSlice';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
@@ -29,7 +29,7 @@ export default function EditUser({ userId, onBack }) {
     name: Yup.string().required('Имя обязательно'),
     email: Yup.string().email('Неверный формат email').required('Email обязателен'),
     role: Yup.string()
-      .oneOf(['admin', 'guest', 'student'], 'Неверная роль')
+      .oneOf(['admin', 'guest', 'student', 'moderator'], 'Неверная роль')
       .required('Роль обязательна'),
   });
 
@@ -44,6 +44,12 @@ export default function EditUser({ userId, onBack }) {
 
   // Обработчик отправки формы
   const handleSubmit = async (values, { setSubmitting }) => {
+    if (user?.role === 'admin') {
+      toast.error('Редактирование данных администратора запрещено.');
+      setSubmitting(false);
+      return;
+    }
+
     if (JSON.stringify(values) === JSON.stringify(initialValues)) {
       toast.info('Изменений не внесено.');
       setSubmitting(false);
@@ -85,6 +91,9 @@ export default function EditUser({ userId, onBack }) {
   return (
     <div className={scss.editUser}>
       <h2>Редактировать пользователя</h2>
+      {user?.role === 'admin' && (
+        <p className={scss.warning}>Редактирование администратора запрещено.</p>
+      )}
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}

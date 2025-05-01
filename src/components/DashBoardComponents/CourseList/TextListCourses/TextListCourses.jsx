@@ -1,6 +1,12 @@
 import scss from './TextListCourses.module.scss';
 
-export default function TextListCourses({ courses, handleEdit, handleDelete, accessLevels }) {
+export default function TextListCourses({
+  courses,
+  handleEdit,
+  handleDelete,
+  accessLevels,
+  userRole,
+}) {
   // Функция для форматирования даты в формат DD.MM.YYYY
   const formatDate = (dateString) => {
     if (!dateString) return 'Нет даты';
@@ -58,15 +64,17 @@ export default function TextListCourses({ courses, handleEdit, handleDelete, acc
             <button className={scss.editButton} onClick={() => handleEdit(course.id)}>
               Редактировать
             </button>
-            <button
-              className={scss.deleteButton}
-              onClick={() => {
-                if (window.confirm('Вы уверены, что хотите удалить этот курс?')) {
-                  handleDelete(course.id);
-                }
-              }}>
-              Удалить
-            </button>
+            {userRole == 'admin' && (
+              <button
+                className={scss.deleteButton}
+                onClick={() => {
+                  if (window.confirm('Вы уверены, что хотите удалить этот курс?')) {
+                    handleDelete(course.id);
+                  }
+                }}>
+                Удалить
+              </button>
+            )}
           </td>
         </tr>
       ))}

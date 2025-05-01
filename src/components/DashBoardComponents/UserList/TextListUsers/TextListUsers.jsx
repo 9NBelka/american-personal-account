@@ -1,6 +1,12 @@
 import scss from './TextListUsers.module.scss';
 
-export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete, accessLevels }) {
+export default function TextListUsers({
+  paginatedUsers,
+  handleEdit,
+  handleDelete,
+  accessLevels,
+  userRole,
+}) {
   // Функция для форматирования даты в формат DD.MM.YYYY
   const formatDate = (dateString) => {
     if (!dateString) return 'Нет даты';
@@ -58,9 +64,11 @@ export default function TextListUsers({ paginatedUsers, handleEdit, handleDelete
               <button className={scss.editButton} onClick={() => handleEdit(user.id)}>
                 Редактировать
               </button>
-              <button className={scss.deleteButton} onClick={() => handleDelete(user.id)}>
-                Удалить
-              </button>
+              {userRole == 'admin' && (
+                <button className={scss.deleteButton} onClick={() => handleDelete(user.id)}>
+                  Удалить
+                </button>
+              )}
             </td>
           </tr>
         );

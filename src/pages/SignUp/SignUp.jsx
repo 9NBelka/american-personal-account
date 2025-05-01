@@ -2,7 +2,7 @@ import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { signUp } from '../../store/slices/authSlice'; // Import thunk
+import { signUp } from '../../store/slices/authSlice';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import scss from './SignUp.module.scss';
 import { BsBoxArrowInRight } from 'react-icons/bs';
@@ -12,11 +12,11 @@ import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/Ac
 export default function SignUp() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { userRole, isLoading } = useSelector((state) => state.auth); // Replaced useAuth
+  const { userRole, isLoading } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (userRole) {
-      navigate(userRole === 'admin' ? '/dashboard' : '/account');
+      navigate(['admin', 'moderator'].includes(userRole) ? '/dashboard' : '/account');
     }
   }, [userRole, navigate]);
 
@@ -56,6 +56,7 @@ export default function SignUp() {
           lastName: values.lastName,
           email: values.email,
           password: values.password,
+          role: 'student', // По умолчанию новая роль — student
         }),
       ).unwrap();
       navigate('/login');

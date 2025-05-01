@@ -37,7 +37,7 @@ function AppContent() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(initializeAuth()); // Инициализируем авторизацию при монтировании
+    dispatch(initializeAuth());
   }, [dispatch]);
 
   const handleLogout = async () => {
@@ -75,7 +75,7 @@ function AppContent() {
         <Route
           path='/dashboard'
           element={
-            <PrivateRoute allowedRoles={['admin']}>
+            <PrivateRoute allowedRoles={['admin', 'moderator']}>
               <DashBoard />
             </PrivateRoute>
           }>

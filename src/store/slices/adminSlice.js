@@ -14,7 +14,6 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { getFirebaseCurrentUser } from './authSlice';
-import { useAuth } from '../../context/AuthContext';
 
 // Initial state
 const initialState = {
@@ -36,8 +35,10 @@ export const fetchUsers = createAsyncThunk(
   'admin/fetchUsers',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') {
-      return rejectWithValue('Только администраторы могут просматривать список пользователей');
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue(
+        'Только администраторы и модераторы могут просматривать список пользователей',
+      );
     }
     try {
       const snapshot = await getDocs(collection(db, 'users'));
@@ -52,8 +53,10 @@ export const fetchCourses = createAsyncThunk(
   'admin/fetchCourses',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') {
-      return rejectWithValue('Только администраторы могут просматривать список курсов');
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue(
+        'Только администраторы и модераторы могут просматривать список курсов',
+      );
     }
     try {
       const snapshot = await getDocs(collection(db, 'courses'));
@@ -68,8 +71,8 @@ export const fetchProducts = createAsyncThunk(
   'admin/fetchProducts',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') {
-      return [];
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы и модераторы могут просматривать продукты');
     }
     try {
       const snapshot = await getDocs(collection(db, 'products'));
@@ -84,7 +87,7 @@ export const addProduct = createAsyncThunk(
   'admin/addProduct',
   async (productData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin') {
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять продукты');
     }
     try {
@@ -149,21 +152,28 @@ export const deleteProduct = createAsyncThunk(
   },
 );
 
-export const fetchOrders = createAsyncThunk('admin/fetchOrders', async (_, { rejectWithValue }) => {
-  try {
-    const snapshot = await getDocs(collection(db, 'orders'));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    return rejectWithValue(error.message);
-  }
-});
+export const fetchOrders = createAsyncThunk(
+  'admin/fetchOrders',
+  async (_, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    if (!['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы и модераторы могут просматривать заказы');
+    }
+    try {
+      const snapshot = await getDocs(collection(db, 'orders'));
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
 
 export const fetchNotifications = createAsyncThunk(
   'admin/fetchNotifications',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') {
-      return [];
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы и модераторы могут просматривать уведомления');
     }
     try {
       const snapshot = await getDocs(collection(db, 'notifications'));
@@ -178,8 +188,10 @@ export const fetchAccessLevels = createAsyncThunk(
   'admin/fetchAccessLevels',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') {
-      return [];
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue(
+        'Только администраторы и модераторы могут просматривать уровни доступа',
+      );
     }
     try {
       const snapshot = await getDocs(collection(db, 'accessLevels'));
@@ -194,8 +206,8 @@ export const fetchTimers = createAsyncThunk(
   'admin/fetchTimers',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') {
-      return [];
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы и модераторы могут просматривать таймеры');
     }
     try {
       const snapshot = await getDocs(collection(db, 'timers'));
@@ -210,8 +222,10 @@ export const fetchDiscountPresets = createAsyncThunk(
   'admin/fetchDiscountPresets',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') {
-      return [];
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue(
+        'Только администраторы и модераторы могут просматривать пресеты скидок',
+      );
     }
     try {
       const snapshot = await getDocs(collection(db, 'discountPresets'));
@@ -226,8 +240,8 @@ export const fetchPromoCodes = createAsyncThunk(
   'admin/fetchPromoCodes',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (!auth.user || auth.userRole !== 'admin') {
-      return [];
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы и модераторы могут просматривать промокоды');
     }
     try {
       const snapshot = await getDocs(collection(db, 'promoCodes'));
@@ -255,7 +269,7 @@ export const addUser = createAsyncThunk(
     if (!auth.isAuthInitialized) {
       return rejectWithValue('Авторизация еще не инициализирована');
     }
-    if (auth.userRole !== 'admin') {
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять пользователей');
     }
     try {
@@ -280,7 +294,6 @@ export const addUser = createAsyncThunk(
             errorData.message || errorData.error?.message || 'Ошибка при добавлении пользователя';
           return rejectWithValue(errorMessage);
         } catch (e) {
-          // Если ответ — строка, а не JSON
           return rejectWithValue(text || 'Ошибка при добавлении пользователя');
         }
       }
@@ -334,8 +347,9 @@ export const addAccessLevel = createAsyncThunk(
   'admin/addAccessLevel',
   async (accessLevelData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять уровни доступа');
+    }
     try {
       const accessLevelRef = doc(db, 'accessLevels', accessLevelData.id);
       await setDoc(accessLevelRef, accessLevelData);
@@ -350,8 +364,9 @@ export const addCourse = createAsyncThunk(
   'admin/addCourse',
   async (courseData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять курсы');
+    }
     try {
       const courseRef = doc(db, 'courses', courseData.id);
       await setDoc(courseRef, courseData);
@@ -366,7 +381,7 @@ export const updateCourse = createAsyncThunk(
   'admin/updateCourse',
   async ({ courseId, updatedData }, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin') {
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут обновлять курсы');
     }
     try {
@@ -382,9 +397,13 @@ export const updateCourse = createAsyncThunk(
 export const updateUser = createAsyncThunk(
   'admin/updateUser',
   async ({ userId, updatedData }, { getState, rejectWithValue }) => {
-    const { auth } = getState();
-    if (auth.userRole !== 'admin') {
-      return rejectWithValue('Только администраторы могут обновлять пользователей');
+    const { auth, admin } = getState();
+    if (!['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы и модераторы могут обновлять пользователей');
+    }
+    const userToUpdate = admin.users.find((u) => u.id === userId);
+    if (userToUpdate?.role === 'admin') {
+      return rejectWithValue('Редактирование данных администратора запрещено');
     }
     try {
       const userRef = doc(db, 'users', userId);
@@ -442,7 +461,10 @@ export const uploadImage = createAsyncThunk(
       return rejectWithValue('Только администраторы могут загружать изображения');
     }
     try {
-      const storageRef = ref(storage, `product-images/${productId}/${Date.now()}/${file.name}`);
+      const storageRef = ref(
+        storage,
+        `product-images/${product.PersistenceId}/${Date.now()}/${file.name}`,
+      );
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
       return downloadURL;
@@ -456,8 +478,9 @@ export const addNotification = createAsyncThunk(
   'admin/addNotification',
   async (notificationData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять уведомления');
+    }
     try {
       const docRef = await addDoc(collection(db, 'notifications'), notificationData);
       return { id: docRef.id, ...notificationData };
@@ -471,8 +494,9 @@ export const updateNotification = createAsyncThunk(
   'admin/updateNotification',
   async ({ notificationId, updatedData }, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут обновлять уведомления');
+    }
     try {
       const notificationRef = doc(db, 'notifications', notificationId);
       await updateDoc(notificationRef, updatedData);
@@ -487,8 +511,9 @@ export const deleteNotification = createAsyncThunk(
   'admin/deleteNotification',
   async (notificationId, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут удалять уведомления');
+    }
     try {
       await deleteDoc(doc(db, 'notifications', notificationId));
       return notificationId;
@@ -502,8 +527,9 @@ export const addTimer = createAsyncThunk(
   'admin/addTimer',
   async (timerData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять таймеры');
+    }
     try {
       const docRef = await addDoc(collection(db, 'timers'), timerData);
       return { id: docRef.id, ...timerData };
@@ -517,8 +543,9 @@ export const deleteTimer = createAsyncThunk(
   'admin/deleteTimer',
   async (timerId, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут удалять таймеры');
+    }
     try {
       await deleteDoc(doc(db, 'timers', timerId));
       return timerId;
@@ -532,8 +559,9 @@ export const addDiscountPreset = createAsyncThunk(
   'admin/addDiscountPreset',
   async (presetData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять пресеты скидок');
+    }
     try {
       const presetRef = doc(db, 'discountPresets', presetData.id);
       await setDoc(presetRef, { ...presetData, isActive: false });
@@ -548,8 +576,9 @@ export const updateDiscountPreset = createAsyncThunk(
   'admin/updateDiscountPreset',
   async ({ presetId, updatedData }, { getState, rejectWithValue }) => {
     const { auth, admin } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут обновлять пресеты скидок');
+    }
     try {
       const presetToUpdate = admin.discountPresets.find((p) => p.id === presetId);
       if (!presetToUpdate) return rejectWithValue('Пресет не найден');
@@ -588,8 +617,9 @@ export const deleteDiscountPreset = createAsyncThunk(
   'admin/deleteDiscountPreset',
   async (presetId, { getState, rejectWithValue }) => {
     const { auth, admin } = getState();
-    if (auth.userRole !== 'admin')
-      return rejectWithValue('Только администраторы могут удалять пресеты скидок');
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы могут удалять пресеты скид ;)ок');
+    }
     try {
       const presetToDelete = admin.discountPresets.find((p) => p.id === presetId);
       if (presetToDelete?.isActive) {
@@ -611,8 +641,9 @@ export const toggleDiscountPreset = createAsyncThunk(
   'admin/toggleDiscountPreset',
   async (presetId, { getState, rejectWithValue }) => {
     const { auth, admin } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут управлять пресетами скидок');
+    }
     try {
       const presetToToggle = admin.discountPresets.find((p) => p.id === presetId);
       if (!presetToToggle) return rejectWithValue('Пресет не найден');
@@ -663,8 +694,9 @@ export const addPromoCode = createAsyncThunk(
   'admin/addPromoCode',
   async (promoCodeData, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять промокоды');
+    }
     try {
       const promoCodeRef = doc(db, 'promoCodes', promoCodeData.id);
       await setDoc(promoCodeRef, promoCodeData);
@@ -679,8 +711,9 @@ export const updatePromoCode = createAsyncThunk(
   'admin/updatePromoCode',
   async ({ promoCodeId, updatedData }, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут обновлять промокоды');
+    }
     try {
       const promoCodeRef = doc(db, 'promoCodes', promoCodeId);
       await updateDoc(promoCodeRef, updatedData);
@@ -695,8 +728,9 @@ export const deletePromoCode = createAsyncThunk(
   'admin/deletePromoCode',
   async (promoCodeId, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут удалять промокоды');
+    }
     try {
       await deleteDoc(doc(db, 'promoCodes', promoCodeId));
       return promoCodeId;
@@ -710,8 +744,9 @@ export const togglePromoCode = createAsyncThunk(
   'admin/togglePromoCode',
   async (promoCodeId, { getState, rejectWithValue }) => {
     const { auth, admin } = getState();
-    if (auth.userRole !== 'admin')
+    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут управлять промокодами');
+    }
     try {
       const promoCode = admin.promoCodes.find((p) => p.id === promoCodeId);
       if (!promoCode) return rejectWithValue('Промокод не найден');
@@ -800,18 +835,6 @@ const adminSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.products = action.payload;
       })
-      // .addCase(fetchProducts.pending, (state) => {
-      //   state.status = 'loading';
-      //   state.error = null;
-      // })
-      // .addCase(fetchProducts.fulfilled, (state, action) => {
-      //   state.status = 'succeeded';
-      //   state.products = action.payload;
-      // })
-      // .addCase(fetchProducts.rejected, (state, action) => {
-      //   state.status = 'failed';
-      //   state.error = action.payload;
-      // })
       .addCase(addProduct.fulfilled, (state, action) => {
         // Добавляем продукт локально, но onSnapshot сделает это автоматически
       })

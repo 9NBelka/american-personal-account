@@ -7,8 +7,8 @@ export const fetchCurrencies = createAsyncThunk(
   'currency/fetchCurrencies',
   async (_, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    if (auth.userRole !== 'admin') {
-      return rejectWithValue('Только администраторы могут управлять валютами');
+    if (!['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы и модераторы могут просматривать валюты');
     }
     try {
       const querySnapshot = await getDocs(collection(db, 'currencies'));

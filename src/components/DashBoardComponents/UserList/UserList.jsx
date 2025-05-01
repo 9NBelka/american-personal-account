@@ -17,6 +17,7 @@ export default function UserList() {
   const dispatch = useDispatch();
 
   const { users, courses, accessLevels, status, error } = useSelector((state) => state.admin);
+  const { userRole } = useSelector((state) => state.auth);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -157,6 +158,7 @@ export default function UserList() {
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
                 accessLevels={accessLevels}
+                userRole={userRole}
               />
             ) : (
               <p>

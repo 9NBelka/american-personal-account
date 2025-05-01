@@ -41,6 +41,7 @@ export default function UserInfoForm({ values, initialValues, showRegistrationDa
           <option value='admin'>Администратор</option>
           <option value='guest'>Гость</option>
           <option value='student'>Студент</option>
+          <option value='student'>Модератор</option>
         </Field>
         <ErrorMessage name='role' component='div' className={scss.error} />
       </div>

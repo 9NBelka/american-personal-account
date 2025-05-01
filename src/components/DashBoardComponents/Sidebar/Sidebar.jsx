@@ -18,6 +18,7 @@ import {
   BsImage,
   BsDisplayFill,
 } from 'react-icons/bs';
+import { useSelector } from 'react-redux';
 
 export default function Sidebar({
   activeSection,
@@ -26,6 +27,8 @@ export default function Sidebar({
   handleSectionClick,
 }) {
   const navigate = useNavigate();
+
+  const { userRole } = useSelector((state) => state.auth);
   const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [isProductOpen, setIsProductOpen] = useState(false);
@@ -60,22 +63,26 @@ export default function Sidebar({
             <span className={scss.menuText}>Главная</span>
           </div>
         </li>
-        <li
-          className={clsx(scss.menuItem, activeSection === 'images' && scss.active)}
-          onClick={() => handleSectionClick('images')}>
-          <div className={scss.iconAndTextMenuMainBlock}>
-            <BsImage className={scss.menuIcon} />
-            <span className={scss.menuText}>Изображения</span>
-          </div>
-        </li>
-        <li
-          className={clsx(scss.menuItem, activeSection === 'pages' && scss.active)}
-          onClick={() => handleSectionClick('pages')}>
-          <div className={scss.iconAndTextMenuMainBlock}>
-            <BsDisplayFill className={scss.menuIcon} />
-            <span className={scss.menuText}>Страницы</span>
-          </div>
-        </li>
+        {userRole == 'admin' && (
+          <li
+            className={clsx(scss.menuItem, activeSection === 'images' && scss.active)}
+            onClick={() => handleSectionClick('images')}>
+            <div className={scss.iconAndTextMenuMainBlock}>
+              <BsImage className={scss.menuIcon} />
+              <span className={scss.menuText}>Изображения</span>
+            </div>
+          </li>
+        )}
+        {userRole == 'admin' && (
+          <li
+            className={clsx(scss.menuItem, activeSection === 'pages' && scss.active)}
+            onClick={() => handleSectionClick('pages')}>
+            <div className={scss.iconAndTextMenuMainBlock}>
+              <BsDisplayFill className={scss.menuIcon} />
+              <span className={scss.menuText}>Страницы</span>
+            </div>
+          </li>
+        )}
         <li
           className={clsx(
             scss.menuItem,
@@ -153,97 +160,103 @@ export default function Sidebar({
                 onClick={() => handleSectionClick('courseList')}>
                 Все курсы
               </li>
-              <li
-                className={clsx(
-                  scss.submenuItem,
-                  activeSection === 'addCourse' && scss.activeSubText,
-                )}
-                onClick={() => handleSectionClick('addCourse')}>
-                Добавить курс
-              </li>
-              <li
-                className={clsx(
-                  scss.submenuItem,
-                  activeSection === 'timersCourses' && scss.activeSubText,
-                )}
-                onClick={() => handleSectionClick('timersCourses')}>
-                Таймеры
-              </li>
+              {userRole == 'admin' && (
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'addCourse' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('addCourse')}>
+                  Добавить курс
+                </li>
+              )}
+              {userRole == 'admin' && (
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'timersCourses' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('timersCourses')}>
+                  Таймеры
+                </li>
+              )}
             </ul>
           )}
         </li>
-        <li
-          className={clsx(
-            scss.menuItem,
-            (activeSection === 'productList' ||
-              activeSection === 'addProduct' ||
-              activeSection === 'discountPresets' ||
-              activeSection === 'promocodes' ||
-              activeSection === 'currencySelector' ||
-              activeSection === 'editProduct') &&
-              scss.active,
-          )}>
-          <div
-            className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
-            onClick={() => {
-              if (!isCollapsed) setIsProductOpen(!isProductOpen);
-              handleSectionClick('productList');
-            }}>
-            <div className={scss.iconAndTextMenuBlock}>
-              <BsFillBoxFill className={scss.menuIcon} />
-              <span className={scss.menuText}>Товары</span>
+        {userRole == 'admin' && (
+          <li
+            className={clsx(
+              scss.menuItem,
+              (activeSection === 'productList' ||
+                activeSection === 'addProduct' ||
+                activeSection === 'discountPresets' ||
+                activeSection === 'promocodes' ||
+                activeSection === 'currencySelector' ||
+                activeSection === 'editProduct') &&
+                scss.active,
+            )}>
+            <div
+              className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
+              onClick={() => {
+                if (!isCollapsed) setIsProductOpen(!isProductOpen);
+                handleSectionClick('productList');
+              }}>
+              <div className={scss.iconAndTextMenuBlock}>
+                <BsFillBoxFill className={scss.menuIcon} />
+                <span className={scss.menuText}>Товары</span>
+              </div>
+              {isProductOpen ? (
+                <BsChevronDown className={scss.iconDrop} />
+              ) : (
+                <BsChevronRight className={scss.iconDrop} />
+              )}
             </div>
-            {isProductOpen ? (
-              <BsChevronDown className={scss.iconDrop} />
-            ) : (
-              <BsChevronRight className={scss.iconDrop} />
+            {isProductOpen && !isCollapsed && (
+              <ul className={scss.submenu}>
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'productList' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('productList')}>
+                  Все товары
+                </li>
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'addProduct' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('addProduct')}>
+                  Добавить товар
+                </li>
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'discountPresets' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('discountPresets')}>
+                  Скидки
+                </li>
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'promocodes' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('promocodes')}>
+                  Промокоды
+                </li>
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'currencySelector' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('currencySelector')}>
+                  Смена валюты
+                </li>
+              </ul>
             )}
-          </div>
-          {isProductOpen && !isCollapsed && (
-            <ul className={scss.submenu}>
-              <li
-                className={clsx(
-                  scss.submenuItem,
-                  activeSection === 'productList' && scss.activeSubText,
-                )}
-                onClick={() => handleSectionClick('productList')}>
-                Все товары
-              </li>
-              <li
-                className={clsx(
-                  scss.submenuItem,
-                  activeSection === 'addProduct' && scss.activeSubText,
-                )}
-                onClick={() => handleSectionClick('addProduct')}>
-                Добавить товар
-              </li>
-              <li
-                className={clsx(
-                  scss.submenuItem,
-                  activeSection === 'discountPresets' && scss.activeSubText,
-                )}
-                onClick={() => handleSectionClick('discountPresets')}>
-                Скидки
-              </li>
-              <li
-                className={clsx(
-                  scss.submenuItem,
-                  activeSection === 'promocodes' && scss.activeSubText,
-                )}
-                onClick={() => handleSectionClick('promocodes')}>
-                Промокоды
-              </li>
-              <li
-                className={clsx(
-                  scss.submenuItem,
-                  activeSection === 'currencySelector' && scss.activeSubText,
-                )}
-                onClick={() => handleSectionClick('currencySelector')}>
-                Смена валюты
-              </li>
-            </ul>
-          )}
-        </li>
+          </li>
+        )}
         <li
           className={clsx(scss.menuItem, activeSection === 'orders' && scss.active)}
           onClick={() => handleSectionClick('orders')}>

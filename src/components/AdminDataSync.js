@@ -20,7 +20,7 @@ const AdminDataSync = () => {
   const { user, userRole, isAuthInitialized } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (!isAuthInitialized || !user || userRole !== 'admin') return;
+    if (!isAuthInitialized || !user || !['admin', 'moderator'].includes(userRole)) return;
 
     const unsubscribes = [];
 

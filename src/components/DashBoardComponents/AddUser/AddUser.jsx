@@ -2,7 +2,7 @@ import scss from './AddUser.module.scss';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addUser, fetchCourses } from '../../../store/slices/adminSlice';
-import { resetPassword } from '../../../store/slices/authSlice'; // Импортируем resetPassword
+import { resetPassword } from '../../../store/slices/authSlice';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
@@ -24,8 +24,8 @@ export default function AddUser({ onBack }) {
   useEffect(() => {
     if (!isAuthInitialized) return;
 
-    if (!user || userRole !== 'admin') {
-      toast.error('Только администраторы могут добавлять пользователей');
+    if (!user || !['admin', 'moderator'].includes(userRole)) {
+      toast.error('Только администраторы и модераторы могут добавлять пользователей');
       navigate('/login');
       return;
     }
@@ -37,7 +37,7 @@ export default function AddUser({ onBack }) {
     name: Yup.string().required('Имя обязательно'),
     email: Yup.string().email('Неверный формат email').required('Email обязателен'),
     role: Yup.string()
-      .oneOf(['admin', 'guest', 'student'], 'Неверная роль')
+      .oneOf(['admin', 'guest', 'student', 'moderator'], 'Неверная роль')
       .required('Роль обязательна'),
   });
 
@@ -111,7 +111,7 @@ export default function AddUser({ onBack }) {
     return <div>Инициализация авторизации...</div>;
   }
 
-  if (!user || userRole !== 'admin') {
+  if (!user || !['admin', 'moderator'].includes(userRole)) {
     return null;
   }
 

@@ -10,19 +10,18 @@ import { Outlet } from 'react-router-dom';
 export default function DashBoard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userRole, isLoading } = useSelector((state) => state.auth); // Replaced useAuth
+  const { userRole, isLoading } = useSelector((state) => state.auth);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const activeSection = location.pathname.split('/').pop() || 'mainStatistics';
 
   useEffect(() => {
-    if (!isLoading && (!userRole || userRole !== 'admin')) {
+    if (!isLoading && (!userRole || !['admin', 'moderator'].includes(userRole))) {
       navigate('/account');
     }
   }, [userRole, isLoading, navigate]);
 
   const handleSectionClick = (section) => {
-    // Set path in the format /dashboard/[section]
     const path = section === 'mainStatistics' ? '/dashboard' : `/dashboard/${section}`;
     navigate(path);
   };
@@ -41,7 +40,7 @@ export default function DashBoard() {
           handleSectionClick={handleSectionClick}
         />
         <div className={clsx(scss.content, isCollapsed && scss.contentCollapsed)}>
-          <Outlet context={{ handleSectionClick }} /> {/* Render nested component */}
+          <Outlet context={{ handleSectionClick }} />
         </div>
       </div>
     </div>

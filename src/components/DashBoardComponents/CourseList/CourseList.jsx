@@ -17,6 +17,7 @@ export default function CourseList() {
   const dispatch = useDispatch();
 
   const { courses, accessLevels, status } = useSelector((state) => state.admin); // Добавили status
+  const { userRole } = useSelector((state) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOption, setSortOption] = useState('title-asc');
@@ -120,11 +121,15 @@ export default function CourseList() {
     <>
       <AmountCourses categoryCounts={categoryCounts} lastCourse={lastCourse} />
       <div className={scss.listMainBlock}>
-        <div>
-          <button className={scss.addCourseButton} onClick={() => handleSectionClick('addCourse')}>
-            Добавить курс
-          </button>
-        </div>
+        {userRole == 'admin' && (
+          <div>
+            <button
+              className={scss.addCourseButton}
+              onClick={() => handleSectionClick('addCourse')}>
+              Добавить курс
+            </button>
+          </div>
+        )}
         <h2 className={scss.listTitle}>Список курсов</h2>
 
         {/* Фильтры и сортировка */}
@@ -146,6 +151,7 @@ export default function CourseList() {
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
                 accessLevels={accessLevels}
+                userRole={userRole}
               />
             ) : (
               <tbody>

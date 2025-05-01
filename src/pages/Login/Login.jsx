@@ -2,7 +2,7 @@ import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { login, resetPassword } from '../../store/slices/authSlice'; // Import thunks
+import { login, resetPassword } from '../../store/slices/authSlice';
 import scss from './Login.module.scss';
 import LSAuthForm from '../../components/LSAuthForm/LSAuthForm';
 import { BsBoxArrowInRight } from 'react-icons/bs';
@@ -13,13 +13,13 @@ import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetP
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { userRole, isLoading } = useSelector((state) => state.auth); // Replaced useAuth
+  const { userRole, isLoading } = useSelector((state) => state.auth);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [generalError, setGeneralError] = useState(null); // Новое состояние для ошибки
+  const [generalError, setGeneralError] = useState(null);
 
   useEffect(() => {
     if (userRole) {
-      navigate(userRole === 'admin' ? '/dashboard' : '/account');
+      navigate(['admin', 'moderator'].includes(userRole) ? '/dashboard' : '/account');
     }
   }, [userRole, navigate]);
 
@@ -38,9 +38,8 @@ export default function Login() {
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       await dispatch(login({ email: values.email, password: values.password })).unwrap();
-      setGeneralError(null); // Сбрасываем ошибку при успешном логине
+      setGeneralError(null);
     } catch (error) {
-      // Устанавливаем общую ошибку
       if (
         error.code === 'auth/user-not-found' ||
         error.code === 'auth/wrong-password' ||
@@ -63,8 +62,8 @@ export default function Login() {
       const result = await dispatch(resetPassword(email)).unwrap();
       return result;
     } catch (error) {
-      console.error('Password reset failed:', error); // Log for debugging
-      throw new Error('Failed to reset password. Please try again.'); // User-friendly message
+      console.error('Password reset failed:', error);
+      throw new Error('Failed to reset password. Please try again.');
     }
   };
 
@@ -107,7 +106,7 @@ export default function Login() {
             <LSResetPasswordModal
               isOpen={showResetModal}
               onClose={() => setShowResetModal(false)}
-              resetPassword={handleResetPassword} // Updated to use Redux thunk
+              resetPassword={handleResetPassword}
               isLoading={isLoading}
             />
           </div>
