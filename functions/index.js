@@ -163,8 +163,10 @@ export const addNewUser = onRequest(async (req, res) => {
       const userId = decodedToken.uid;
 
       const userDoc = await adminFirestore.doc(`users/${userId}`).get();
-      if (!userDoc.exists || userDoc.data().role !== 'admin') {
-        return res.status(403).json({ message: 'Forbidden: Only admins can add users' });
+      if (!userDoc.exists || !['admin', 'moderator'].includes(userDoc.data().role)) {
+        return res
+          .status(403)
+          .json({ message: 'Forbidden: Only admins and moderators can add users' });
       }
 
       const { name, email, role, purchasedCourses, registrationDate } = req.body;
@@ -173,6 +175,12 @@ export const addNewUser = onRequest(async (req, res) => {
         return res.status(400).json({ message: 'Missing required fields: name, email, role' });
       }
 
+      // Запрещаем модераторам создавать администраторов
+      if (userDoc.data().role === 'moderator' && role === 'admin') {
+        return res.status(403).json({ message: 'Forbidden: Moderators cannot create admin users' });
+      }
+
+      // Проверяем, существует ли пользователь с таким email
       try {
         await adminAuth.getUserByEmail(email);
         return res.status(400).json({ message: 'User with this email already exists' });

@@ -37,6 +37,13 @@ export default function AddUser({ onBack }) {
     name: Yup.string().required('Имя обязательно'),
     email: Yup.string().email('Неверный формат email').required('Email обязателен'),
     role: Yup.string()
+      .test(
+        'restrict-admin-for-moderators',
+        'Модераторы не могут назначать роль администратора',
+        function (value) {
+          return userRole === 'moderator' ? value !== 'admin' : true;
+        },
+      )
       .oneOf(['admin', 'guest', 'student', 'moderator'], 'Неверная роль')
       .required('Роль обязательна'),
   });
@@ -74,10 +81,8 @@ export default function AddUser({ onBack }) {
         purchasedCourses: values.purchasedCourses,
       };
 
-      // Создаем пользователя через Cloud Function
       await dispatch(addUser(userData)).unwrap();
 
-      // Отправляем письмо для сброса пароля
       const resetResult = await dispatch(resetPassword(values.email)).unwrap();
       if (resetResult.success) {
         toast.success(
