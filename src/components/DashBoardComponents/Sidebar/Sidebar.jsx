@@ -50,7 +50,7 @@ export default function Sidebar({
   return (
     <div className={clsx(scss.sidebar, isCollapsed && scss.collapsed)}>
       <div className={scss.sidebarTitleBlock}>
-        <h2 className={scss.sidebarTitle}>Панель управления</h2>
+        <h2 className={scss.sidebarTitle}>DashBoard</h2>
         <BsArrowBarLeft className={scss.iconTitle} onClick={toggleSidebar} />
       </div>
 

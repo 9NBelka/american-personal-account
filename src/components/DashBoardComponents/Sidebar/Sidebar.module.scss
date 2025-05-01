@@ -4,15 +4,20 @@
   height: 100vh;
   background-color: #262a2e;
   position: fixed;
-  top: 0;
-  left: 0;
-  padding: 1vw 0.6vw;
+  top: 0.5vw;
+  left: 0.5vw;
+  padding: 0vw 0.8vw;
   box-shadow: 0.5vw 0.5vw 0.75vw rgba(0, 0, 0, 0.1);
-  transition: width 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.75vw;
+  background: rgb(0 0 0 / 32%);
+  backdrop-filter: blur(1.5vw);
+  transition: width 0.4s ease-in-out;
 
   &.collapsed {
-    width: 3.5vw;
-    padding: 1vw 0.5vw;
+    width: 4vw;
+    padding: 0vw 0.8vw;
 
     .sidebarTitle {
       opacity: 0;
@@ -34,6 +39,8 @@
   align-items: center;
   justify-content: space-between;
   position: relative;
+  border-bottom: 0.1vw solid rgb(255 255 255 / 8%);
+  padding: 1.25vw 0;
 
   & .sidebarTitle {
     color: rgba(255, 255, 255, 1);
@@ -52,7 +59,7 @@
     cursor: pointer;
     position: absolute;
     right: -1vw;
-    background-color: #464a4d;
+    background-color: rgba(245, 246, 247, 0.12);
     border-radius: 0.2vw;
     padding: 0.25vw;
     z-index: 1;
@@ -75,8 +82,8 @@
   cursor: pointer;
   transition: 0.3s ease-in-out;
   border-radius: 0.3vw;
-  font-size: 0.8vw;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85vw;
+  color: rgba(255, 255, 255, 0.75);
   font-family: var(--font-main-for-account);
   font-weight: var(--font-weight-small);
   line-height: var(--font-lineh-small);
@@ -96,7 +103,7 @@
       height: 0.75vw;
       width: 0.75vw;
       flex-shrink: 0;
-      fill: rgba(255, 255, 255, 0.6);
+      fill: rgba(255, 255, 255, 0.75);
       transition: 0.3s ease-in-out;
     }
 
@@ -110,7 +117,7 @@
         height: 0.75vw;
         width: 0.75vw;
         flex-shrink: 0;
-        fill: rgba(255, 255, 255, 0.6);
+        fill: rgba(255, 255, 255, 0.75);
         transition: 0.3s ease-in-out;
       }
     }
@@ -126,7 +133,7 @@
   }
 
   &.active {
-    background-color: #464a4d;
+    background-color: rgba(245, 246, 247, 0.12);
     color: rgba(255, 255, 255, 1);
 
     & .menuIcon {
@@ -144,7 +151,7 @@
 
   & .submenuItem {
     padding: 0.4vw 0.25vw;
-    font-size: 0.7vw;
+    font-size: 0.75vw;
     color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: 0.3s ease-in-out;
