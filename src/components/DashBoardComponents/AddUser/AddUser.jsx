@@ -123,7 +123,7 @@ export default function AddUser({ onBack }) {
   return (
     <div className={scss.addUser}>
       <h2>Регистрация пользователя</h2>
-      {error && <div className={scss.error}>{error}</div>}
+      {/* {error && <div className={scss.error}>{error}</div>} */}
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}

@@ -1,8 +1,10 @@
 // components/admin/UserInfoForm.jsx
+import { useSelector } from 'react-redux';
 import scss from '../EditUser.module.scss';
 import { Field, ErrorMessage } from 'formik';
 
 export default function UserInfoForm({ values, initialValues, showRegistrationDate = true }) {
+  const { userRole } = useSelector((state) => state.auth);
   return (
     <>
       {/* Имя */}
@@ -38,10 +40,10 @@ export default function UserInfoForm({ values, initialValues, showRegistrationDa
           name='role'
           className={`${scss.input} ${values.role !== initialValues.role ? scss.changed : ''}`}>
           <option value=''>Выберите роль</option>
-          <option value='admin'>Администратор</option>
+          {userRole == 'admin' && <option value='admin'>Администратор</option>}
           <option value='guest'>Гость</option>
           <option value='student'>Студент</option>
-          <option value='student'>Модератор</option>
+          {userRole == 'admin' && <option value='student'>Модератор</option>}
         </Field>
         <ErrorMessage name='role' component='div' className={scss.error} />
       </div>

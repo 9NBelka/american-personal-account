@@ -269,8 +269,11 @@ export const addUser = createAsyncThunk(
     if (!auth.isAuthInitialized) {
       return rejectWithValue('Авторизация еще не инициализирована');
     }
-    if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
-      return rejectWithValue('Только администраторы могут добавлять пользователей');
+    if (!['admin', 'moderator'].includes(auth.userRole)) {
+      return rejectWithValue('Только администраторы и модераторы могут добавлять пользователей');
+    }
+    if (auth.userRole === 'moderator' && userData.role === 'admin') {
+      return rejectWithValue('Модераторы не могут создавать администраторов');
     }
     try {
       const currentUser = getFirebaseCurrentUser();
