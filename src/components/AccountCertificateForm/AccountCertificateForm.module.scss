@@ -1,115 +1,262 @@
 .container {
-  max-width: 1200px;
+  width: 68.75vw;
   margin: 0 auto;
-  padding: 20px;
-  text-align: center;
+  max-width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .container {
+    width: 92vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    width: 90vw;
+  }
+}
+
+.certificateTitlePage {
+  display: flex;
+  flex-direction: column;
+  padding-top: 2.2vw;
+
+  & h1 {
+    font-size: 2.15vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+  }
+}
+
+@media (max-width: 1024px) {
+  .certificateTitlePage {
+    padding-top: 3vw;
+
+    & h1 {
+      font-size: 3vw;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .certificateTitlePage {
+    padding-top: 5vw;
+
+    & h1 {
+      font-size: 4vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .certificateTitlePage {
+    align-items: center;
+    padding-top: 7vw;
+
+    & h1 {
+      font-size: 6vw;
+    }
+  }
+}
+
+.certificateDesctiptionPage {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  & .welcomeText {
+    font-size: 0.8vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    margin: 0;
+    margin-top: 0.5vw;
+
+    & span {
+      color: var(--color-orange);
+      text-transform: capitalize;
+    }
+  }
 }
 
 .formAndPreview {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
-  gap: 20px;
-  margin-top: 20px;
+  padding-top: 2.2vw;
+  gap: 3vw;
 }
 
-.form {
-  flex: 1;
+.formBlock {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  max-width: 400px;
-}
+  height: 100%;
 
-.field {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
+  & .form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1vw;
+    width: 100%;
 
-.field label {
-  margin-bottom: 5px;
-  font-weight: bold;
-}
+    & .field {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
 
-.field input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
+    & .field label {
+      font-size: 0.75vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
 
-.error {
-  color: red;
-  font-size: 12px;
-  margin-top: 5px;
-}
+      & span {
+        color: var(--color-blue);
+      }
+    }
 
-.form button {
-  padding: 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
+    & .field input {
+      display: flex;
+      width: 100%;
+      padding: 0.9vw 1.1vw;
+      border-radius: 0.3vw;
+      font-size: 0.75vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      background-color: var(--color-darkGrey);
+      border: 0.1vw solid var(--color-darkGrey);
+      outline: var(--color-orange);
+      margin-top: 0.5vw;
 
-.form button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+      &::placeholder {
+        color: var(--color-white);
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+      }
+
+      &:focus {
+        background-color: var(--color-orange-opacity20);
+        border: 0.1vw solid var(--color-orange);
+      }
+    }
+
+    & .submitButton {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      padding: 0.9vw 0;
+      border: 0;
+      border-radius: 0.3vw;
+      background-color: var(--color-orange);
+      font-size: 0.8vw;
+      color: var(--color-white);
+      font-family: var(--font-albertSans);
+      font-weight: var(--font-weight-normal);
+      line-height: var(--font-lineh-small);
+      margin-top: 0.5vw;
+      cursor: pointer;
+
+      &:disabled {
+        background-color: var(--color-darkGrey);
+        cursor: not-allowed;
+      }
+    }
+
+    & .error {
+      display: flex;
+      color: var(--color-red);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      font-size: 0.8vw;
+      margin: 0;
+      margin-top: 0.5vw;
+    }
+  }
+
+  & .textAfterForm {
+    font-size: 0.75vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-normal);
+    margin: 0;
+    margin-top: 2vw;
+  }
 }
 
 .preview {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
 
-.certificate {
-  width: 297mm; // Размер A4 в landscape
-  height: 210mm;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  color: #000;
+  & .certificate {
+    width: 44vw; // Размер A4 в landscape
+    height: 31vw;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #000;
+    // padding: 20mm;
+    box-sizing: border-box;
 
-  padding: 20mm;
-  box-sizing: border-box;
-}
+    & h2 {
+      font-size: 2vw;
+      margin: 10px 0;
+      color: var(--color-white);
+      font-family: var(--font-forCertificate);
+    }
 
-.certificate h2 {
-  font-size: 2vw;
-  margin: 10px 0;
-  color: var(--color-white);
-  font-family: var(--font-forCertificate);
-}
+    & p {
+      font-size: 1vw;
+      color: var(--color-white);
+      font-family: var(--font-forCertificate);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-normal);
+      margin: 0;
+    }
+  }
 
-.certificate h3 {
-  font-size: 24px;
-  margin: 10px 0;
-}
+  & .notPossible {
+    font-size: 0.75vw;
+    color: var(--color-lightGrey);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-normal);
+    margin: 0;
+  }
 
-.certificate p {
-  font-size: 18px;
-  margin: 5px 0;
-  color: var(--color-white);
-  font-family: var(--font-forCertificate);
-}
+  & .downloadButton {
+    display: flex;
+    justify-content: center;
+    padding: 0.9vw 2vw;
+    background-color: var(--color-green-opacity20);
+    border: 0.05vw solid var(--color-lightGreen);
+    border-radius: 0.4vw;
+    font-size: 0.8vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    transition: 0.3s ease-in-out;
+    cursor: pointer;
+    margin-top: 1vw;
+  }
 
-.downloadButton {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.downloadButton:hover {
-  background-color: #218838;
+  & .downloadButton:hover {
+    transform: scale(0.96);
+  }
 }

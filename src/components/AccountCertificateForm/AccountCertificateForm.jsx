@@ -7,7 +7,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import styles from './AccountCertificateForm.module.scss';
+import scss from './AccountCertificateForm.module.scss';
 import { toast } from 'react-toastify';
 
 export default function AccountCertificateForm() {
@@ -20,6 +20,7 @@ export default function AccountCertificateForm() {
   const course = useSelector((state) => state.auth.courses.find((c) => c.id === courseId));
   const certificateImage = course?.certificateImage || '/img/DefaultCertificate.jpg';
 
+  const { userName } = useSelector((state) => state.auth);
   const user = useSelector((state) => state.auth.user);
   const isAuthInitialized = useSelector((state) => state.auth.isAuthInitialized);
 
@@ -110,43 +111,23 @@ export default function AccountCertificateForm() {
   }
 
   return (
-    <div className={styles.container}>
-      <h1>Certificate of completion</h1>
-      <h3>
-        Congratulations on successfully completing the course{' '}
-        {course?.title || courseId.replace(/-/g, ' ').toUpperCase()}
-      </h3>
-      <div className={styles.formAndPreview}>
-        <Formik
-          initialValues={{ firstName: user?.firstName || '', lastName: user?.lastName || '' }}
-          validationSchema={validationSchema}
-          onSubmit={(values) => {
-            setCertificateData(values);
-          }}>
-          {({ isSubmitting }) => (
-            <Form className={styles.form}>
-              <div className={styles.field}>
-                <label htmlFor='firstName'>First Name (English)</label>
-                <Field name='firstName' type='text' placeholder='John' />
-                <ErrorMessage name='firstName' component='div' className={styles.error} />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor='lastName'>Last Name (English)</label>
-                <Field name='lastName' type='text' placeholder='Doe' />
-                <ErrorMessage name='lastName' component='div' className={styles.error} />
-              </div>
-              <button type='submit' disabled={isSubmitting}>
-                Preview Certificate
-              </button>
-            </Form>
-          )}
-        </Formik>
+    <div className={scss.container}>
+      <div className={scss.certificateTitlePage}>
+        <h1>Certificate of completion</h1>
+      </div>
+      <div className={scss.certificateDesctiptionPage}>
+        <p className={scss.welcomeText}>
+          Hi, <span>{userName}</span>! Make your sertificate here
+          {/* {course?.title || courseId.replace(/-/g, ' ').toUpperCase()} */}
+        </p>
+      </div>
 
-        <div className={styles.preview}>
+      <div className={scss.formAndPreview}>
+        <div className={scss.preview}>
           {certificateImage ? (
             <div
               id='certificate'
-              className={styles.certificate}
+              className={scss.certificate}
               style={{ backgroundImage: `url(${certificateImage})` }}>
               <h2>
                 {certificateData.firstName} {certificateData.lastName}
@@ -155,13 +136,52 @@ export default function AccountCertificateForm() {
               <p>{new Date().toLocaleDateString()}</p>
             </div>
           ) : (
-            <p>At the moment it is not possible to download the certificate.</p>
+            <p className={scss.notPossible}>
+              At the moment it is not possible to download the certificate.
+            </p>
           )}
           {certificateData.firstName && certificateData.lastName && (
-            <button onClick={downloadCertificate} className={styles.downloadButton}>
+            <button onClick={downloadCertificate} className={scss.downloadButton}>
               Download Certificate
             </button>
           )}
+        </div>
+
+        <div className={scss.formBlock}>
+          <Formik
+            initialValues={{ firstName: user?.firstName || '', lastName: user?.lastName || '' }}
+            validationSchema={validationSchema}
+            onSubmit={(values) => {
+              setCertificateData(values);
+            }}>
+            {({ isSubmitting }) => (
+              <Form className={scss.form}>
+                <div className={scss.field}>
+                  <label htmlFor='firstName'>
+                    First Name (<span>English</span>)
+                  </label>
+                  <Field name='firstName' type='text' placeholder='John' />
+                  <ErrorMessage name='firstName' component='div' className={scss.error} />
+                </div>
+                <div className={scss.field}>
+                  <label htmlFor='lastName'>
+                    Last Name (<span>English</span>)
+                  </label>
+                  <Field name='lastName' type='text' placeholder='Doe' />
+                  <ErrorMessage name='lastName' component='div' className={scss.error} />
+                </div>
+                <button className={scss.submitButton} type='submit' disabled={isSubmitting}>
+                  Preview Certificate
+                </button>
+              </Form>
+            )}
+          </Formik>
+          <p className={scss.textAfterForm}>
+            {userName} успешно прошел курс{' '}
+            {course?.title || courseId.replace(/-/g, ' ').toLowerCase()}{' '}
+            {new Date().toLocaleDateString()} от преподавателя Oleksey Naumenko and Kate Revvo |
+            K.Syndicate.school
+          </p>
         </div>
       </div>
     </div>

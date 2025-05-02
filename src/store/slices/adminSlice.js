@@ -365,14 +365,21 @@ export const addAccessLevel = createAsyncThunk(
 
 export const addCourse = createAsyncThunk(
   'admin/addCourse',
-  async (courseData, { getState, rejectWithValue }) => {
+  async (courseData, { getState, rejectWithValue, dispatch }) => {
     const { auth } = getState();
     if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
       return rejectWithValue('Только администраторы могут добавлять курсы');
     }
     try {
+      // Проверяем, существует ли курс с таким ID
       const courseRef = doc(db, 'courses', courseData.id);
+      const courseSnapshot = await getDoc(courseRef);
+      if (courseSnapshot.exists()) {
+        return rejectWithValue('Курс с таким ID уже существует');
+      }
       await setDoc(courseRef, courseData);
+      // После успешного добавления курса вызываем fetchCourses для синхронизации
+      await dispatch(fetchCourses()).unwrap();
       return courseData;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -464,10 +471,7 @@ export const uploadImage = createAsyncThunk(
       return rejectWithValue('Только администраторы могут загружать изображения');
     }
     try {
-      const storageRef = ref(
-        storage,
-        `product-images/${product.PersistenceId}/${Date.now()}/${file.name}`,
-      );
+      const storageRef = ref(storage, `product-images/${productId}/${Date.now()}/${file.name}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
       return downloadURL;
@@ -621,7 +625,7 @@ export const deleteDiscountPreset = createAsyncThunk(
   async (presetId, { getState, rejectWithValue }) => {
     const { auth, admin } = getState();
     if (!auth.user || !['admin', 'moderator'].includes(auth.userRole)) {
-      return rejectWithValue('Только администраторы могут удалять пресеты скид ;)ок');
+      return rejectWithValue('Только администраторы могут удалять пресеты скидок');
     }
     try {
       const presetToDelete = admin.discountPresets.find((p) => p.id === presetId);
@@ -824,12 +828,10 @@ const adminSlice = createSlice({
       })
       .addCase(fetchCourses.pending, (state) => {
         state.status = 'loading';
-        state.error = null;
       })
       .addCase(fetchCourses.fulfilled, (state, action) => {
-        state.status = 'succeeded';
         state.courses = action.payload;
-        state.error = null;
+        state.status = 'succeeded';
       })
       .addCase(fetchCourses.rejected, (state, action) => {
         state.status = 'failed';
@@ -917,16 +919,29 @@ const adminSlice = createSlice({
       .addCase(addAccessLevel.fulfilled, (state, action) => {
         state.accessLevels.push(action.payload);
       })
-      .addCase(addCourse.fulfilled, (state, action) => {
-        state.courses.push(action.payload);
+      .addCase(addCourse.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(addCourse.fulfilled, (state) => {
+        state.status = 'succeeded';
+        // Полагаемся на fetchCourses
+      })
+      .addCase(addCourse.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(updateCourse.pending, (state) => {
+        state.status = 'loading';
       })
       .addCase(updateCourse.fulfilled, (state, action) => {
+        state.status = 'succeeded';
         const index = state.courses.findIndex((c) => c.id === action.payload.id);
         if (index !== -1) {
           state.courses[index] = action.payload;
         }
       })
       .addCase(updateCourse.rejected, (state, action) => {
+        state.status = 'failed';
         state.error = action.payload;
       })
       .addCase(addNotification.fulfilled, (state) => {
