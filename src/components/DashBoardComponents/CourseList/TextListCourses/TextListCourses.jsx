@@ -4,10 +4,8 @@ export default function TextListCourses({
   courses,
   handleEdit,
   handleDelete,
-  handleDuplicate,
   accessLevels,
   userRole,
-  duplicatingCourseId,
 }) {
   // Функция для форматирования даты в формат DD.MM.YYYY
   const formatDate = (dateString) => {
@@ -60,30 +58,22 @@ export default function TextListCourses({
           <td>{course.category || 'Нет категории'}</td>
           <td>{course.id}</td>
           <td>{getAccessLevelName(course.access)}</td>
-          <td>{getLessonCount(course.modules)}</td>
+          <td>{getLessonCount(course.modules)}</td> {/* Новый столбец */}
           <td>{formatDate(course.createdAt)}</td>
           <td className={scss.actions}>
             <button className={scss.editButton} onClick={() => handleEdit(course.id)}>
               Редактировать
             </button>
-            {userRole === 'admin' && (
-              <>
-                <button
-                  className={scss.duplicateButton}
-                  onClick={() => handleDuplicate(course.id)}
-                  disabled={duplicatingCourseId === course.id}>
-                  {duplicatingCourseId === course.id ? 'Дублирование...' : 'Дублировать'}
-                </button>
-                <button
-                  className={scss.deleteButton}
-                  onClick={() => {
-                    if (window.confirm('Вы уверены, что хотите удалить этот курс?')) {
-                      handleDelete(course.id);
-                    }
-                  }}>
-                  Удалить
-                </button>
-              </>
+            {userRole == 'admin' && (
+              <button
+                className={scss.deleteButton}
+                onClick={() => {
+                  if (window.confirm('Вы уверены, что хотите удалить этот курс?')) {
+                    handleDelete(course.id);
+                  }
+                }}>
+                Удалить
+              </button>
             )}
           </td>
         </tr>

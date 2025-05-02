@@ -10,24 +10,23 @@ import PaginationOnCourses from './PaginationOnCourses/PaginationOnCourses';
 import AmountCourses from './AmountCourses/AmountCourses';
 import { useOutletContext } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCourses, deleteCourse, addCourse } from '../../../store/slices/adminSlice';
+import { fetchCourses, deleteCourse } from '../../../store/slices/adminSlice'; // Исправлен импорт
 
 export default function CourseList() {
   const { handleSectionClick } = useOutletContext();
   const dispatch = useDispatch();
 
-  const { courses, accessLevels, status } = useSelector((state) => state.admin);
+  const { courses, accessLevels, status } = useSelector((state) => state.admin); // Добавили status
   const { userRole } = useSelector((state) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOption, setSortOption] = useState('title-asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [coursesPerPage] = useState(20);
+  const [coursesPerPage] = useState(2);
   const [editingCourseId, setEditingCourseId] = useState(null);
-  const [duplicatingCourseId, setDuplicatingCourseId] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchCourses());
+    dispatch(fetchCourses()); // Исправлено на fetchAllCourses
   }, [dispatch]);
 
   // Debounce для поиска
@@ -96,62 +95,6 @@ export default function CourseList() {
     }
   };
 
-  // Обработчик дублирования
-  const handleDuplicate = async (courseId) => {
-    if (duplicatingCourseId) return;
-
-    setDuplicatingCourseId(courseId);
-    const courseToDuplicate = courses.find((course) => course.id === courseId);
-    if (!courseToDuplicate) {
-      toast.error('Курс не найден');
-      setDuplicatingCourseId(null);
-      return;
-    }
-
-    let newId = courseToDuplicate.id;
-    let newTitle = `${courseToDuplicate.title}_копия`;
-    let counter = 1;
-
-    // Проверяем уникальность ID с добавлением цифры
-    while (courses.some((course) => course.id === newId + counter)) {
-      counter++;
-    }
-    newId += counter;
-
-    // Проверяем уникальность заголовка с добавлением номера
-    while (courses.some((course) => course.title === newTitle + (counter > 1 ? counter : ''))) {
-      counter++;
-      newTitle = `${courseToDuplicate.title}_копия${counter}`;
-    }
-    if (counter > 1) {
-      newTitle += counter;
-    }
-
-    // Создаем новый объект курса с глубоким копированием модулей
-    const duplicatedCourse = {
-      ...courseToDuplicate,
-      id: newId,
-      title: newTitle,
-      createdAt: new Date().toISOString(),
-      modules: Object.keys(courseToDuplicate.modules || {}).reduce((acc, moduleId) => {
-        acc[`${moduleId}_${Date.now()}`] = {
-          ...courseToDuplicate.modules[moduleId],
-          lessons: [...(courseToDuplicate.modules[moduleId].lessons || [])],
-        };
-        return acc;
-      }, {}),
-    };
-
-    try {
-      await dispatch(addCourse(duplicatedCourse)).unwrap();
-      toast.success('Курс успешно дублирован!');
-    } catch (error) {
-      toast.error(`Ошибка при дублировании курса: ${error}`);
-    } finally {
-      setDuplicatingCourseId(null);
-    }
-  };
-
   // Обработчик возврата к списку
   const handleBack = () => {
     setEditingCourseId(null);
@@ -169,7 +112,7 @@ export default function CourseList() {
   }
 
   // Показываем индикатор загрузки, если данные еще не загружены
-  if (status === 'loading' && !duplicatingCourseId) {
+  if (status === 'loading') {
     return <div>Загрузка курсов...</div>;
   }
 
@@ -178,7 +121,7 @@ export default function CourseList() {
     <>
       <AmountCourses categoryCounts={categoryCounts} lastCourse={lastCourse} />
       <div className={scss.listMainBlock}>
-        {userRole === 'admin' && (
+        {userRole == 'admin' && (
           <div>
             <button
               className={scss.addCourseButton}
@@ -207,10 +150,8 @@ export default function CourseList() {
                 courses={paginatedCourses}
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
-                handleDuplicate={handleDuplicate}
                 accessLevels={accessLevels}
                 userRole={userRole}
-                duplicatingCourseId={duplicatingCourseId}
               />
             ) : (
               <tbody>

@@ -111,8 +111,7 @@ export default function AccountCertificateForm() {
 
   return (
     <div className={styles.container}>
-      <h2>Generate Your Certificate</h2>
-
+      <h1>Certificate of completion</h1>
       <h3>
         Congratulations on successfully completing the course{' '}
         {course?.title || courseId.replace(/-/g, ' ').toUpperCase()}
