@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
@@ -10,20 +10,42 @@ import jsPDF from 'jspdf';
 import scss from './AccountCertificateForm.module.scss';
 import { toast } from 'react-toastify';
 import { BsArrowLeftShort } from 'react-icons/bs';
+import { fetchUserData, subscribeToCourses } from '../../store/slices/authSlice';
+import PlayListLoadingIndicator from '../PlayListLoadingIndicator/PlayListLoadingIndicator';
 
 export default function AccountCertificateForm() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [certificateData, setCertificateData] = useState({ firstName: '', lastName: '' });
   const [hasAccess, setHasAccess] = useState(null);
+  const [certificateImageLoaded, setCertificateImageLoaded] = useState(null);
 
-  // Получаем данные курса из Redux
+  // Получаем данные из Redux
   const course = useSelector((state) => state.auth.courses.find((c) => c.id === courseId));
-  const certificateImage = course?.certificateImage || '/img/DefaultCertificate.jpg';
+  const { userName, user, isAuthInitialized, isCoursesLoaded } = useSelector((state) => state.auth);
 
-  const { userName } = useSelector((state) => state.auth);
-  const user = useSelector((state) => state.auth.user);
-  const isAuthInitialized = useSelector((state) => state.auth.isAuthInitialized);
+  // Загружаем данные пользователя и курсы при монтировании компонента
+  useEffect(() => {
+    if (!isAuthInitialized) return;
+
+    const initializeData = async () => {
+      if (!user) {
+        setHasAccess(false);
+        return;
+      }
+
+      // Загружаем данные пользователя, если они еще не загружены
+      const userData = await dispatch(fetchUserData(user.uid)).unwrap();
+
+      // Подписываемся на курсы, если они еще не загружены
+      if (!isCoursesLoaded) {
+        await dispatch(subscribeToCourses(userData.purchasedCourses)).unwrap();
+      }
+    };
+
+    initializeData();
+  }, [dispatch, isAuthInitialized, user, isCoursesLoaded]);
 
   // Проверяем доступ пользователя
   useEffect(() => {
@@ -49,7 +71,7 @@ export default function AccountCertificateForm() {
       }
     };
 
-    if (isAuthInitialized) {
+    if (isAuthInitialized && user) {
       checkAccess();
     }
   }, [isAuthInitialized, user, courseId]);
@@ -62,6 +84,26 @@ export default function AccountCertificateForm() {
     }
   }, [isAuthInitialized, hasAccess, navigate]);
 
+  // Предварительная загрузка изображения
+  useEffect(() => {
+    if (!course || !isCoursesLoaded) return; // Ждем, пока курсы загрузятся
+
+    const certificateImage = course?.certificateImage || '/img/DefaultCertificate.jpg';
+
+    if (certificateImage.startsWith('http')) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = certificateImage;
+      img.onload = () => setCertificateImageLoaded(certificateImage);
+      img.onerror = () => {
+        console.error('Ошибка загрузки изображения сертификата');
+        setCertificateImageLoaded('/img/DefaultCertificate.jpg');
+      };
+    } else {
+      setCertificateImageLoaded(certificateImage);
+    }
+  }, [course, isCoursesLoaded]);
+
   const validationSchema = Yup.object({
     firstName: Yup.string()
       .matches(/^[A-Za-z]+$/, 'Only English letters are allowed')
@@ -73,11 +115,14 @@ export default function AccountCertificateForm() {
 
   const downloadCertificate = async () => {
     const certificateElement = document.getElementById('certificate');
+    toast.info('Generating image, please wait...');
     try {
       const canvas = await html2canvas(certificateElement, {
-        scale: 4,
+        scale: 1.7,
         useCORS: true,
         logging: false,
+        imageTimeout: 5000,
+        backgroundColor: null,
       });
       const imgData = canvas.toDataURL('image/png', 1.0);
 
@@ -91,13 +136,65 @@ export default function AccountCertificateForm() {
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'NONE');
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'SLOW');
       pdf.save(
         `certificate_${courseId}_${certificateData.firstName}_${certificateData.lastName}.pdf`,
       );
+      toast.success('Image downloaded successfully!');
     } catch (error) {
       console.error('Ошибка генерации сертификата:', error);
       toast.error('Failed to generate certificate. Please try again.');
+    }
+  };
+
+  const downloadImage = async () => {
+    toast.info('Generating image, please wait...');
+    const certificateElement = document.getElementById('certificate');
+    try {
+      const canvas = await html2canvas(certificateElement, {
+        scale: 1.7,
+        useCORS: true,
+        logging: false,
+        imageTimeout: 5000,
+        backgroundColor: 'black',
+      });
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = `certificate_${courseId}_${certificateData.firstName}_${certificateData.lastName}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Image downloaded successfully!');
+    } catch (error) {
+      console.error('Ошибка генерации изображения:', error);
+      toast.error('Failed to generate image. Please try again.');
+    }
+  };
+
+  const downloadJpg = async () => {
+    toast.info('Generating image, please wait...');
+    const certificateElement = document.getElementById('certificate');
+    try {
+      const canvas = await html2canvas(certificateElement, {
+        scale: 1.7,
+        useCORS: true,
+        logging: false,
+        imageTimeout: 5000,
+        backgroundColor: 'black',
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.95); // Качество 0.95 для JPEG
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = `certificate_${courseId}_${certificateData.firstName}_${certificateData.lastName}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Image downloaded successfully!');
+    } catch (error) {
+      console.error('Ошибка генерации изображения:', error);
+      toast.error('Failed to generate image. Please try again.');
     }
   };
 
@@ -113,9 +210,9 @@ export default function AccountCertificateForm() {
     return `${speakers.slice(0, -1).join(', ')} and ${speakers[speakers.length - 1]}`;
   };
 
-  // Показываем загрузку, пока проверяем доступ
-  if (!isAuthInitialized || hasAccess === null) {
-    return <div>Loading...</div>;
+  // Показываем загрузку, пока проверяем доступ или загружается изображение
+  if (!isAuthInitialized || hasAccess === null || !isCoursesLoaded || !certificateImageLoaded) {
+    return <PlayListLoadingIndicator />;
   }
 
   // Если доступ запрещен, не рендерим форму
@@ -141,11 +238,11 @@ export default function AccountCertificateForm() {
 
       <div className={scss.formAndPreview}>
         <div className={scss.preview}>
-          {certificateImage ? (
+          {certificateImageLoaded ? (
             <div
               id='certificate'
               className={scss.certificate}
-              style={{ backgroundImage: `url(${certificateImage})` }}>
+              style={{ backgroundImage: `url(${certificateImageLoaded})` }}>
               <h2>
                 {certificateData.firstName} {certificateData.lastName}
               </h2>
@@ -157,9 +254,17 @@ export default function AccountCertificateForm() {
             </p>
           )}
           {certificateData.firstName && certificateData.lastName && (
-            <button onClick={downloadCertificate} className={scss.downloadButton}>
-              Download Certificate
-            </button>
+            <div className={scss.buttonsDownload}>
+              <button onClick={downloadCertificate} className={scss.downloadButton}>
+                Download Certificate (PDF)
+              </button>
+              <button onClick={downloadImage} className={scss.downloadButton}>
+                Download Certificate (PNG)
+              </button>
+              <button onClick={downloadJpg} className={scss.downloadButton}>
+                Download Certificate (JPG)
+              </button>
+            </div>
           )}
         </div>
 

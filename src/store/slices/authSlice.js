@@ -43,6 +43,7 @@ const initialState = {
   error: null,
   isLoading: true,
   isAuthInitialized: false,
+  isCoursesLoaded: false, // Добавляем флаг для отслеживания загрузки курсов
   lastCourseId: localStorage.getItem('lastCourseId') || null,
   status: 'idle',
 };
@@ -239,9 +240,9 @@ export const subscribeToCourses = createAsyncThunk(
           };
         });
         dispatch(setCourses(courseList));
+        dispatch(setCoursesLoaded(true)); // Устанавливаем флаг после первой загрузки
       });
 
-      // Возвращаем null или другой сериализуемый payload
       return null;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -308,6 +309,8 @@ export const fetchCourses = createAsyncThunk(
           completedLessonsCount,
           totalDuration,
           userCount: courseData.userCount || 0,
+          certificateImage: courseData.certificateImage || '/img/DefaultCertificate.jpg',
+          speakers: courseData.speakers,
         };
       });
       return courseList;
@@ -512,6 +515,9 @@ const authSlice = createSlice({
     setAuthInitialized: (state, action) => {
       state.isAuthInitialized = action.payload;
     },
+    setCoursesLoaded: (state, action) => {
+      state.isCoursesLoaded = action.payload;
+    },
     setError: (state, action) => {
       state.error = action.payload;
     },
@@ -588,6 +594,7 @@ const authSlice = createSlice({
         state.completedLessons = {};
         state.lastModules = {};
         state.courses = [];
+        state.isCoursesLoaded = false; // Сбрасываем флаг при выходе
       })
       .addCase(logout.rejected, (state, action) => {
         state.error = action.payload;
@@ -611,9 +618,14 @@ const authSlice = createSlice({
       })
       .addCase(fetchCourses.fulfilled, (state, action) => {
         state.courses = action.payload;
+        state.isCoursesLoaded = true; // Устанавливаем флаг после загрузки
       })
       .addCase(subscribeToCourses.fulfilled, (state) => {
         // Ничего не делаем, так как данные обновляются через setCourses
+      })
+      .addCase(subscribeToCourses.rejected, (state, action) => {
+        state.error = action.payload;
+        state.isCoursesLoaded = false;
       })
       .addCase(updateUserAvatar.fulfilled, (state, action) => {
         state.avatarUrl = action.payload;
@@ -676,6 +688,7 @@ export const {
   setUser,
   setUserRole,
   setAuthInitialized,
+  setCoursesLoaded,
   setError,
   clearError,
   setLastCourseId,

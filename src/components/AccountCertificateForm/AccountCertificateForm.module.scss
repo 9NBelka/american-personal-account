@@ -2,6 +2,7 @@
   width: 68.75vw;
   margin: 0 auto;
   max-width: 100%;
+  padding-bottom: 5vw;
 }
 
 @media (max-width: 1024px) {
@@ -199,8 +200,8 @@
   flex-direction: column;
 
   & .certificate {
-    width: 44vw; // Размер A4 в landscape
-    height: 31vw;
+    width: 45vw; // Размер A4 в landscape
+    height: 32vw;
     background-size: cover;
     background-position: center;
     position: relative;
@@ -210,6 +211,7 @@
     align-items: center;
     text-align: center;
     color: #000;
+    background-color: #000;
     // padding: 20mm;
     box-sizing: border-box;
 
@@ -217,7 +219,7 @@
       position: absolute;
       top: 52%;
       font-size: 1.8vw;
-      color: black;
+      color: var(--color-white);
       font-family: var(--font-forCertificate);
     }
 
@@ -243,25 +245,31 @@
     margin: 0;
   }
 
-  & .downloadButton {
+  & .buttonsDownload {
     display: flex;
-    justify-content: center;
-    padding: 0.9vw 2vw;
-    background-color: var(--color-green-opacity20);
-    border: 0.05vw solid var(--color-lightGreen);
-    border-radius: 0.4vw;
-    font-size: 0.8vw;
-    color: var(--color-white);
-    font-family: var(--font-main-for-account);
-    font-weight: var(--font-weight-small);
-    line-height: var(--font-lineh-small);
-    transition: 0.3s ease-in-out;
-    cursor: pointer;
-    margin-top: 1vw;
-  }
+    width: 100%;
+    justify-content: space-between;
 
-  & .downloadButton:hover {
-    transform: scale(0.99);
+    & .downloadButton {
+      display: flex;
+      justify-content: center;
+      padding: 0.9vw 2vw;
+      background-color: var(--color-green-opacity20);
+      border: 0.05vw solid var(--color-lightGreen);
+      border-radius: 0.4vw;
+      font-size: 0.8vw;
+      color: var(--color-white);
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-small);
+      line-height: var(--font-lineh-small);
+      transition: 0.3s ease-in-out;
+      cursor: pointer;
+      margin-top: 1vw;
+
+      &:hover {
+        transform: scale(0.99);
+      }
+    }
   }
 }
 
