@@ -9,6 +9,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import scss from './AccountCertificateForm.module.scss';
 import { toast } from 'react-toastify';
+import { BsArrowLeftShort } from 'react-icons/bs';
 
 export default function AccountCertificateForm() {
   const { courseId } = useParams();
@@ -100,6 +101,10 @@ export default function AccountCertificateForm() {
     }
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   // Показываем загрузку, пока проверяем доступ
   if (!isAuthInitialized || hasAccess === null) {
     return <div>Loading...</div>;
@@ -112,6 +117,11 @@ export default function AccountCertificateForm() {
 
   return (
     <div className={scss.container}>
+      <div className={scss.backButtonBlock}>
+        <button className={scss.backButton} onClick={handleGoBack}>
+          <BsArrowLeftShort className={scss.backIcon} /> Back
+        </button>
+      </div>
       <div className={scss.certificateTitlePage}>
         <h1>Certificate of completion</h1>
       </div>

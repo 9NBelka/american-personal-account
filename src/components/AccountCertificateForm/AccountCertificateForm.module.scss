@@ -19,7 +19,7 @@
 .certificateTitlePage {
   display: flex;
   flex-direction: column;
-  padding-top: 2.2vw;
+  padding-top: 1vw;
 
   & h1 {
     font-size: 2.15vw;
@@ -214,14 +214,18 @@
     box-sizing: border-box;
 
     & h2 {
-      font-size: 2vw;
-      margin: 10px 0;
-      color: var(--color-white);
+      position: absolute;
+      top: 52%;
+      font-size: 1.8vw;
+      color: black;
       font-family: var(--font-forCertificate);
     }
 
     & p {
-      font-size: 1vw;
+      position: absolute;
+      bottom: 1.5vw;
+      right: 1.5vw;
+      font-size: 0.55vw;
       color: var(--color-white);
       font-family: var(--font-forCertificate);
       font-weight: var(--font-weight-small);
@@ -257,6 +261,74 @@
   }
 
   & .downloadButton:hover {
-    transform: scale(0.96);
+    transform: scale(0.99);
+  }
+}
+
+.backButtonBlock {
+  display: flex;
+  align-items: center;
+  padding-top: 2.2vw;
+
+  & .backButton {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    color: #919191;
+    font-size: 0.85vw;
+    cursor: pointer;
+    transition: color 0.3s;
+    gap: 0.2vw;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    transition: 0.3s ease-in-out;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+
+  & .backIcon {
+    fill: #919191;
+    width: 1vw;
+    height: 1vw;
+  }
+}
+
+@media (max-width: 1024px) {
+  .backButtonBlock {
+    padding-top: 3vw;
+
+    & .backButton {
+      font-size: 2.4vw;
+      gap: 0.5vw;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+
+    & .backIcon {
+      width: 2.25vw;
+      height: 2.25vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .backButtonBlock {
+    padding-top: 4vw;
+
+    & .backButton {
+      font-size: 3.6vw;
+      gap: 0.5vw;
+    }
+
+    & .backIcon {
+      width: 4vw;
+      height: 4vw;
+    }
   }
 }
