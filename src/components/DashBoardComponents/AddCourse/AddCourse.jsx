@@ -22,6 +22,7 @@ export default function AddCourse() {
     access: '',
     modules: {},
     certificateImage: '',
+    speakers: [], // Новое поле для спикеров
   });
 
   // Состояние для файла сертификата и предпросмотра
@@ -207,6 +208,29 @@ export default function AddCourse() {
     );
   };
 
+  // Управление спикерами
+  const addSpeaker = () => {
+    setCourseData((prev) => ({
+      ...prev,
+      speakers: [...prev.speakers, ''],
+    }));
+  };
+
+  const handleSpeakerChange = (index, value) => {
+    setCourseData((prev) => {
+      const updatedSpeakers = [...prev.speakers];
+      updatedSpeakers[index] = value;
+      return { ...prev, speakers: updatedSpeakers };
+    });
+  };
+
+  const removeSpeaker = (index) => {
+    setCourseData((prev) => ({
+      ...prev,
+      speakers: prev.speakers.filter((_, i) => i !== index),
+    }));
+  };
+
   // Обработчик отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -273,6 +297,7 @@ export default function AddCourse() {
         access: '',
         modules: {},
         certificateImage: '',
+        speakers: [], // Сбрасываем спикеров
       });
       setModuleList([]);
       setCertificateFile(null);
@@ -425,6 +450,31 @@ export default function AddCourse() {
             </div>
           )}
           {certificateFile && <p>Выбрано: {certificateFile.name}</p>}
+        </div>
+
+        {/* Спикеры */}
+        <div className={scss.speakersSection}>
+          <h3>Спикеры</h3>
+          {courseData.speakers.map((speaker, index) => (
+            <div key={index} className={scss.speaker}>
+              <input
+                type='text'
+                value={speaker}
+                onChange={(e) => handleSpeakerChange(index, e.target.value)}
+                placeholder={`Спикер ${index + 1}`}
+                required
+              />
+              <button
+                type='button'
+                className={scss.deleteButton}
+                onClick={() => removeSpeaker(index)}>
+                <BsTrash />
+              </button>
+            </div>
+          ))}
+          <button type='button' className={scss.addSpeakerButton} onClick={addSpeaker}>
+            <BsPlus /> Добавить спикера
+          </button>
         </div>
 
         {/* Модули и уроки */}

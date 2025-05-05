@@ -105,6 +105,14 @@ export default function AccountCertificateForm() {
     navigate(-1);
   };
 
+  // Форматирование списка спикеров
+  const formatSpeakers = (speakers) => {
+    if (!speakers || speakers.length === 0) return 'Unknown Instructor';
+    if (speakers.length === 1) return speakers[0];
+    if (speakers.length === 2) return `${speakers[0]} and ${speakers[1]}`;
+    return `${speakers.slice(0, -1).join(', ')} and ${speakers[speakers.length - 1]}`;
+  };
+
   // Показываем загрузку, пока проверяем доступ
   if (!isAuthInitialized || hasAccess === null) {
     return <div>Loading...</div>;
@@ -127,8 +135,7 @@ export default function AccountCertificateForm() {
       </div>
       <div className={scss.certificateDesctiptionPage}>
         <p className={scss.welcomeText}>
-          Hi, <span>{userName}</span>! Make your sertificate here
-          {/* {course?.title || courseId.replace(/-/g, ' ').toUpperCase()} */}
+          Hi, <span>{userName}</span>! Make your certificate here
         </p>
       </div>
 
@@ -142,7 +149,6 @@ export default function AccountCertificateForm() {
               <h2>
                 {certificateData.firstName} {certificateData.lastName}
               </h2>
-
               <p>{new Date().toLocaleDateString()}</p>
             </div>
           ) : (
@@ -187,9 +193,9 @@ export default function AccountCertificateForm() {
             )}
           </Formik>
           <p className={scss.textAfterForm}>
-            {userName} успешно прошел курс{' '}
-            {course?.title || courseId.replace(/-/g, ' ').toLowerCase()}{' '}
-            {new Date().toLocaleDateString()} от преподавателя Oleksey Naumenko and Kate Revvo |
+            {userName} successfully completed the course{' '}
+            {course?.title || courseId.replace(/-/g, ' ').toLowerCase()} on{' '}
+            {new Date().toLocaleDateString()} taught by {formatSpeakers(course?.speakers)} |
             K.Syndicate.school
           </p>
         </div>

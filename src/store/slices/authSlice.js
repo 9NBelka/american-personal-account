@@ -235,6 +235,7 @@ export const subscribeToCourses = createAsyncThunk(
             totalDuration,
             userCount: courseData.userCount || 0,
             certificateImage: courseData.certificateImage || '/img/DefaultCertificate.jpg',
+            speakers: courseData.speakers,
           };
         });
         dispatch(setCourses(courseList));

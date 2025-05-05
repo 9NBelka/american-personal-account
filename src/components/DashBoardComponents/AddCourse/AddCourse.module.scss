@@ -203,6 +203,75 @@
     }
   }
 
+  & .speakersSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1vw;
+
+    h3 {
+      font-size: 0.9vw;
+      color: #fff;
+      font-family: var(--font-main-for-account);
+      font-weight: var(--font-weight-normal);
+      line-height: var(--font-lineh-normal);
+    }
+
+    & .descriptionItem,
+    & .speaker {
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+
+      input {
+        flex: 1;
+        padding: 0.5vw;
+        background-color: #252525;
+        border: none;
+        border-radius: 0.2vw;
+        font-size: 0.75vw;
+        color: #fff;
+        font-family: var(--font-main-for-account);
+        font-weight: var(--font-weight-small);
+        line-height: var(--font-lineh-small);
+        outline: none;
+
+        &::placeholder {
+          color: #888;
+        }
+
+        &:focus {
+          background-color: #303030;
+        }
+      }
+    }
+  }
+
+  & .addSpeakerButton {
+    display: flex;
+    align-items: center;
+    gap: 0.3vw;
+    padding: 0.4vw 0.75vw;
+    background-color: #2ecc71;
+    border: none;
+    border-radius: 0.2vw;
+    font-size: 0.75vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+
+    &:hover {
+      background-color: #27ae60;
+    }
+
+    svg {
+      width: 0.75vw;
+      height: 0.75vw;
+    }
+  }
+
   & .modulesSection {
     display: flex;
     flex-direction: column;
