@@ -118,17 +118,17 @@ export default function AccountCertificateForm() {
     toast.info('Generating image, please wait...');
     try {
       const canvas = await html2canvas(certificateElement, {
-        scale: 1.7,
+        scale: 3,
         useCORS: true,
         logging: false,
         imageTimeout: 5000,
         backgroundColor: null,
       });
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      const imgData = canvas.toDataURL('image/png', 3);
 
       const pdf = new jsPDF({
         orientation: 'landscape',
-        unit: 'mm',
+        unit: 'px',
         format: 'a4',
         compress: false,
       });
@@ -153,13 +153,13 @@ export default function AccountCertificateForm() {
     const certificateElement = document.getElementById('certificate');
     try {
       const canvas = await html2canvas(certificateElement, {
-        scale: 1.7,
+        scale: 3,
         useCORS: true,
         logging: false,
         imageTimeout: 5000,
         backgroundColor: 'black',
       });
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      const imgData = canvas.toDataURL('image/png', 3);
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `certificate_${courseId}_${certificateData.firstName}_${certificateData.lastName}.png`;
@@ -178,13 +178,13 @@ export default function AccountCertificateForm() {
     const certificateElement = document.getElementById('certificate');
     try {
       const canvas = await html2canvas(certificateElement, {
-        scale: 1.7,
+        scale: 3,
         useCORS: true,
         logging: false,
         imageTimeout: 5000,
         backgroundColor: 'black',
       });
-      const imgData = canvas.toDataURL('image/jpeg', 0.95); // Качество 0.95 для JPEG
+      const imgData = canvas.toDataURL('image/jpeg', 3); // Качество 0.95 для JPEG
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `certificate_${courseId}_${certificateData.firstName}_${certificateData.lastName}.jpg`;
