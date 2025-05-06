@@ -47,7 +47,7 @@
       color: var(--color-white);
       font-family: var(--font-main-for-account);
       font-weight: var(--font-weight-small);
-      line-height: var(--font-lineh-small);
+      line-height: var(--font-lineh-normal);
       text-transform: capitalize;
     }
 
@@ -172,7 +172,7 @@
 
       & .moduleCompletionCount {
         font-size: 3.6vw;
-        padding-left: 5.6vw;
+        padding-left: 0vw;
       }
     }
 
@@ -202,7 +202,7 @@
     color: var(--color-lightGrey);
     font-family: var(--font-main-for-account);
     font-weight: var(--font-weight-small);
-    line-height: var(--font-lineh-small);
+    line-height: var(--font-lineh-normal);
     padding: 0.5vw 0vw;
     transition: 0.3s ease-in-out;
     cursor: pointer;

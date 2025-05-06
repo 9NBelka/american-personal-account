@@ -8,6 +8,7 @@
 @media (max-width: 1024px) {
   .container {
     width: 92vw;
+    padding-bottom: 15vw;
   }
 }
 
@@ -83,12 +84,62 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .certificateDesctiptionPage {
+    & .welcomeText {
+      font-size: 1.6vw;
+      margin-top: 1vw;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .certificateDesctiptionPage {
+    & .welcomeText {
+      font-size: 2.4vw;
+      margin-top: 1.5vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .certificateDesctiptionPage {
+    justify-content: center;
+    & .welcomeText {
+      font-size: 3.6vw;
+      margin-top: 2vw;
+    }
+  }
+}
+
 .formAndPreview {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   padding-top: 2.2vw;
   gap: 3vw;
+}
+
+@media (max-width: 1024px) {
+  .formAndPreview {
+    flex-direction: column-reverse;
+    padding-top: 3vw;
+    gap: 3vw;
+  }
+}
+
+@media (max-width: 980px) {
+  .formAndPreview {
+    padding-top: 5vw;
+    gap: 5vw;
+  }
+}
+
+@media (max-width: 576px) {
+  .formAndPreview {
+    padding-top: 10vw;
+    gap: 7vw;
+  }
 }
 
 .formBlock {
@@ -194,6 +245,114 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .formBlock {
+    & .form {
+      gap: 3vw;
+
+      & .field label {
+        font-size: 1.8vw;
+      }
+
+      & .field input {
+        padding: 1.5vw 2vw;
+        border-radius: 0.5vw;
+        font-size: 1.8vw;
+        margin-top: 1vw;
+      }
+
+      & .submitButton {
+        padding: 1.5vw 0;
+        border-radius: 0.5vw;
+        font-size: 1.8vw;
+        margin-top: 0vw;
+      }
+
+      & .error {
+        font-size: 1.7vw;
+        margin-top: 1vw;
+      }
+    }
+
+    & .textAfterForm {
+      font-size: 1.8vw;
+      margin-top: 2vw;
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .formBlock {
+    & .form {
+      gap: 5vw;
+
+      & .field label {
+        font-size: 2.4vw;
+      }
+
+      & .field input {
+        padding: 2vw 2.5vw;
+        border-radius: 1vw;
+        font-size: 2.4vw;
+        margin-top: 1vw;
+      }
+
+      & .submitButton {
+        padding: 2vw 0;
+        border-radius: 1vw;
+        font-size: 2.4vw;
+        margin-top: 0vw;
+      }
+
+      & .error {
+        font-size: 2.2vw;
+        margin-top: 1vw;
+      }
+    }
+
+    & .textAfterForm {
+      font-size: 2.4vw;
+      margin-top: 5vw;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .formBlock {
+    & .form {
+      gap: 6vw;
+
+      & .field label {
+        font-size: 3.6vw;
+      }
+
+      & .field input {
+        padding: 3vw 3vw;
+        border-radius: 1.5vw;
+        font-size: 3.6vw;
+        margin-top: 1vw;
+      }
+
+      & .submitButton {
+        padding: 3vw 0;
+        border-radius: 1.5vw;
+        font-size: 3.6vw;
+        margin-top: 0vw;
+      }
+
+      & .error {
+        font-size: 3.2vw;
+        margin-top: 1vw;
+      }
+    }
+
+    & .textAfterForm {
+      font-size: 3.6vw;
+      margin-top: 6vw;
+    }
+  }
+}
+
 .preview {
   flex: 1;
   display: flex;
@@ -268,6 +427,114 @@
 
       &:hover {
         transform: scale(0.99);
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .preview {
+    align-items: center;
+    & .certificate {
+      width: 78vw; // Размер A4 в landscape
+      height: 54.5vw;
+
+      & h2 {
+        top: 52%;
+        font-size: 3vw;
+      }
+
+      & p {
+        bottom: 2.5vw;
+        right: 2.5vw;
+        font-size: 1vw;
+      }
+    }
+
+    & .notPossible {
+      font-size: 1.8vw;
+    }
+
+    & .buttonsDownload {
+      & .downloadButton {
+        padding: 1.5vw 2vw;
+        border-radius: 0.5vw;
+        font-size: 1.8vw;
+        margin-top: 3vw;
+
+        &:hover {
+          transform: scale(1);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .preview {
+    & .certificate {
+      width: 100%; // Размер A4 в landscape
+      height: 65vw;
+
+      & h2 {
+        top: 52%;
+        font-size: 3.8vw;
+      }
+
+      & p {
+        bottom: 3vw;
+        right: 3vw;
+        font-size: 1.2vw;
+      }
+    }
+
+    & .notPossible {
+      font-size: 2.4vw;
+    }
+
+    & .buttonsDownload {
+      gap: 4vw;
+      & .downloadButton {
+        padding: 2vw 2.5vw;
+        border-radius: 1vw;
+        font-size: 2.4vw;
+        margin-top: 3vw;
+        line-height: var(--font-lineh-normal);
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .preview {
+    & .certificate {
+      width: 100%; // Размер A4 в landscape
+      height: 65vw;
+
+      & h2 {
+        top: 52%;
+        font-size: 3.8vw;
+      }
+
+      & p {
+        bottom: 3.5vw;
+        right: 2vw;
+        font-size: 1.2vw;
+      }
+    }
+
+    & .notPossible {
+      font-size: 3.6vw;
+    }
+
+    & .buttonsDownload {
+      flex-direction: column;
+      gap: 0vw;
+      & .downloadButton {
+        padding: 3vw 2.5vw;
+        border-radius: 1.5vw;
+        font-size: 3.6vw;
+        margin-top: 4vw;
       }
     }
   }
