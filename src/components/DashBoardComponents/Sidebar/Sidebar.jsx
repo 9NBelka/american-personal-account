@@ -29,6 +29,7 @@ export default function Sidebar({
   const navigate = useNavigate();
 
   const { userRole } = useSelector((state) => state.auth);
+  const [isPagesOpen, setIsPagesOpen] = useState(false);
   const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [isProductOpen, setIsProductOpen] = useState(false);
@@ -41,6 +42,7 @@ export default function Sidebar({
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
     if (!isCollapsed) {
+      setIsPagesOpen(false);
       setIsUsersOpen(false);
       setIsCoursesOpen(false);
       setIsProductOpen(false);
@@ -73,7 +75,7 @@ export default function Sidebar({
             </div>
           </li>
         )}
-        {userRole == 'admin' && (
+        {/* {userRole == 'admin' && (
           <li
             className={clsx(scss.menuItem, activeSection === 'pages' && scss.active)}
             onClick={() => handleSectionClick('pages')}>
@@ -81,6 +83,50 @@ export default function Sidebar({
               <BsDisplayFill className={scss.menuIcon} />
               <span className={scss.menuText}>Страницы</span>
             </div>
+          </li>
+        )} */}
+        {userRole == 'admin' && (
+          <li
+            className={clsx(
+              scss.menuItem,
+              (activeSection === 'pages' || activeSection === 'formsOnPages') && scss.active,
+            )}>
+            <div
+              className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
+              onClick={() => {
+                if (!isCollapsed) setIsPagesOpen(!isPagesOpen);
+                handleSectionClick('pages');
+              }}>
+              <div className={scss.iconAndTextMenuBlock}>
+                <BsDisplayFill className={scss.menuIcon} />
+                <span className={scss.menuText}>Страницы</span>
+              </div>
+              {isPagesOpen ? (
+                <BsChevronDown className={scss.iconDrop} />
+              ) : (
+                <BsChevronRight className={scss.iconDrop} />
+              )}
+            </div>
+            {isPagesOpen && !isCollapsed && (
+              <ul className={scss.submenu}>
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'pages' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('pages')}>
+                  Все страницы
+                </li>
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'formsOnPages' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('formsOnPages')}>
+                  Формы
+                </li>
+              </ul>
+            )}
           </li>
         )}
         <li

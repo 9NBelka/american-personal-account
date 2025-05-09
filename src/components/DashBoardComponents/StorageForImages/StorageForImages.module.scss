@@ -22,7 +22,7 @@
 }
 
 .fileInput {
-  border: 0.1vw solid var(--color-lightGreen);
+  border: 0;
   border-radius: 0.2vw;
   padding: 0.3vw;
   color: var(--color-white);
@@ -42,11 +42,9 @@
   transition: 0.3s ease-in-out;
   cursor: pointer;
   background-color: var(--color-green-opacity20);
-  border: 0.1vw solid var(--color-lightGreen);
 
   &:hover {
     background-color: #053a1b;
-    border: 0.1vw solid transparent;
   }
 
   &:disabled {
@@ -133,11 +131,10 @@
   transition: 0.3s ease-in-out;
   cursor: pointer;
   background-color: var(--color-green-opacity20);
-  border: 0.1vw solid var(--color-lightGreen);
+  border: 0;
 
   &:hover {
     background-color: #053a1b;
-    border: 0.1vw solid transparent;
   }
 }
 
@@ -153,10 +150,9 @@
   transition: 0.3s ease-in-out;
   cursor: pointer;
   background-color: var(--color-red-opacity20);
-  border: 0.1vw solid var(--color-red);
+  border: 0;
 
   &:hover {
     background-color: #3f0d07;
-    border: 0.1vw solid transparent;
   }
 }

@@ -3,6 +3,7 @@ import adminReducer from './slices/adminSlice';
 import authReducer from './slices/authSlice';
 import currencyReducer from './slices/currencySlice';
 import storageReducer from './slices/storageSlice';
+import formsReducer from './slices/formsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     auth: authReducer,
     currency: currencyReducer,
     storage: storageReducer,
+    forms: formsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -31,18 +33,13 @@ export const store = configureStore({
           'storage/fetchImages/fulfilled',
           'storage/fetchImages/rejected',
         ],
-        ignoredActionPaths: [
-          'payload.ref',
-          'payload.firestore',
-          'meta.arg',
-          'payload.*.ref', // Игнорируем ref в массиве payload
-        ],
+        ignoredActionPaths: ['payload.ref', 'payload.firestore', 'meta.arg', 'payload.*.ref'],
         ignoredPaths: [
           'admin.firestore',
           'auth.firestore',
           'meta.arg.file',
           'storage.images',
-          'storage.images.*.ref', // Игнорируем ref в состоянии
+          'storage.images.*.ref',
         ],
       },
     }),

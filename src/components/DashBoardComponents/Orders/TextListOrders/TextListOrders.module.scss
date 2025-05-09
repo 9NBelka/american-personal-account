@@ -36,11 +36,9 @@
         cursor: pointer;
         border: none;
         background-color: var(--color-blue-opacity20); // Using a blue color for "Details"
-        border: 0.1vw solid var(--color-blue);
 
         &:hover {
           background-color: #1a3c5e;
-          border: 0.1vw solid transparent;
         }
       }
     }

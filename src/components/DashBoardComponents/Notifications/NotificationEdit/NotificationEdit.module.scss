@@ -177,7 +177,7 @@
         flex: 1;
         padding: 0.5vw;
         background-color: var(--color-green-opacity20);
-        border: 0.1vw solid var(--color-lightGreen);
+        border: 0;
         border-radius: 0.25vw;
         font-size: 0.8vw;
         color: #fff;
@@ -189,7 +189,6 @@
 
         &:hover {
           background-color: #053a1b;
-          border: 0.1vw solid transparent;
         }
       }
 
@@ -197,7 +196,7 @@
         flex: 1;
         padding: 0.5vw;
         background-color: var(--color-red-opacity20);
-        border: 0.1vw solid var(--color-red);
+        border: 0;
         border-radius: 0.25vw;
         font-size: 0.8vw;
         color: #fff;
@@ -209,7 +208,6 @@
 
         &:hover {
           background-color: #3f0d07;
-          border: 0.1vw solid transparent;
         }
       }
     }

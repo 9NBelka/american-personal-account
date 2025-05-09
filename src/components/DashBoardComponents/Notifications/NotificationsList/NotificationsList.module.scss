@@ -115,7 +115,7 @@
         .editButton {
           padding: 0.3vw 0.75vw;
           background-color: var(--color-blue-opacity20);
-          border: 0.1vw solid var(--color-blue);
+          border: 0;
           border-radius: 0.3vw;
           font-size: 0.7vw;
           color: var(--color-white);
@@ -127,14 +127,13 @@
 
           &:hover {
             background-color: #0d2a3f;
-            border: 0.1vw solid transparent;
           }
         }
 
         .deleteButton {
+          border: 0;
           padding: 0.3vw 0.75vw;
           background-color: var(--color-red-opacity20);
-          border: 0.1vw solid var(--color-red);
           border-radius: 0.3vw;
           font-size: 0.7vw;
           color: var(--color-white);
@@ -146,7 +145,6 @@
 
           &:hover {
             background-color: #3f0d07;
-            border: 0.1vw solid transparent;
           }
         }
       }

@@ -1,0 +1,100 @@
+.formsContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 2vw;
+
+  & .title {
+    font-size: 1.4vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    margin-bottom: 1vw;
+  }
+
+  & .error {
+    color: var(--color-red);
+    font-size: 0.8vw;
+    margin-bottom: 1vw;
+  }
+}
+
+.pageBlock {
+  margin-bottom: 1vw;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5vw 1vw;
+  background-color: var(--color-green-opacity20);
+  border-radius: 0.2vw;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+
+  &:hover {
+    background-color: #053a1b;
+  }
+
+  & h3 {
+    font-size: 1vw;
+    color: var(--color-white);
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-normal);
+    margin: 0;
+  }
+
+  & span {
+    font-size: 0.8vw;
+    color: var(--color-white);
+  }
+}
+
+.tableWrapper {
+  max-height: 20vw; /* Ограничение высоты таблицы */
+  overflow-y: auto; /* Скролл при превышении */
+  border-radius: 0.25vw;
+  margin-top: 0.5vw;
+  background-color: #111111;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #111111;
+
+  & th {
+    padding: 0.5vw 1vw;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--font-lineh-small);
+    background-color: #1e1e1e;
+    border-bottom: 0.05vw solid #333;
+    text-align: left;
+  }
+
+  & td {
+    padding: 0.5vw 1vw;
+    font-size: 0.7vw;
+    color: #fff;
+    font-family: var(--font-main-for-account);
+    font-weight: var(--font-weight-small);
+    line-height: var(--font-lineh-small);
+    vertical-align: middle;
+  }
+}
+
+.formRow {
+  background-color: #1e1e1e;
+  border-bottom: 0.05vw solid #333;
+  transition: 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #252525;
+  }
+}

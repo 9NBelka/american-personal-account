@@ -28,7 +28,6 @@
     cursor: pointer;
     border-radius: 0.2vw;
     transition: background-color 0.3s ease-in-out;
-    border: 0.1vw solid transparent;
 
     &:hover {
       background-color: #252525;
@@ -36,7 +35,6 @@
 
     &.active {
       background-color: var(--color-green-opacity20);
-      border: 0.1vw solid var(--color-lightGreen);
       color: #fff;
     }
   }

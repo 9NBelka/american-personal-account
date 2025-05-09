@@ -100,19 +100,15 @@
 
         &.editButton {
           background-color: var(--color-green-opacity20);
-          border: 0.1vw solid var(--color-lightGreen);
           &:hover {
             background-color: #053a1b;
-            border: 0.1vw solid transparent;
           }
         }
 
         &.deleteButton {
           background-color: var(--color-red-opacity20);
-          border: 0.1vw solid var(--color-red);
           &:hover {
             background-color: #3f0d07;
-            border: 0.1vw solid transparent;
           }
         }
       }

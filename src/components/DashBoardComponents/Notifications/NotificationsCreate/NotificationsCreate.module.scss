@@ -165,7 +165,7 @@
         width: 15vw;
         padding: 0.5vw 1vw;
         background-color: var(--color-green-opacity20);
-        border: 0.1vw solid var(--color-lightGreen);
+        border: 0;
         border-radius: 0.25vw;
         font-size: 0.8vw;
         color: #fff;
@@ -177,7 +177,6 @@
 
         &:hover {
           background-color: #053a1b;
-          border: 0.1vw solid transparent;
         }
       }
     }
