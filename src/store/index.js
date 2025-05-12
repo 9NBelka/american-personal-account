@@ -4,6 +4,7 @@ import authReducer from './slices/authSlice';
 import currencyReducer from './slices/currencySlice';
 import storageReducer from './slices/storageSlice';
 import formsReducer from './slices/formsSlice';
+import timersReducer from './slices/timersForPagesSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     currency: currencyReducer,
     storage: storageReducer,
     forms: formsReducer,
+    timers: timersReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

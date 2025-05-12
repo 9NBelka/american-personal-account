@@ -31,6 +31,7 @@ import CurrencySelector from './components/DashBoardComponents/CurrencySelector/
 import StorageForImages from './components/DashBoardComponents/StorageForImages/StorageForImages';
 import AccountCertificateForm from './components/AccountCertificateForm/AccountCertificateForm';
 import FormsOnPages from './components/DashBoardComponents/FormsOnPages/FormsOnPages';
+import TimersForPages from './components/DashBoardComponents/TimersForPages/TimersForPages';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -82,8 +83,8 @@ function AppContent() {
           }>
           <Route index element={<MainStatistics />} />
           <Route path='mainStatistics' element={<MainStatistics />} />
-
           <Route path='images' element={<StorageForImages />} />
+          <Route path='timersForPages' element={<TimersForPages />} />
           <Route path='formsOnPages' element={<FormsOnPages />} />
           <Route path='userList' element={<UserList />} />
           <Route path='addUser' element={<AddUser />} />

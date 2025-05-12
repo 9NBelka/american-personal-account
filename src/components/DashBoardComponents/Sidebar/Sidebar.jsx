@@ -75,21 +75,14 @@ export default function Sidebar({
             </div>
           </li>
         )}
-        {/* {userRole == 'admin' && (
-          <li
-            className={clsx(scss.menuItem, activeSection === 'pages' && scss.active)}
-            onClick={() => handleSectionClick('pages')}>
-            <div className={scss.iconAndTextMenuMainBlock}>
-              <BsDisplayFill className={scss.menuIcon} />
-              <span className={scss.menuText}>Страницы</span>
-            </div>
-          </li>
-        )} */}
         {userRole == 'admin' && (
           <li
             className={clsx(
               scss.menuItem,
-              (activeSection === 'pages' || activeSection === 'formsOnPages') && scss.active,
+              (activeSection === 'pages' ||
+                activeSection === 'formsOnPages' ||
+                activeSection === 'timersForPages') &&
+                scss.active,
             )}>
             <div
               className={clsx(scss.iconAndTextMenuMainBlock, scss.iconAndTextMenuMainBlockDrop)}
@@ -124,6 +117,14 @@ export default function Sidebar({
                   )}
                   onClick={() => handleSectionClick('formsOnPages')}>
                   Формы
+                </li>
+                <li
+                  className={clsx(
+                    scss.submenuItem,
+                    activeSection === 'timersForPages' && scss.activeSubText,
+                  )}
+                  onClick={() => handleSectionClick('timersForPages')}>
+                  Таймеры
                 </li>
               </ul>
             )}
