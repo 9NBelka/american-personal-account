@@ -11,10 +11,12 @@ export default function TimersForPages() {
   const dispatch = useDispatch();
   const { timers, status, error } = useSelector((state) => state.timers);
   const [customDates, setCustomDates] = useState({});
+  const [customDescriptions, setCustomDescriptions] = useState({});
   const [newTimer, setNewTimer] = useState({
     id: '',
     name: '',
     endDate: '',
+    description: '',
     isActive: false,
   });
 
@@ -26,6 +28,10 @@ export default function TimersForPages() {
     setCustomDates((prev) => ({ ...prev, [timerId]: value }));
   };
 
+  const handleDescriptionChange = (timerId, value) => {
+    setCustomDescriptions((prev) => ({ ...prev, [timerId]: value }));
+  };
+
   const handleSaveCustomDate = (timerId) => {
     const customDate = customDates[timerId];
     if (customDate) {
@@ -33,6 +39,16 @@ export default function TimersForPages() {
       toast.success('Дата окончания сохранена');
     } else {
       toast.error('Введите дату окончания');
+    }
+  };
+
+  const handleSaveCustomDescription = (timerId) => {
+    const customDescription = customDescriptions[timerId];
+    if (customDescription) {
+      dispatch(updateTimer({ timerId, updatedData: { description: customDescription } }));
+      toast.success('Описание сохранено');
+    } else {
+      toast.error('Введите описание');
     }
   };
 
@@ -69,7 +85,7 @@ export default function TimersForPages() {
 
     if (newTimer.id && newTimer.name && newTimer.endDate) {
       dispatch(addTimer({ ...newTimer, isActive: false }));
-      setNewTimer({ id: '', name: '', endDate: '', isActive: false });
+      setNewTimer({ id: '', name: '', endDate: '', description: '', isActive: false });
       toast.success('Таймер добавлен');
     } else {
       toast.error('Заполните все поля');
@@ -109,6 +125,9 @@ export default function TimersForPages() {
                   {timer.id} - {timer.name}
                 </h5>
                 <p className={styles.timerDate}>Дата окончания: {timer.endDate}</p>
+                <p className={styles.timerDescription}>
+                  Описание: {timer.description || 'Нет описания'}
+                </p>
                 <p
                   className={clsx(styles.timerStatus, {
                     [styles.activeStatus]: timer.isActive,
@@ -121,9 +140,21 @@ export default function TimersForPages() {
                   onChange={(e) => handleDateChange(timer.id, e.target.value)}
                   className={styles.input}
                 />
+                <input
+                  type='text'
+                  value={customDescriptions[timer.id] || timer.description || ''}
+                  onChange={(e) => handleDescriptionChange(timer.id, e.target.value)}
+                  className={styles.input}
+                  placeholder='Описание'
+                />
                 <div className={styles.buttonGroup}>
                   <button onClick={() => handleSaveCustomDate(timer.id)} className={styles.button}>
                     Сохранить дату
+                  </button>
+                  <button
+                    onClick={() => handleSaveCustomDescription(timer.id)}
+                    className={styles.button}>
+                    Сохранить описание
                   </button>
                   <button
                     onClick={() => handleToggleActive(timer.id)}
@@ -169,6 +200,14 @@ export default function TimersForPages() {
             type='date'
             name='endDate'
             value={newTimer.endDate}
+            onChange={handleNewTimerChange}
+            className={styles.input}
+          />
+          <input
+            type='text'
+            name='description'
+            placeholder='Описание'
+            value={newTimer.description}
             onChange={handleNewTimerChange}
             className={styles.input}
           />
