@@ -1,6 +1,6 @@
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { signInWithGoogle } from '../../store/slices/authSlice';
 import LSInputField from '../LSInputField/LSInputField';
 import LSFormError from '../LSFormError/LSFormError';
@@ -8,6 +8,8 @@ import LSPasswordField from '../LSPasswordField/LSPasswordField';
 import scss from './LSAuthForm.module.scss';
 import clsx from 'clsx';
 import { BsGoogle, BsGithub } from 'react-icons/bs';
+import { useState } from 'react';
+import * as Yup from 'yup';
 
 export default function LSAuthForm({
   initialValues,
@@ -27,13 +29,37 @@ export default function LSAuthForm({
   generalError,
 }) {
   const dispatch = useDispatch();
+  const { isLoading } = useSelector((state) => state.auth);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkError, setLinkError] = useState(null);
+
+  const linkValidationSchema = Yup.object({
+    email: Yup.string().email('*Invalid email format').required('*Required field'),
+    password: Yup.string().required('*Required field'),
+  });
 
   const handleGoogleSignIn = async () => {
     try {
       await dispatch(signInWithGoogle()).unwrap();
+      setLinkError(null);
     } catch (error) {
-      console.error('Google sign-in failed:', error);
+      if (error.code === 'auth/requires-email-password') {
+        setShowLinkModal(true);
+      } else {
+        setLinkError(error.message || 'Google sign-in failed');
+      }
     }
+  };
+
+  const handleLinkSubmit = async (values, { setSubmitting }) => {
+    try {
+      await dispatch(signInWithGoogle({ email: values.email, password: values.password })).unwrap();
+      setShowLinkModal(false);
+      setLinkError(null);
+    } catch (error) {
+      setLinkError(error.message || 'Failed to link Google account');
+    }
+    setSubmitting(false);
   };
 
   return (
@@ -104,7 +130,11 @@ export default function LSAuthForm({
               <span>Or {otherPointsText} with</span>
             </div>
             <div className={scss.socialButtonsBlock}>
-              <button type='button' className={scss.socialButton} onClick={handleGoogleSignIn}>
+              <button
+                type='button'
+                className={scss.socialButton}
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}>
                 <BsGoogle className={scss.iconSocial} /> Google
               </button>
               <button type='button' className={scss.socialButton}>
@@ -114,6 +144,46 @@ export default function LSAuthForm({
           </Form>
         )}
       </Formik>
+
+      {/* Modal for linking Google account */}
+      {showLinkModal && (
+        <div className={scss.modalOverlay}>
+          <div className={scss.modalContent}>
+            <h3>Link Google Account</h3>
+            <p>
+              An account with this email already exists. Please enter your email and password to
+              link your Google account.
+            </p>
+            {linkError && <div className={scss.errorText}>{linkError}</div>}
+            <Formik
+              initialValues={{ email: '', password: '' }}
+              validationSchema={linkValidationSchema}
+              onSubmit={handleLinkSubmit}>
+              {({ errors, isSubmitting: linkSubmitting }) => (
+                <Form>
+                  <LSInputField name='email' type='email' placeholder='Email' />
+                  <LSPasswordField name='password' placeholder='Password' />
+                  <LSFormError error={errors.general} />
+                  <div className={scss.modalButtons}>
+                    <button
+                      type='button'
+                      className={scss.cancelButton}
+                      onClick={() => setShowLinkModal(false)}>
+                      Cancel
+                    </button>
+                    <button
+                      type='submit'
+                      disabled={linkSubmitting || isLoading}
+                      className={scss.submitButton}>
+                      Link Account
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

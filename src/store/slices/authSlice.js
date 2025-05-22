@@ -68,24 +68,36 @@ export const login = createAsyncThunk(
 
 export const signInWithGoogle = createAsyncThunk(
   'auth/signInWithGoogle',
-  async (_, { rejectWithValue, dispatch }) => {
+  async ({ email, password } = {}, { rejectWithValue, dispatch }) => {
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const user = result.user;
+      let user;
+      let credential;
 
-      // Check if Google provider is already linked
-      const isGoogleLinked = user.providerData.some(
-        (provider) => provider.providerId === 'google.com',
-      );
-      const isEmailPasswordLinked = user.providerData.some(
-        (provider) => provider.providerId === 'password',
-      );
+      try {
+        const result = await signInWithPopup(auth, provider);
+        credential = GoogleAuthProvider.credentialFromResult(result);
+        user = result.user;
+      } catch (error) {
+        if (error.code === 'auth/account-exists-with-different-credential') {
+          if (!email || !password) {
+            return rejectWithValue({
+              code: 'auth/requires-email-password',
+              message:
+                'Account exists with email/password. Please provide your email and password to link Google account.',
+            });
+          }
 
-      if (!isGoogleLinked && isEmailPasswordLinked) {
-        // Link Google provider to existing email/password account
-        await linkWithCredential(auth.currentUser, credential);
+          // Sign in with email/password to link Google provider
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          user = userCredential.user;
+          credential = GoogleAuthProvider.credential(error.credential);
+
+          // Link Google provider
+          await linkWithCredential(user, credential);
+        } else {
+          throw error;
+        }
       }
 
       firebaseCurrentUser = user;
@@ -105,6 +117,21 @@ export const signInWithGoogle = createAsyncThunk(
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || 'Failed to process Google authentication');
+      }
+
+      if (data.requiresLinking) {
+        // Client-side linking already handled above, just return user data
+        const userData = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+        };
+
+        const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
+        dispatch(setUserRole(userDataResult.role));
+        dispatch(subscribeToCourses(userDataResult.purchasedCourses));
+
+        return userData;
       }
 
       const userData = {
@@ -370,7 +397,7 @@ export const fetchCourses = createAsyncThunk(
           title:
             courseData.title || doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
           category: courseData.category || 'Uncategorized',
-          gitHubRepLink: codeData.gitHubRepLink,
+          gitHubRepLink: courseData.gitHubRepLink,
           description: courseData.description || ' ',
           available: isAccessible,
           access: courseAccess,

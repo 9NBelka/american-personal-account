@@ -38,6 +38,7 @@ const generateRandomPassword = () => {
 };
 
 // HTTP function for handling authentication
+// HTTP function for handling authentication
 export const handleAuthentication = onRequest(async (req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
@@ -107,33 +108,35 @@ export const handleAuthentication = onRequest(async (req, res) => {
         try {
           const existingUser = await adminAuth.getUserByEmail(email);
 
-          // User exists, link Google provider if not already linked
+          // Check if Google provider is already linked
           if (!existingUser.providerData.some((provider) => provider.providerId === 'google.com')) {
-            // Note: Linking is handled client-side with linkWithCredential to avoid replacing providers
-            // Server only verifies and updates Firestore if necessary
-            const userDoc = await adminFirestore.doc(`users/${existingUser.uid}`).get();
-            if (!userDoc.exists) {
-              // Create Firestore document if it doesn't exist
-              await adminFirestore.doc(`users/${existingUser.uid}`).set({
-                name: existingUser.displayName || name,
-                lastName: '',
-                email,
-                role: 'student',
-                registrationDate: new Date().toISOString(),
-                purchasedCourses: {},
-                avatarUrl: null,
-                readNotifications: [],
-              });
-            }
-
+            // Google provider not linked, client should handle linking
             return res.status(200).json({
-              message: 'Google provider linked successfully',
+              message: 'User exists, Google provider not linked. Please link on client side.',
               userId: existingUser.uid,
+              email,
+              requiresLinking: true,
+            });
+          }
+
+          // User exists and Google provider is already linked
+          const userDoc = await adminFirestore.doc(`users/${existingUser.uid}`).get();
+          if (!userDoc.exists) {
+            // Create Firestore document if it doesn't exist
+            await adminFirestore.doc(`users/${existingUser.uid}`).set({
+              name: existingUser.displayName || name,
+              lastName: '',
+              email,
+              role: 'student',
+              registrationDate: new Date().toISOString(),
+              purchasedCourses: {},
+              avatarUrl: null,
+              readNotifications: [],
             });
           }
 
           return res.status(200).json({
-            message: 'User already linked with Google',
+            message: 'User authenticated with Google successfully',
             userId: existingUser.uid,
           });
         } catch (error) {
@@ -142,7 +145,7 @@ export const handleAuthentication = onRequest(async (req, res) => {
             const userRecord = await adminAuth.createUser({
               email,
               displayName: name,
-              password: generateRandomPassword(), // Generate random password as fallback
+              password: generateRandomPassword(),
             });
 
             // Set Google provider data
