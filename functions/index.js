@@ -23,7 +23,7 @@ const adminFirestore = getFirestore();
 const adminAuth = getAuth();
 
 // Настройка CORS
-const corsHandler = cors({ origin: 'https://lms-jet-one.vercel.app' });
+const corsHandler = cors({ origin: ' https://lms-jet-one.vercel.app' });
 
 // Функция для генерации случайного пароля
 const generateRandomPassword = () => {
@@ -36,6 +36,155 @@ const generateRandomPassword = () => {
   }
   return password;
 };
+
+// HTTP function for handling authentication
+export const handleAuthentication = onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ message: 'Method Not Allowed' });
+    }
+
+    const { authType, email, password, name, lastName, googleToken } = req.body;
+
+    if (!authType) {
+      return res.status(400).json({ message: 'Missing authType' });
+    }
+
+    try {
+      if (authType === 'email') {
+        // Handle email/password registration
+        if (!email || !password || !name) {
+          return res
+            .status(400)
+            .json({ message: 'Missing required fields: email, password, name' });
+        }
+
+        // Check if user already exists
+        try {
+          await adminAuth.getUserByEmail(email);
+          return res.status(400).json({ message: 'User with this email already exists' });
+        } catch (error) {
+          if (error.code !== 'auth/user-not-found') {
+            throw error;
+          }
+        }
+
+        // Create user with email and password
+        const userRecord = await adminAuth.createUser({
+          email,
+          password,
+          displayName: `${name} ${lastName || ''}`.trim(),
+        });
+
+        // Store user data in Firestore
+        await adminFirestore.doc(`users/${userRecord.uid}`).set({
+          name,
+          lastName: lastName || '',
+          email,
+          role: 'student',
+          registrationDate: new Date().toISOString(),
+          purchasedCourses: {},
+          avatarUrl: null,
+          readNotifications: [],
+        });
+
+        return res.status(200).json({
+          message: 'User created successfully',
+          userId: userRecord.uid,
+        });
+      } else if (authType === 'google') {
+        // Handle Google sign-in
+        if (!googleToken) {
+          return res.status(400).json({ message: 'Missing Google token' });
+        }
+
+        // Verify Google ID token
+        const decodedToken = await adminAuth.verifyIdToken(googleToken);
+        const email = decodedToken.email;
+        const name = decodedToken.name || 'Google User';
+        const uid = decodedToken.uid;
+
+        try {
+          const existingUser = await adminAuth.getUserByEmail(email);
+
+          // User exists, link Google provider if not already linked
+          if (!existingUser.providerData.some((provider) => provider.providerId === 'google.com')) {
+            // Note: Linking is handled client-side with linkWithCredential to avoid replacing providers
+            // Server only verifies and updates Firestore if necessary
+            const userDoc = await adminFirestore.doc(`users/${existingUser.uid}`).get();
+            if (!userDoc.exists) {
+              // Create Firestore document if it doesn't exist
+              await adminFirestore.doc(`users/${existingUser.uid}`).set({
+                name: existingUser.displayName || name,
+                lastName: '',
+                email,
+                role: 'student',
+                registrationDate: new Date().toISOString(),
+                purchasedCourses: {},
+                avatarUrl: null,
+                readNotifications: [],
+              });
+            }
+
+            return res.status(200).json({
+              message: 'Google provider linked successfully',
+              userId: existingUser.uid,
+            });
+          }
+
+          return res.status(200).json({
+            message: 'User already linked with Google',
+            userId: existingUser.uid,
+          });
+        } catch (error) {
+          if (error.code === 'auth/user-not-found') {
+            // Create new user with Google credentials
+            const userRecord = await adminAuth.createUser({
+              email,
+              displayName: name,
+              password: generateRandomPassword(), // Generate random password as fallback
+            });
+
+            // Set Google provider data
+            await adminAuth.updateUser(userRecord.uid, {
+              providerData: [
+                {
+                  uid: userRecord.uid,
+                  providerId: 'google.com',
+                  email,
+                  displayName: name,
+                },
+              ],
+            });
+
+            // Store user data in Firestore
+            await adminFirestore.doc(`users/${userRecord.uid}`).set({
+              name,
+              lastName: '',
+              email,
+              role: 'student',
+              registrationDate: new Date().toISOString(),
+              purchasedCourses: {},
+              avatarUrl: null,
+              readNotifications: [],
+            });
+
+            return res.status(200).json({
+              message: 'User created with Google successfully',
+              userId: userRecord.uid,
+            });
+          }
+          throw error;
+        }
+      } else {
+        return res.status(400).json({ message: 'Invalid authType' });
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return res.status(500).json({ message: `Authentication error: ${error.message}` });
+    }
+  });
+});
 
 // Функция getCourseUserCount
 export const getCourseUserCount = onRequest(async (req, res) => {

@@ -10,6 +10,9 @@ import {
   updatePassword,
   EmailAuthProvider,
   signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+  linkWithCredential,
 } from 'firebase/auth';
 import {
   doc,
@@ -43,7 +46,7 @@ const initialState = {
   error: null,
   isLoading: true,
   isAuthInitialized: false,
-  isCoursesLoaded: false, // Добавляем флаг для отслеживания загрузки курсов
+  isCoursesLoaded: false,
   lastCourseId: localStorage.getItem('lastCourseId') || null,
   status: 'idle',
 };
@@ -57,6 +60,65 @@ export const login = createAsyncThunk(
       const user = userCredential.user;
       firebaseCurrentUser = user;
       return { uid: user.uid, email: user.email, displayName: user.displayName };
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  },
+);
+
+export const signInWithGoogle = createAsyncThunk(
+  'auth/signInWithGoogle',
+  async (_, { rejectWithValue, dispatch }) => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const user = result.user;
+
+      // Check if Google provider is already linked
+      const isGoogleLinked = user.providerData.some(
+        (provider) => provider.providerId === 'google.com',
+      );
+      const isEmailPasswordLinked = user.providerData.some(
+        (provider) => provider.providerId === 'password',
+      );
+
+      if (!isGoogleLinked && isEmailPasswordLinked) {
+        // Link Google provider to existing email/password account
+        await linkWithCredential(auth.currentUser, credential);
+      }
+
+      firebaseCurrentUser = user;
+
+      // Call server-side function to handle Firestore updates
+      const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          authType: 'google',
+          googleToken: await user.getIdToken(),
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to process Google authentication');
+      }
+
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+      };
+
+      // Fetch user data and update state
+      const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
+      dispatch(setUserRole(userDataResult.role));
+      dispatch(subscribeToCourses(userDataResult.purchasedCourses));
+
+      return userData;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -114,20 +176,28 @@ export const signUp = createAsyncThunk(
   'auth/signUp',
   async ({ name, lastName, email, password }, { rejectWithValue }) => {
     try {
+      const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          authType: 'email',
+          name,
+          lastName,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create user');
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const registrationDate = new Date().toISOString();
       const user = userCredential.user;
       firebaseCurrentUser = user;
-
-      await setDoc(doc(db, 'users', user.uid), {
-        name,
-        lastName: lastName || '',
-        email,
-        role: 'guest',
-        registrationDate,
-        avatarUrl: null,
-        readNotifications: [],
-      });
 
       await updateProfile(user, {
         displayName: `${name} ${lastName || ''}`.trim(),
@@ -240,7 +310,7 @@ export const subscribeToCourses = createAsyncThunk(
           };
         });
         dispatch(setCourses(courseList));
-        dispatch(setCoursesLoaded(true)); // Устанавливаем флаг после первой загрузки
+        dispatch(setCoursesLoaded(true));
       });
 
       return null;
@@ -300,7 +370,7 @@ export const fetchCourses = createAsyncThunk(
           title:
             courseData.title || doc.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
           category: courseData.category || 'Uncategorized',
-          gitHubRepLink: courseData.gitHubRepLink,
+          gitHubRepLink: codeData.gitHubRepLink,
           description: courseData.description || ' ',
           available: isAccessible,
           access: courseAccess,
@@ -582,6 +652,20 @@ const authSlice = createSlice({
         state.error = action.payload.message;
         state.isLoading = false;
       })
+      .addCase(signInWithGoogle.pending, (state) => {
+        state.status = 'loading';
+        state.isLoading = true;
+      })
+      .addCase(signInWithGoogle.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.user = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(signInWithGoogle.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload.message;
+        state.isLoading = false;
+      })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.userRole = null;
@@ -594,7 +678,7 @@ const authSlice = createSlice({
         state.completedLessons = {};
         state.lastModules = {};
         state.courses = [];
-        state.isCoursesLoaded = false; // Сбрасываем флаг при выходе
+        state.isCoursesLoaded = false;
       })
       .addCase(logout.rejected, (state, action) => {
         state.error = action.payload;
@@ -618,7 +702,7 @@ const authSlice = createSlice({
       })
       .addCase(fetchCourses.fulfilled, (state, action) => {
         state.courses = action.payload;
-        state.isCoursesLoaded = true; // Устанавливаем флаг после загрузки
+        state.isCoursesLoaded = true;
       })
       .addCase(subscribeToCourses.fulfilled, (state) => {
         // Ничего не делаем, так как данные обновляются через setCourses
