@@ -75,22 +75,53 @@ export const signInWithGoogle = createAsyncThunk(
     try {
       const provider = new GoogleAuthProvider();
       let user;
+      let credential;
 
       // Проверяем результат редиректа
       const result = await getRedirectResult(auth);
       if (result) {
         user = result.user;
+        credential = GoogleAuthProvider.credentialFromResult(result);
       } else if (email && password) {
+        // Аутентификация через email/password для линковки
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         user = userCredential.user;
-        await signInWithRedirect(auth, provider); // Редирект для линковки
+
+        // Проверяем, не привязан ли уже Google
+        const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
+        if (signInMethods.includes('google.com')) {
+          return { uid: user.uid, email: user.email, displayName: user.displayName };
+        }
+
+        // Инициируем редирект для получения Google-токена
+        await signInWithRedirect(auth, provider);
         return; // Ожидаем редиректа
       } else {
+        // Проверяем, зарегистрирован ли email
+        if (auth.currentUser) {
+          const signInMethods = await fetchSignInMethodsForEmail(auth, auth.currentUser.email);
+          if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
+            return rejectWithValue({
+              code: 'auth/requires-email-password',
+              message:
+                'Account exists with email/password. Please provide your email and password to link Google account.',
+              email: auth.currentUser.email,
+            });
+          }
+        }
+        // Инициируем редирект для нового входа
         await signInWithRedirect(auth, provider);
         return; // Ожидаем редиректа
       }
 
       firebaseCurrentUser = user;
+
+      // Проверяем провайдеры пользователя
+      const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
+      if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
+        // Привязываем Google-провайдер
+        await linkWithCredential(user, credential);
+      }
 
       // Вызов серверной функции
       const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
@@ -111,6 +142,10 @@ export const signInWithGoogle = createAsyncThunk(
         throw new Error(data.message || 'Failed to process Google authentication');
       }
 
+      console.log('Redirect result:', result);
+      console.log('User providers:', await fetchSignInMethodsForEmail(auth, user.email));
+      console.log('Server response:', data);
+
       const userData = { uid: user.uid, email: user.email, displayName: user.displayName };
       const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
       dispatch(setUserRole(userDataResult.role));
@@ -118,6 +153,7 @@ export const signInWithGoogle = createAsyncThunk(
 
       return userData;
     } catch (error) {
+      console.error('Google sign-in error:', error);
       if (error.code === 'auth/account-exists-with-different-credential') {
         return rejectWithValue({
           code: 'auth/requires-email-password',

@@ -33,7 +33,6 @@ export default function LSAuthForm({
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkError, setLinkError] = useState(null);
   const [linkEmail, setLinkEmail] = useState('');
-  const [pendingCredential, setPendingCredential] = useState(null);
 
   const linkValidationSchema = Yup.object({
     email: Yup.string().email('*Invalid email format').required('*Required field'),
@@ -48,7 +47,6 @@ export default function LSAuthForm({
     } catch (error) {
       if (error.code === 'auth/requires-email-password') {
         setLinkEmail(error.email || '');
-        setPendingCredential(error.pendingCredential || null);
         setShowLinkModal(true);
       } else {
         setLinkError(error.message || 'Google sign-in failed');
@@ -151,7 +149,6 @@ export default function LSAuthForm({
         )}
       </Formik>
 
-      {/* Modal for linking Google account */}
       {showLinkModal && (
         <div className={scss.modalOverlay}>
           <div className={scss.modalContent}>
