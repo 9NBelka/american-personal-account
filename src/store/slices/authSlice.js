@@ -71,34 +71,41 @@ export const login = createAsyncThunk(
 
 export const signInWithGoogle = createAsyncThunk(
   'auth/signInWithGoogle',
-  async ({ email, password } = {}, { rejectWithValue, dispatch }) => {
+  async ({ email, password, isLinking = false } = {}, { rejectWithValue, dispatch }) => {
     try {
       const provider = new GoogleAuthProvider();
       let user;
       let credential;
+
+      // Сохраняем флаг линковки в localStorage перед редиректом
+      if (email && password) {
+        localStorage.setItem('googleLinking', JSON.stringify({ email, isLinking: true }));
+      }
 
       // Проверяем результат редиректа
       const result = await getRedirectResult(auth);
       if (result) {
         user = result.user;
         credential = GoogleAuthProvider.credentialFromResult(result);
-      } else if (email && password) {
-        // Аутентификация через email/password для линковки
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        user = userCredential.user;
-
-        // Проверяем, не привязан ли уже Google
-        const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
-        if (signInMethods.includes('google.com')) {
-          return { uid: user.uid, email: user.email, displayName: user.displayName };
-        }
-
-        // Инициируем редирект для получения Google-токена
-        await signInWithRedirect(auth, provider);
-        return; // Ожидаем редиректа
       } else {
-        // Проверяем, зарегистрирован ли email
-        if (auth.currentUser) {
+        const linkingState = JSON.parse(localStorage.getItem('googleLinking') || '{}');
+        if (linkingState.isLinking && email && password) {
+          // Аутентификация через email/password для линковки
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          user = userCredential.user;
+
+          // Проверяем, не привязан ли уже Google
+          const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
+          if (signInMethods.includes('google.com')) {
+            localStorage.removeItem('googleLinking');
+            return { uid: user.uid, email: user.email, displayName: user.displayName };
+          }
+
+          // Инициируем редирект для получения Google-токена
+          await signInWithRedirect(auth, provider);
+          return; // Ожидаем редиректа
+        } else if (auth.currentUser) {
+          // Проверяем текущего пользователя
           const signInMethods = await fetchSignInMethodsForEmail(auth, auth.currentUser.email);
           if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
             return rejectWithValue({
@@ -108,20 +115,27 @@ export const signInWithGoogle = createAsyncThunk(
               email: auth.currentUser.email,
             });
           }
+          // Если Google уже привязан, продолжаем
+          user = auth.currentUser;
+        } else {
+          // Инициируем редирект для нового входа
+          await signInWithRedirect(auth, provider);
+          return; // Ожидаем редиректа
         }
-        // Инициируем редирект для нового входа
-        await signInWithRedirect(auth, provider);
-        return; // Ожидаем редиректа
+      }
+
+      // После редиректа проверяем, нужно ли привязать Google
+      const linkingState = JSON.parse(localStorage.getItem('googleLinking') || '{}');
+      if (linkingState.isLinking && credential && user) {
+        const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
+        if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
+          await linkWithCredential(user, credential);
+          console.log('Google provider linked successfully');
+        }
+        localStorage.removeItem('googleLinking');
       }
 
       firebaseCurrentUser = user;
-
-      // Проверяем провайдеры пользователя
-      const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
-      if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
-        // Привязываем Google-провайдер
-        await linkWithCredential(user, credential);
-      }
 
       // Вызов серверной функции
       const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
@@ -142,10 +156,6 @@ export const signInWithGoogle = createAsyncThunk(
         throw new Error(data.message || 'Failed to process Google authentication');
       }
 
-      console.log('Redirect result:', result);
-      console.log('User providers:', await fetchSignInMethodsForEmail(auth, user.email));
-      console.log('Server response:', data);
-
       const userData = { uid: user.uid, email: user.email, displayName: user.displayName };
       const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
       dispatch(setUserRole(userDataResult.role));
@@ -154,6 +164,7 @@ export const signInWithGoogle = createAsyncThunk(
       return userData;
     } catch (error) {
       console.error('Google sign-in error:', error);
+      localStorage.removeItem('googleLinking');
       if (error.code === 'auth/account-exists-with-different-credential') {
         return rejectWithValue({
           code: 'auth/requires-email-password',

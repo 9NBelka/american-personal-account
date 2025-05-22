@@ -41,10 +41,12 @@ export default function LSAuthForm({
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('Initiating Google sign-in');
       await dispatch(signInWithGoogle()).unwrap();
       setLinkError(null);
       setShowLinkModal(false);
     } catch (error) {
+      console.error('Google sign-in error:', error);
       if (error.code === 'auth/requires-email-password') {
         setLinkEmail(error.email || '');
         setShowLinkModal(true);
@@ -56,10 +58,14 @@ export default function LSAuthForm({
 
   const handleLinkSubmit = async (values, { setSubmitting }) => {
     try {
-      await dispatch(signInWithGoogle({ email: values.email, password: values.password })).unwrap();
+      console.log('Attempting to link Google with:', values.email);
+      await dispatch(
+        signInWithGoogle({ email: values.email, password: values.password, isLinking: true }),
+      ).unwrap();
       setShowLinkModal(false);
       setLinkError(null);
     } catch (error) {
+      console.error('Link error:', error);
       setLinkError(error.message || 'Failed to link Google account');
     }
     setSubmitting(false);

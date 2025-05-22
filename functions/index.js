@@ -141,18 +141,7 @@ export const handleAuthentication = onRequest(async (req, res) => {
             const userRecord = await adminAuth.createUser({
               email,
               displayName: name,
-            });
-
-            // Set Google provider
-            await adminAuth.updateUser(userRecord.uid, {
-              providerData: [
-                {
-                  uid: userRecord.uid,
-                  providerId: 'google.com',
-                  email,
-                  displayName: name,
-                },
-              ],
+              emailVerified: true, // Google verifies email
             });
 
             // Store user data in Firestore
