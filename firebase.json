@@ -7,7 +7,7 @@
     }
   ],
   "hosting": {
-    "public": "public", // Укажите папку для хостинга, обычно "public"
+    "public": "public",
     "headers": [
       {
         "source": "/**",
