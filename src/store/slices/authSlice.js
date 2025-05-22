@@ -83,7 +83,8 @@ export const signInWithGoogle = createAsyncThunk(
       }
 
       // Проверяем результат редиректа
-      const result = await getRedirectResult(auth);
+      const result = await signInWithPopup(auth, provider);
+
       if (result) {
         user = result.user;
         credential = GoogleAuthProvider.credentialFromResult(result);
