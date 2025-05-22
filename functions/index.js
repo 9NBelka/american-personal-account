@@ -37,8 +37,6 @@ const generateRandomPassword = () => {
   return password;
 };
 
-// HTTP function for handling authentication
-// HTTP function for handling authentication
 export const handleAuthentication = onRequest(async (req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
@@ -103,52 +101,49 @@ export const handleAuthentication = onRequest(async (req, res) => {
         const decodedToken = await adminAuth.verifyIdToken(googleToken);
         const email = decodedToken.email;
         const name = decodedToken.name || 'Google User';
-        const uid = decodedToken.uid;
 
+        // Check if email is already registered
         try {
           const existingUser = await adminAuth.getUserByEmail(email);
-
-          // Check if Google provider is already linked
-          if (!existingUser.providerData.some((provider) => provider.providerId === 'google.com')) {
-            // Google provider not linked, client should handle linking
+          // If user exists, check providers
+          if (existingUser.providerData.some((provider) => provider.providerId === 'google.com')) {
+            // User already linked with Google
+            const userDoc = await adminFirestore.doc(`users/${existingUser.uid}`).get();
+            if (!userDoc.exists) {
+              await adminFirestore.doc(`users/${existingUser.uid}`).set({
+                name: existingUser.displayName || name,
+                lastName: '',
+                email,
+                role: 'student',
+                registrationDate: new Date().toISOString(),
+                purchasedCourses: {},
+                avatarUrl: null,
+                readNotifications: [],
+              });
+            }
             return res.status(200).json({
-              message: 'User exists, Google provider not linked. Please link on client side.',
+              message: 'User authenticated with Google',
+              userId: existingUser.uid,
+            });
+          } else {
+            // Email exists but not linked with Google, client must handle linking
+            return res.status(409).json({
+              message:
+                'Email already registered with another provider. Please sign in with email/password to link Google.',
               userId: existingUser.uid,
               email,
               requiresLinking: true,
             });
           }
-
-          // User exists and Google provider is already linked
-          const userDoc = await adminFirestore.doc(`users/${existingUser.uid}`).get();
-          if (!userDoc.exists) {
-            // Create Firestore document if it doesn't exist
-            await adminFirestore.doc(`users/${existingUser.uid}`).set({
-              name: existingUser.displayName || name,
-              lastName: '',
-              email,
-              role: 'student',
-              registrationDate: new Date().toISOString(),
-              purchasedCourses: {},
-              avatarUrl: null,
-              readNotifications: [],
-            });
-          }
-
-          return res.status(200).json({
-            message: 'User authenticated with Google successfully',
-            userId: existingUser.uid,
-          });
         } catch (error) {
           if (error.code === 'auth/user-not-found') {
-            // Create new user with Google credentials
+            // Create new user with Google
             const userRecord = await adminAuth.createUser({
               email,
               displayName: name,
-              password: generateRandomPassword(),
             });
 
-            // Set Google provider data
+            // Set Google provider
             await adminAuth.updateUser(userRecord.uid, {
               providerData: [
                 {

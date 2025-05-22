@@ -32,6 +32,8 @@ export default function LSAuthForm({
   const { isLoading } = useSelector((state) => state.auth);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkError, setLinkError] = useState(null);
+  const [linkEmail, setLinkEmail] = useState('');
+  const [pendingCredential, setPendingCredential] = useState(null);
 
   const linkValidationSchema = Yup.object({
     email: Yup.string().email('*Invalid email format').required('*Required field'),
@@ -42,8 +44,11 @@ export default function LSAuthForm({
     try {
       await dispatch(signInWithGoogle()).unwrap();
       setLinkError(null);
+      setShowLinkModal(false);
     } catch (error) {
       if (error.code === 'auth/requires-email-password') {
+        setLinkEmail(error.email || '');
+        setPendingCredential(error.pendingCredential || null);
         setShowLinkModal(true);
       } else {
         setLinkError(error.message || 'Google sign-in failed');
@@ -73,6 +78,7 @@ export default function LSAuthForm({
           <Form>
             <div className={clsx(scss.nameContainer, halfInput && scss.nameContainerHalf)}>
               {generalError && <div className={scss.errorText}>{generalError}</div>}
+              {linkError && <div className={scss.errorText}>{linkError}</div>}
               {fields
                 .slice(0, 2)
                 .map((field, index) =>
@@ -156,7 +162,7 @@ export default function LSAuthForm({
             </p>
             {linkError && <div className={scss.errorText}>{linkError}</div>}
             <Formik
-              initialValues={{ email: '', password: '' }}
+              initialValues={{ email: linkEmail, password: '' }}
               validationSchema={linkValidationSchema}
               onSubmit={handleLinkSubmit}>
               {({ errors, isSubmitting: linkSubmitting }) => (
@@ -181,6 +187,19 @@ export default function LSAuthForm({
                 </Form>
               )}
             </Formik>
+            {onForgotPassword && (
+              <div className={scss.forgotPassword}>
+                <Link
+                  to='#'
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onForgotPassword();
+                    setShowLinkModal(false);
+                  }}>
+                  Forgot password?
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

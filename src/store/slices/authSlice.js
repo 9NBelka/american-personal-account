@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   linkWithCredential,
+  fetchSignInMethodsForEmail,
 } from 'firebase/auth';
 import {
   doc,
@@ -74,35 +75,58 @@ export const signInWithGoogle = createAsyncThunk(
       let user;
       let credential;
 
-      try {
-        const result = await signInWithPopup(auth, provider);
-        credential = GoogleAuthProvider.credentialFromResult(result);
-        user = result.user;
-      } catch (error) {
-        if (error.code === 'auth/account-exists-with-different-credential') {
-          if (!email || !password) {
+      // Check sign-in methods for the email if provided
+      if (email) {
+        const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+        if (signInMethods.includes('password') && password) {
+          // Authenticate with email/password first
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          user = userCredential.user;
+
+          // Attempt to link Google
+          try {
+            const result = await signInWithPopup(auth, provider);
+            credential = GoogleAuthProvider.credentialFromResult(result);
+            await linkWithCredential(user, credential);
+          } catch (linkError) {
+            if (linkError.code === 'auth/credential-already-in-use') {
+              // Google already linked, proceed
+              return {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+              };
+            }
+            throw linkError;
+          }
+        } else {
+          throw new Error('Invalid email/password or email not registered with password provider');
+        }
+      } else {
+        // Attempt Google sign-in
+        try {
+          const result = await signInWithPopup(auth, provider);
+          credential = GoogleAuthProvider.credentialFromResult(result);
+          user = result.user;
+        } catch (error) {
+          if (error.code === 'auth/account-exists-with-different-credential') {
+            const pendingCredential = GoogleAuthProvider.credential(error.credential);
+            const email = error.email || error.customData?.email;
             return rejectWithValue({
               code: 'auth/requires-email-password',
               message:
                 'Account exists with email/password. Please provide your email and password to link Google account.',
+              email,
+              pendingCredential: JSON.stringify(pendingCredential),
             });
           }
-
-          // Sign in with email/password to link Google provider
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          user = userCredential.user;
-          credential = GoogleAuthProvider.credential(error.credential);
-
-          // Link Google provider
-          await linkWithCredential(user, credential);
-        } else {
           throw error;
         }
       }
 
       firebaseCurrentUser = user;
 
-      // Call server-side function to handle Firestore updates
+      // Call server-side function
       const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
         method: 'POST',
         headers: {
@@ -116,22 +140,14 @@ export const signInWithGoogle = createAsyncThunk(
 
       const data = await response.json();
       if (!response.ok) {
+        if (data.requiresLinking) {
+          return rejectWithValue({
+            code: 'auth/requires-email-password',
+            message: data.message,
+            email: data.email,
+          });
+        }
         throw new Error(data.message || 'Failed to process Google authentication');
-      }
-
-      if (data.requiresLinking) {
-        // Client-side linking already handled above, just return user data
-        const userData = {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-        };
-
-        const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
-        dispatch(setUserRole(userDataResult.role));
-        dispatch(subscribeToCourses(userDataResult.purchasedCourses));
-
-        return userData;
       }
 
       const userData = {
