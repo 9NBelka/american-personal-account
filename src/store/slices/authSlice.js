@@ -14,6 +14,8 @@ import {
   signInWithPopup,
   linkWithCredential,
   fetchSignInMethodsForEmail,
+  getRedirectResult,
+  signInWithRedirect,
 } from 'firebase/auth';
 import {
   doc,
@@ -73,69 +75,28 @@ export const signInWithGoogle = createAsyncThunk(
     try {
       const provider = new GoogleAuthProvider();
       let user;
-      let credential;
 
-      // Check sign-in methods for the email if provided
-      if (email) {
-        const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-        if (signInMethods.includes('password') && password) {
-          // Authenticate with email/password first
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          user = userCredential.user;
-
-          // Attempt to link Google
-          try {
-            const result = await signInWithPopup(auth, provider);
-            credential = GoogleAuthProvider.credentialFromResult(result);
-            await linkWithCredential(user, credential);
-          } catch (linkError) {
-            if (linkError.code === 'auth/credential-already-in-use') {
-              // Google already linked, proceed
-              return {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-              };
-            }
-            throw linkError;
-          }
-        } else {
-          throw new Error('Invalid email/password or email not registered with password provider');
-        }
+      // Проверяем результат редиректа
+      const result = await getRedirectResult(auth);
+      if (result) {
+        user = result.user;
+      } else if (email && password) {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        user = userCredential.user;
+        await signInWithRedirect(auth, provider); // Редирект для линковки
+        return; // Ожидаем редиректа
       } else {
-        // Attempt Google sign-in
-        try {
-          const result = await signInWithPopup(auth, provider);
-          credential = GoogleAuthProvider.credentialFromResult(result);
-          user = result.user;
-        } catch (error) {
-          if (error.code === 'auth/account-exists-with-different-credential') {
-            const pendingCredential = GoogleAuthProvider.credential(error.credential);
-            const email = error.email || error.customData?.email;
-            return rejectWithValue({
-              code: 'auth/requires-email-password',
-              message:
-                'Account exists with email/password. Please provide your email and password to link Google account.',
-              email,
-              pendingCredential: JSON.stringify(pendingCredential),
-            });
-          }
-          throw error;
-        }
+        await signInWithRedirect(auth, provider);
+        return; // Ожидаем редиректа
       }
 
       firebaseCurrentUser = user;
 
-      // Call server-side function
+      // Вызов серверной функции
       const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          authType: 'google',
-          googleToken: await user.getIdToken(),
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authType: 'google', googleToken: await user.getIdToken() }),
       });
 
       const data = await response.json();
@@ -150,19 +111,21 @@ export const signInWithGoogle = createAsyncThunk(
         throw new Error(data.message || 'Failed to process Google authentication');
       }
 
-      const userData = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-      };
-
-      // Fetch user data and update state
+      const userData = { uid: user.uid, email: user.email, displayName: user.displayName };
       const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
       dispatch(setUserRole(userDataResult.role));
       dispatch(subscribeToCourses(userDataResult.purchasedCourses));
 
       return userData;
     } catch (error) {
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        return rejectWithValue({
+          code: 'auth/requires-email-password',
+          message:
+            'Account exists with email/password. Please provide your email and password to link Google account.',
+          email: error.email || error.customData?.email,
+        });
+      }
       return rejectWithValue(error);
     }
   },
