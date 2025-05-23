@@ -10,8 +10,7 @@ import {
   updatePassword,
   EmailAuthProvider,
   signOut,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
 } from 'firebase/auth';
 import {
@@ -55,17 +54,9 @@ export const signInWithGoogle = createAsyncThunk(
   async (_, { rejectWithValue, dispatch }) => {
     try {
       const provider = new GoogleAuthProvider();
-      let user;
-
-      // Проверяем результат редиректа
-      const result = await getRedirectResult(auth);
-      if (result) {
-        user = result.user;
-      } else {
-        // Инициируем редирект для Google Sign-In
-        await signInWithRedirect(auth, provider);
-        return; // Ожидаем редиректа
-      }
+      // Используем signInWithPopup для открытия окна выбора аккаунта
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
       firebaseCurrentUser = user;
 

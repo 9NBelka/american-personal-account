@@ -9,7 +9,6 @@ import scss from './LSAuthForm.module.scss';
 import clsx from 'clsx';
 import { BsGoogle, BsGithub } from 'react-icons/bs';
 import { useState } from 'react';
-import * as Yup from 'yup';
 
 export default function LSAuthForm({
   initialValues,
@@ -30,21 +29,13 @@ export default function LSAuthForm({
 }) {
   const dispatch = useDispatch();
   const { isLoading } = useSelector((state) => state.auth);
-  const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkError, setLinkError] = useState(null);
-  const [linkEmail, setLinkEmail] = useState('');
-
-  const linkValidationSchema = Yup.object({
-    email: Yup.string().email('*Invalid email format').required('*Required field'),
-    password: Yup.string().required('*Required field'),
-  });
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log('Initiating Google sign-in');
+      console.log('Initiating Google sign-in with popup');
       await dispatch(signInWithGoogle()).unwrap();
       setLinkError(null);
-      setShowLinkModal(false);
     } catch (error) {
       console.error('Google sign-in error:', error);
       setLinkError(error || 'Google sign-in failed');
