@@ -1,15 +1,15 @@
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { signInWithGoogle, clearError } from '../../store/slices/authSlice';
+import { signInWithGoogle } from '../../store/slices/authSlice';
 import LSInputField from '../LSInputField/LSInputField';
 import LSFormError from '../LSFormError/LSFormError';
 import LSPasswordField from '../LSPasswordField/LSPasswordField';
 import scss from './LSAuthForm.module.scss';
 import clsx from 'clsx';
 import { BsGoogle, BsGithub } from 'react-icons/bs';
-import { useEffect } from 'react';
-import { toast } from 'react-toastify';
+import { useState } from 'react';
+import * as Yup from 'yup';
 
 export default function LSAuthForm({
   initialValues,
@@ -29,38 +29,25 @@ export default function LSAuthForm({
   generalError,
 }) {
   const dispatch = useDispatch();
-  const { isLoading, error } = useSelector((state) => state.auth);
+  const { isLoading } = useSelector((state) => state.auth);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkError, setLinkError] = useState(null);
+  const [linkEmail, setLinkEmail] = useState('');
 
-  useEffect(() => {
-    if (error && error.code === 'auth/no-google-provider') {
-      toast.error(error.message, {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      dispatch(clearError());
-    } else if (error) {
-      toast.error(error.message || 'Google sign-in failed', {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      dispatch(clearError());
-    }
-  }, [error, dispatch]);
+  const linkValidationSchema = Yup.object({
+    email: Yup.string().email('*Invalid email format').required('*Required field'),
+    password: Yup.string().required('*Required field'),
+  });
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log('Initiating Google sign-in with popup');
+      console.log('Initiating Google sign-in');
       await dispatch(signInWithGoogle()).unwrap();
+      setLinkError(null);
+      setShowLinkModal(false);
     } catch (error) {
       console.error('Google sign-in error:', error);
+      setLinkError(error || 'Google sign-in failed');
     }
   };
 
@@ -75,6 +62,7 @@ export default function LSAuthForm({
           <Form>
             <div className={clsx(scss.nameContainer, halfInput && scss.nameContainerHalf)}>
               {generalError && <div className={scss.errorText}>{generalError}</div>}
+              {linkError && <div className={scss.errorText}>{linkError}</div>}
               {fields
                 .slice(0, 2)
                 .map((field, index) =>

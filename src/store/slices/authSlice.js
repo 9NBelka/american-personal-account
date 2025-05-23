@@ -10,9 +10,9 @@ import {
   updatePassword,
   EmailAuthProvider,
   signOut,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
-  fetchSignInMethodsForEmail,
 } from 'firebase/auth';
 import {
   doc,
@@ -55,25 +55,16 @@ export const signInWithGoogle = createAsyncThunk(
   async (_, { rejectWithValue, dispatch }) => {
     try {
       const provider = new GoogleAuthProvider();
+      let user;
 
-      // Открываем попап для получения email пользователя
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const email = user.email;
-
-      // Проверяем методы входа для этого email
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-
-      console.log(signInMethods);
-
-      // Если среди методов нет google.com, отклоняем вход
-      if (!signInMethods.includes('google.com')) {
-        await signOut(auth); // Выходим, если уже залогинились
-        return rejectWithValue({
-          code: 'auth/no-google-provider',
-          message:
-            'This account does not have a Google provider linked. Please sign in with Email/Password or link a Google provider.',
-        });
+      // Проверяем результат редиректа
+      const result = await getRedirectResult(auth);
+      if (result) {
+        user = result.user;
+      } else {
+        // Инициируем редирект для Google Sign-In
+        await signInWithRedirect(auth, provider);
+        return; // Ожидаем редиректа
       }
 
       firebaseCurrentUser = user;
@@ -97,9 +88,6 @@ export const signInWithGoogle = createAsyncThunk(
 
       return userData;
     } catch (error) {
-      if (auth.currentUser) {
-        await signOut(auth); // Убеждаемся, что пользователь не остается залогиненным при ошибке
-      }
       console.error('Google sign-in error:', error);
       return rejectWithValue(error.message);
     }
