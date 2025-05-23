@@ -37,6 +37,77 @@ const generateRandomPassword = () => {
   return password;
 };
 
+export const handleAuthentication = onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ message: 'Method Not Allowed' });
+    }
+
+    const { authType, googleToken } = req.body;
+
+    if (!authType) {
+      return res.status(400).json({ message: 'Missing authType' });
+    }
+
+    try {
+      if (authType === 'google') {
+        if (!googleToken) {
+          return res.status(400).json({ message: 'Missing Google token' });
+        }
+
+        // Верификация Google ID token
+        const decodedToken = await adminAuth.verifyIdToken(googleToken);
+        const email = decodedToken.email;
+        const name = decodedToken.name || 'Google User';
+        const uid = decodedToken.uid;
+
+        // Проверяем, существует ли пользователь
+        let userRecord;
+        try {
+          userRecord = await adminAuth.getUser(uid);
+        } catch (error) {
+          if (error.code === 'auth/user-not-found') {
+            // Создаем нового пользователя
+            userRecord = await adminAuth.createUser({
+              uid,
+              email,
+              displayName: name,
+              emailVerified: true,
+            });
+          } else {
+            throw error;
+          }
+        }
+
+        // Проверяем и создаем запись в Firestore
+        const userDoc = await adminFirestore.doc(`users/${uid}`).get();
+        if (!userDoc.exists) {
+          await adminFirestore.doc(`users/${uid}`).set({
+            name,
+            lastName: '',
+            email,
+            role: 'student',
+            registrationDate: new Date().toISOString(),
+            purchasedCourses: {},
+            avatarUrl: null,
+            readNotifications: [],
+          });
+        }
+
+        return res.status(200).json({
+          message: 'User authenticated with Google',
+          userId: uid,
+        });
+      } else {
+        return res.status(400).json({ message: 'Invalid authType' });
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return res.status(500).json({ message: `Authentication error: ${error.message}` });
+    }
+  });
+});
+
 // Функция getCourseUserCount
 export const getCourseUserCount = onRequest(async (req, res) => {
   corsHandler(req, res, async () => {
