@@ -1,14 +1,14 @@
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { signInWithGoogle, linkWithGoogle } from '../../store/slices/authSlice';
+import { signInWithGoogle, linkWithGoogle, clearError } from '../../store/slices/authSlice';
 import LSInputField from '../LSInputField/LSInputField';
 import LSFormError from '../LSFormError/LSFormError';
 import LSPasswordField from '../LSPasswordField/LSPasswordField';
 import scss from './LSAuthForm.module.scss';
 import clsx from 'clsx';
 import { BsGoogle, BsGithub } from 'react-icons/bs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as Yup from 'yup';
 
 export default function LSAuthForm({
