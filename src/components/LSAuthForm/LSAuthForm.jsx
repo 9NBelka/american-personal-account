@@ -1,7 +1,7 @@
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { signInWithGoogle } from '../../store/slices/authSlice';
+import { signInWithGoogle, linkWithGoogle } from '../../store/slices/authSlice';
 import LSInputField from '../LSInputField/LSInputField';
 import LSFormError from '../LSFormError/LSFormError';
 import LSPasswordField from '../LSPasswordField/LSPasswordField';
@@ -9,6 +9,7 @@ import scss from './LSAuthForm.module.scss';
 import clsx from 'clsx';
 import { BsGoogle, BsGithub } from 'react-icons/bs';
 import { useState } from 'react';
+import * as Yup from 'yup';
 
 export default function LSAuthForm({
   initialValues,
@@ -28,8 +29,23 @@ export default function LSAuthForm({
   generalError,
 }) {
   const dispatch = useDispatch();
-  const { isLoading } = useSelector((state) => state.auth);
+  const { isLoading, error } = useSelector((state) => state.auth);
   const [linkError, setLinkError] = useState(null);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkEmail, setLinkEmail] = useState('');
+
+  const linkValidationSchema = Yup.object({
+    email: Yup.string().email('*Invalid email format').required('*Required field'),
+    password: Yup.string().required('*Required field'),
+  });
+
+  useEffect(() => {
+    if (error && error.code === 'auth/account-exists-with-different-credential') {
+      setLinkEmail(error.email || '');
+      setShowLinkModal(true);
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -38,8 +54,20 @@ export default function LSAuthForm({
       setLinkError(null);
     } catch (error) {
       console.error('Google sign-in error:', error);
-      setLinkError(error || 'Google sign-in failed');
+      setLinkError(error.message || 'Google sign-in failed');
     }
+  };
+
+  const handleLinkWithGoogle = async (values, { setSubmitting }) => {
+    try {
+      await dispatch(linkWithGoogle({ email: values.email, password: values.password })).unwrap();
+      setShowLinkModal(false);
+      setLinkError(null);
+    } catch (error) {
+      console.error('Link with Google error:', error);
+      setLinkError(error.message || 'Failed to link accounts');
+    }
+    setSubmitting(false);
   };
 
   return (
@@ -125,6 +153,42 @@ export default function LSAuthForm({
           </Form>
         )}
       </Formik>
+
+      {showLinkModal && (
+        <div className={scss.modalOverlay}>
+          <div className={scss.modalContent}>
+            <h3>Link Accounts</h3>
+            <p>
+              An account with email {linkEmail} already exists with a different provider. Please
+              enter your password to link it with Google.
+            </p>
+            <Formik
+              initialValues={{ email: linkEmail, password: '' }}
+              validationSchema={linkValidationSchema}
+              onSubmit={handleLinkWithGoogle}>
+              {({ errors, isSubmitting }) => (
+                <Form>
+                  <LSInputField name='email' type='email' placeholder='Email' disabled />
+                  <LSPasswordField name='password' placeholder='Password' />
+                  <LSFormError error={errors.general} />
+                  <button
+                    type='submit'
+                    disabled={isSubmitting || isLoading}
+                    className={scss.buttonSubmit}>
+                    Link Accounts
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setShowLinkModal(false)}
+                    className={scss.buttonCancel}>
+                    Cancel
+                  </button>
+                </Form>
+              )}
+            </Formik>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

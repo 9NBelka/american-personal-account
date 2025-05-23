@@ -12,6 +12,7 @@ import {
   signOut,
   signInWithPopup,
   GoogleAuthProvider,
+  linkWithCredential,
 } from 'firebase/auth';
 import {
   doc,
@@ -54,7 +55,6 @@ export const signInWithGoogle = createAsyncThunk(
   async (_, { rejectWithValue, dispatch }) => {
     try {
       const provider = new GoogleAuthProvider();
-      // Используем signInWithPopup для открытия окна выбора аккаунта
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
@@ -79,12 +79,57 @@ export const signInWithGoogle = createAsyncThunk(
 
       return userData;
     } catch (error) {
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        // Сохраняем email для дальнейшей линковки
+        const email = error.customData.email;
+        return rejectWithValue({
+          code: error.code,
+          message:
+            'An account with this email already exists with a different provider. Please sign in with your email and password to link accounts.',
+          email: email,
+        });
+      }
       console.error('Google sign-in error:', error);
       return rejectWithValue(error.message);
     }
   },
 );
 
+export const linkWithGoogle = createAsyncThunk(
+  'auth/linkWithGoogle',
+  async ({ email, password }, { rejectWithValue, dispatch }) => {
+    try {
+      const credential = EmailAuthProvider.credential(email, password);
+      const userCredential = await linkWithCredential(auth.currentUser, credential);
+      const user = userCredential.user;
+
+      firebaseCurrentUser = user;
+
+      const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authType: 'google', googleToken: await user.getIdToken() }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to process Google authentication');
+      }
+
+      const userData = { uid: user.uid, email: user.email, displayName: user.displayName };
+      const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
+      dispatch(setUserRole(userDataResult.role));
+      dispatch(subscribeToCourses(userDataResult.purchasedCourses));
+
+      return userData;
+    } catch (error) {
+      console.error('Link with Google error:', error);
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+// Остальная часть кода (login, initializeAuth, logout, signUp, fetchUserData, etc.) остается без изменений
 export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
@@ -625,6 +670,19 @@ const authSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(signInWithGoogle.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(linkWithGoogle.pending, (state) => {
+        state.status = 'loading';
+        state.isLoading = true;
+      })
+      .addCase(linkWithGoogle.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.isLoading = false;
+      })
+      .addCase(linkWithGoogle.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
         state.isLoading = false;
