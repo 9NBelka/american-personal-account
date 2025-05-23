@@ -1,15 +1,15 @@
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { signInWithGoogle, linkWithGoogle, clearError } from '../../store/slices/authSlice';
+import { signInWithGoogle, clearError } from '../../store/slices/authSlice';
 import LSInputField from '../LSInputField/LSInputField';
 import LSFormError from '../LSFormError/LSFormError';
 import LSPasswordField from '../LSPasswordField/LSPasswordField';
 import scss from './LSAuthForm.module.scss';
 import clsx from 'clsx';
 import { BsGoogle, BsGithub } from 'react-icons/bs';
-import { useEffect, useState } from 'react';
-import * as Yup from 'yup';
+import { useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 export default function LSAuthForm({
   initialValues,
@@ -30,19 +30,27 @@ export default function LSAuthForm({
 }) {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.auth);
-  const [linkError, setLinkError] = useState(null);
-  const [showLinkModal, setShowLinkModal] = useState(false);
-  const [linkEmail, setLinkEmail] = useState('');
-
-  const linkValidationSchema = Yup.object({
-    email: Yup.string().email('*Invalid email format').required('*Required field'),
-    password: Yup.string().required('*Required field'),
-  });
 
   useEffect(() => {
-    if (error && error.code === 'auth/account-exists-with-different-credential') {
-      setLinkEmail(error.email || '');
-      setShowLinkModal(true);
+    if (error && error.code === 'auth/no-google-provider') {
+      toast.error(error.message, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      dispatch(clearError());
+    } else if (error) {
+      toast.error(error.message || 'Google sign-in failed', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       dispatch(clearError());
     }
   }, [error, dispatch]);
@@ -51,23 +59,9 @@ export default function LSAuthForm({
     try {
       console.log('Initiating Google sign-in with popup');
       await dispatch(signInWithGoogle()).unwrap();
-      setLinkError(null);
     } catch (error) {
       console.error('Google sign-in error:', error);
-      setLinkError(error.message || 'Google sign-in failed');
     }
-  };
-
-  const handleLinkWithGoogle = async (values, { setSubmitting }) => {
-    try {
-      await dispatch(linkWithGoogle({ email: values.email, password: values.password })).unwrap();
-      setShowLinkModal(false);
-      setLinkError(null);
-    } catch (error) {
-      console.error('Link with Google error:', error);
-      setLinkError(error.message || 'Failed to link accounts');
-    }
-    setSubmitting(false);
   };
 
   return (
@@ -81,7 +75,6 @@ export default function LSAuthForm({
           <Form>
             <div className={clsx(scss.nameContainer, halfInput && scss.nameContainerHalf)}>
               {generalError && <div className={scss.errorText}>{generalError}</div>}
-              {linkError && <div className={scss.errorText}>{linkError}</div>}
               {fields
                 .slice(0, 2)
                 .map((field, index) =>
@@ -153,42 +146,6 @@ export default function LSAuthForm({
           </Form>
         )}
       </Formik>
-
-      {showLinkModal && (
-        <div className={scss.modalOverlay}>
-          <div className={scss.modalContent}>
-            <h3>Link Accounts</h3>
-            <p>
-              An account with email {linkEmail} already exists with a different provider. Please
-              enter your password to link it with Google.
-            </p>
-            <Formik
-              initialValues={{ email: linkEmail, password: '' }}
-              validationSchema={linkValidationSchema}
-              onSubmit={handleLinkWithGoogle}>
-              {({ errors, isSubmitting }) => (
-                <Form>
-                  <LSInputField name='email' type='email' placeholder='Email' disabled />
-                  <LSPasswordField name='password' placeholder='Password' />
-                  <LSFormError error={errors.general} />
-                  <button
-                    type='submit'
-                    disabled={isSubmitting || isLoading}
-                    className={scss.buttonSubmit}>
-                    Link Accounts
-                  </button>
-                  <button
-                    type='button'
-                    onClick={() => setShowLinkModal(false)}
-                    className={scss.buttonCancel}>
-                    Cancel
-                  </button>
-                </Form>
-              )}
-            </Formik>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
