@@ -10,12 +10,6 @@ import {
   updatePassword,
   EmailAuthProvider,
   signOut,
-  GoogleAuthProvider,
-  signInWithPopup,
-  linkWithCredential,
-  fetchSignInMethodsForEmail,
-  getRedirectResult,
-  signInWithRedirect,
 } from 'firebase/auth';
 import {
   doc,
@@ -49,7 +43,7 @@ const initialState = {
   error: null,
   isLoading: true,
   isAuthInitialized: false,
-  isCoursesLoaded: false,
+  isCoursesLoaded: false, // Добавляем флаг для отслеживания загрузки курсов
   lastCourseId: localStorage.getItem('lastCourseId') || null,
   status: 'idle',
 };
@@ -64,116 +58,6 @@ export const login = createAsyncThunk(
       firebaseCurrentUser = user;
       return { uid: user.uid, email: user.email, displayName: user.displayName };
     } catch (error) {
-      return rejectWithValue(error);
-    }
-  },
-);
-
-export const signInWithGoogle = createAsyncThunk(
-  'auth/signInWithGoogle',
-  async ({ email, password, isLinking = false } = {}, { rejectWithValue, dispatch }) => {
-    try {
-      const provider = new GoogleAuthProvider();
-      let user;
-      let credential;
-
-      // Сохраняем флаг линковки в localStorage перед редиректом
-      if (email && password) {
-        localStorage.setItem('googleLinking', JSON.stringify({ email, isLinking: true }));
-      }
-
-      // Проверяем результат редиректа
-      const result = await signInWithPopup(auth, provider);
-
-      if (result) {
-        user = result.user;
-        credential = GoogleAuthProvider.credentialFromResult(result);
-      } else {
-        const linkingState = JSON.parse(localStorage.getItem('googleLinking') || '{}');
-        if (linkingState.isLinking && email && password) {
-          // Аутентификация через email/password для линковки
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          user = userCredential.user;
-
-          // Проверяем, не привязан ли уже Google
-          const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
-          if (signInMethods.includes('google.com')) {
-            localStorage.removeItem('googleLinking');
-            return { uid: user.uid, email: user.email, displayName: user.displayName };
-          }
-
-          // Инициируем редирект для получения Google-токена
-          await signInWithRedirect(auth, provider);
-          return; // Ожидаем редиректа
-        } else if (auth.currentUser) {
-          // Проверяем текущего пользователя
-          const signInMethods = await fetchSignInMethodsForEmail(auth, auth.currentUser.email);
-          if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
-            return rejectWithValue({
-              code: 'auth/requires-email-password',
-              message:
-                'Account exists with email/password. Please provide your email and password to link Google account.',
-              email: auth.currentUser.email,
-            });
-          }
-          // Если Google уже привязан, продолжаем
-          user = auth.currentUser;
-        } else {
-          // Инициируем редирект для нового входа
-          await signInWithRedirect(auth, provider);
-          return; // Ожидаем редиректа
-        }
-      }
-
-      // После редиректа проверяем, нужно ли привязать Google
-      const linkingState = JSON.parse(localStorage.getItem('googleLinking') || '{}');
-      if (linkingState.isLinking && credential && user) {
-        const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
-        if (signInMethods.includes('password') && !signInMethods.includes('google.com')) {
-          await linkWithCredential(user, credential);
-          console.log('Google provider linked successfully');
-        }
-        localStorage.removeItem('googleLinking');
-      }
-
-      firebaseCurrentUser = user;
-
-      // Вызов серверной функции
-      const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authType: 'google', googleToken: await user.getIdToken() }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        if (data.requiresLinking) {
-          return rejectWithValue({
-            code: 'auth/requires-email-password',
-            message: data.message,
-            email: data.email,
-          });
-        }
-        throw new Error(data.message || 'Failed to process Google authentication');
-      }
-
-      const userData = { uid: user.uid, email: user.email, displayName: user.displayName };
-      const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
-      dispatch(setUserRole(userDataResult.role));
-      dispatch(subscribeToCourses(userDataResult.purchasedCourses));
-
-      return userData;
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      localStorage.removeItem('googleLinking');
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        return rejectWithValue({
-          code: 'auth/requires-email-password',
-          message:
-            'Account exists with email/password. Please provide your email and password to link Google account.',
-          email: error.email || error.customData?.email,
-        });
-      }
       return rejectWithValue(error);
     }
   },
@@ -230,28 +114,20 @@ export const signUp = createAsyncThunk(
   'auth/signUp',
   async ({ name, lastName, email, password }, { rejectWithValue }) => {
     try {
-      const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          authType: 'email',
-          name,
-          lastName,
-          email,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create user');
-      }
-
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const registrationDate = new Date().toISOString();
       const user = userCredential.user;
       firebaseCurrentUser = user;
+
+      await setDoc(doc(db, 'users', user.uid), {
+        name,
+        lastName: lastName || '',
+        email,
+        role: 'guest',
+        registrationDate,
+        avatarUrl: null,
+        readNotifications: [],
+      });
 
       await updateProfile(user, {
         displayName: `${name} ${lastName || ''}`.trim(),
@@ -364,7 +240,7 @@ export const subscribeToCourses = createAsyncThunk(
           };
         });
         dispatch(setCourses(courseList));
-        dispatch(setCoursesLoaded(true));
+        dispatch(setCoursesLoaded(true)); // Устанавливаем флаг после первой загрузки
       });
 
       return null;
@@ -706,20 +582,6 @@ const authSlice = createSlice({
         state.error = action.payload.message;
         state.isLoading = false;
       })
-      .addCase(signInWithGoogle.pending, (state) => {
-        state.status = 'loading';
-        state.isLoading = true;
-      })
-      .addCase(signInWithGoogle.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.user = action.payload;
-        state.isLoading = false;
-      })
-      .addCase(signInWithGoogle.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload.message;
-        state.isLoading = false;
-      })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.userRole = null;
@@ -732,7 +594,7 @@ const authSlice = createSlice({
         state.completedLessons = {};
         state.lastModules = {};
         state.courses = [];
-        state.isCoursesLoaded = false;
+        state.isCoursesLoaded = false; // Сбрасываем флаг при выходе
       })
       .addCase(logout.rejected, (state, action) => {
         state.error = action.payload;
@@ -756,7 +618,7 @@ const authSlice = createSlice({
       })
       .addCase(fetchCourses.fulfilled, (state, action) => {
         state.courses = action.payload;
-        state.isCoursesLoaded = true;
+        state.isCoursesLoaded = true; // Устанавливаем флаг после загрузки
       })
       .addCase(subscribeToCourses.fulfilled, (state) => {
         // Ничего не делаем, так как данные обновляются через setCourses

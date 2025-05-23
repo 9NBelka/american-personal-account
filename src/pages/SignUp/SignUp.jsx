@@ -12,7 +12,7 @@ import AccountLoadingIndicator from '../../components/AccountLoadingIndicator/Ac
 export default function SignUp() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { userRole, isLoading, error } = useSelector((state) => state.auth);
+  const { userRole, isLoading } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (userRole) {
@@ -56,6 +56,7 @@ export default function SignUp() {
           lastName: values.lastName,
           email: values.email,
           password: values.password,
+          role: 'student', // По умолчанию новая роль — student
         }),
       ).unwrap();
       navigate('/login');
@@ -106,8 +107,7 @@ export default function SignUp() {
               linkTo='/login'
               isSubmitting={isLoading}
               halfInput={halfInput}
-              otherPointsText='Register'
-              generalError={error?.message}>
+              otherPointsText='Register'>
               <LSPrivacyCheckbox />
             </LSAuthForm>
           </div>

@@ -13,7 +13,7 @@ import LSResetPasswordModal from '../../components/LSResetPasswordModal/LSResetP
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { userRole, isLoading, error } = useSelector((state) => state.auth);
+  const { userRole, isLoading } = useSelector((state) => state.auth);
   const [showResetModal, setShowResetModal] = useState(false);
   const [generalError, setGeneralError] = useState(null);
 
@@ -22,24 +22,6 @@ export default function Login() {
       navigate(['admin', 'moderator'].includes(userRole) ? '/dashboard' : '/account');
     }
   }, [userRole, navigate]);
-
-  useEffect(() => {
-    if (error) {
-      if (
-        error.code === 'auth/user-not-found' ||
-        error.code === 'auth/wrong-password' ||
-        error.code === 'auth/invalid-credential'
-      ) {
-        setGeneralError('*Incorrect email or password');
-      } else if (error.code === 'auth/requires-email-password') {
-        setGeneralError(null); // Handled by LSAuthForm modal
-      } else {
-        setGeneralError('*Login error: ' + error.message);
-      }
-    } else {
-      setGeneralError(null);
-    }
-  }, [error]);
 
   const initialValues = {
     email: '',
@@ -58,7 +40,15 @@ export default function Login() {
       await dispatch(login({ email: values.email, password: values.password })).unwrap();
       setGeneralError(null);
     } catch (error) {
-      // Error handling is managed by useEffect
+      if (
+        error.code === 'auth/user-not-found' ||
+        error.code === 'auth/wrong-password' ||
+        error.code === 'auth/invalid-credential'
+      ) {
+        setGeneralError('*Incorrect email or password');
+      } else {
+        setGeneralError('*Login error: ' + error.message);
+      }
     }
     setSubmitting(false);
   };
