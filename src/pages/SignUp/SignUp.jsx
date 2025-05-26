@@ -56,7 +56,7 @@ export default function SignUp() {
           lastName: values.lastName,
           email: values.email,
           password: values.password,
-          role: 'student', // По умолчанию новая роль — student
+          role: 'guest', // По умолчанию новая роль — student
         }),
       ).unwrap();
       navigate('/login');
