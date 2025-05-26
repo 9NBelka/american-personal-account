@@ -94,7 +94,7 @@ export default function Login() {
               title='Login to your account'
               fields={fields}
               submitText='Login'
-              linkText="Don't have an account?"
+              linkText='Don`t have an account?'
               linkToText='Sign In'
               linkTo='/signUp'
               isSubmitting={isLoading}

@@ -1,14 +1,12 @@
+// LSAuthForm.js
 import { Formik, Form } from 'formik';
 import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { signInWithGoogle } from '../../store/slices/authSlice';
 import LSInputField from '../LSInputField/LSInputField';
 import LSFormError from '../LSFormError/LSFormError';
 import LSPasswordField from '../LSPasswordField/LSPasswordField';
 import scss from './LSAuthForm.module.scss';
 import clsx from 'clsx';
-import { BsGoogle, BsGithub } from 'react-icons/bs';
-import { useState } from 'react';
+import { BsGithub, BsGoogle } from 'react-icons/bs';
 
 export default function LSAuthForm({
   initialValues,
@@ -23,25 +21,10 @@ export default function LSAuthForm({
   isSubmitting,
   halfInput,
   otherPointsText,
-  onForgotPassword,
+  onForgotPassword, // Новый пропс
   children,
   generalError,
 }) {
-  const dispatch = useDispatch();
-  const { isLoading } = useSelector((state) => state.auth);
-  const [linkError, setLinkError] = useState(null);
-
-  const handleGoogleSignIn = async () => {
-    try {
-      console.log('Initiating Google sign-in with popup');
-      await dispatch(signInWithGoogle()).unwrap();
-      setLinkError(null);
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      setLinkError(error || 'Google sign-in failed');
-    }
-  };
-
   return (
     <div className={scss.mainLSBlock}>
       <h2 className={scss.titleLS}>{title}</h2>
@@ -52,8 +35,7 @@ export default function LSAuthForm({
         {({ errors, isSubmitting: formikSubmitting }) => (
           <Form>
             <div className={clsx(scss.nameContainer, halfInput && scss.nameContainerHalf)}>
-              {generalError && <div className={scss.errorText}>{generalError}</div>}
-              {linkError && <div className={scss.errorText}>{linkError}</div>}
+              {generalError && <div className={scss.errorText}>{generalError}</div>}{' '}
               {fields
                 .slice(0, 2)
                 .map((field, index) =>
@@ -89,6 +71,8 @@ export default function LSAuthForm({
               )}
             <LSFormError error={errors.general} />
             {children}
+            {/* Отображаем общую ошибку */}
+            {/* Добавляем ссылку "Забыл пароль?" */}
             {onForgotPassword && (
               <div className={scss.forgotPassword}>
                 <Link
@@ -111,14 +95,10 @@ export default function LSAuthForm({
               <span>Or {otherPointsText} with</span>
             </div>
             <div className={scss.socialButtonsBlock}>
-              <button
-                type='button'
-                className={scss.socialButton}
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}>
+              <button type='button' className={scss.socialButton}>
                 <BsGoogle className={scss.iconSocial} /> Google
               </button>
-              <button type='button' className={scss.socialButton} disabled>
+              <button type='button' className={scss.socialButton}>
                 <BsGithub className={scss.iconSocial} /> GitHub
               </button>
             </div>

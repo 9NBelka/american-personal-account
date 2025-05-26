@@ -10,8 +10,6 @@ import {
   updatePassword,
   EmailAuthProvider,
   signOut,
-  signInWithPopup,
-  GoogleAuthProvider,
 } from 'firebase/auth';
 import {
   doc,
@@ -24,6 +22,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+// Храним currentUser вне Redux
 let firebaseCurrentUser = null;
 
 const initialState = {
@@ -44,47 +43,12 @@ const initialState = {
   error: null,
   isLoading: true,
   isAuthInitialized: false,
-  isCoursesLoaded: false,
+  isCoursesLoaded: false, // Добавляем флаг для отслеживания загрузки курсов
   lastCourseId: localStorage.getItem('lastCourseId') || null,
   status: 'idle',
 };
 
-export const signInWithGoogle = createAsyncThunk(
-  'auth/signInWithGoogle',
-  async (_, { rejectWithValue, dispatch }) => {
-    try {
-      const provider = new GoogleAuthProvider();
-      // Используем signInWithPopup для открытия окна выбора аккаунта
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      firebaseCurrentUser = user;
-
-      // Вызов серверной функции для проверки или создания пользователя
-      const response = await fetch('https://handleauthentication-e6rbp5vrzq-uc.a.run.app', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authType: 'google', googleToken: await user.getIdToken() }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to process Google authentication');
-      }
-
-      const userData = { uid: user.uid, email: user.email, displayName: user.displayName };
-      const userDataResult = await dispatch(fetchUserData(user.uid)).unwrap();
-      dispatch(setUserRole(userDataResult.role));
-      dispatch(subscribeToCourses(userDataResult.purchasedCourses));
-
-      return userData;
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      return rejectWithValue(error.message);
-    }
-  },
-);
-
+// Async Thunks
 export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
@@ -159,7 +123,7 @@ export const signUp = createAsyncThunk(
         name,
         lastName: lastName || '',
         email,
-        role: 'student',
+        role: 'guest',
         registrationDate,
         avatarUrl: null,
         readNotifications: [],
@@ -189,7 +153,7 @@ export const fetchUserData = createAsyncThunk(
           .filter((access, index, self) => access && self.indexOf(access) === index);
         return {
           name: data.name || '',
-          role: data.role || 'student',
+          role: data.role || 'guest',
           registrationDate: data.registrationDate || '',
           avatarUrl: data.avatarUrl || null,
           readNotifications: data.readNotifications || [],
@@ -199,7 +163,7 @@ export const fetchUserData = createAsyncThunk(
       }
       return {
         name: '',
-        role: 'student',
+        role: 'guest',
         registrationDate: '',
         avatarUrl: null,
         readNotifications: [],
@@ -276,7 +240,7 @@ export const subscribeToCourses = createAsyncThunk(
           };
         });
         dispatch(setCourses(courseList));
-        dispatch(setCoursesLoaded(true));
+        dispatch(setCoursesLoaded(true)); // Устанавливаем флаг после первой загрузки
       });
 
       return null;
@@ -286,6 +250,7 @@ export const subscribeToCourses = createAsyncThunk(
   },
 );
 
+// Оставляем fetchCourses для случаев, когда подписка не нужна
 export const fetchCourses = createAsyncThunk(
   'auth/fetchCourses',
   async (purchasedCourses = {}, { rejectWithValue }) => {
@@ -535,6 +500,7 @@ export const markNotificationAsRead = createAsyncThunk(
   },
 );
 
+// Slice
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -616,19 +582,6 @@ const authSlice = createSlice({
         state.error = action.payload.message;
         state.isLoading = false;
       })
-      .addCase(signInWithGoogle.pending, (state) => {
-        state.status = 'loading';
-        state.isLoading = true;
-      })
-      .addCase(signInWithGoogle.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.isLoading = false;
-      })
-      .addCase(signInWithGoogle.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload;
-        state.isLoading = false;
-      })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.userRole = null;
@@ -641,7 +594,7 @@ const authSlice = createSlice({
         state.completedLessons = {};
         state.lastModules = {};
         state.courses = [];
-        state.isCoursesLoaded = false;
+        state.isCoursesLoaded = false; // Сбрасываем флаг при выходе
       })
       .addCase(logout.rejected, (state, action) => {
         state.error = action.payload;
@@ -665,7 +618,7 @@ const authSlice = createSlice({
       })
       .addCase(fetchCourses.fulfilled, (state, action) => {
         state.courses = action.payload;
-        state.isCoursesLoaded = true;
+        state.isCoursesLoaded = true; // Устанавливаем флаг после загрузки
       })
       .addCase(subscribeToCourses.fulfilled, (state) => {
         // Ничего не делаем, так как данные обновляются через setCourses
@@ -710,7 +663,7 @@ const authSlice = createSlice({
         state.userName = action.payload;
       })
       .addCase(updateUserPassword.fulfilled, (state) => {
-        // Ничего не обновляем в состоянии
+        // Ничего не обновляем в состоянии, так как пароль обновляется в Firebase
       })
       .addCase(resetPassword.pending, (state) => {
         state.status = 'loading';
