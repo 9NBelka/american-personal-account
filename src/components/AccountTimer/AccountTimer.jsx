@@ -113,7 +113,7 @@ export default function AccountTimer({ courseId, modules }) {
   return (
     <div className={scss.timerContainer}>
       <div className={scss.timerContainerBlock}>
-        <h4 className={scss.timerTitle}>Time left until the lesson opens:</h4>
+        <h4 className={scss.timerTitle}>Next lesson opens:</h4>
         <div className={scss.timer}>
           <div className={scss.timeBlock}>
             <span className={clsx(scss.timeValue, bluePart === 'days' && scss.timeValueBlue)}>

@@ -111,12 +111,15 @@
 
       &.borderOrange {
         border: 0.05vw solid var(--color-orange);
+        color: var(--color-orange);
       }
       &.borderGreen {
         border: 0.05vw solid var(--color-lightGreen);
+        color: var(--color-lightGreen);
       }
       &.borderBlue {
         border: 0.05vw solid var(--color-blue);
+        color: var(--color-blue);
       }
 
       &.watchButtonOrange {

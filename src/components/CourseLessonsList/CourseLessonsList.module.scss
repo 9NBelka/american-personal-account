@@ -2,14 +2,7 @@
   display: flex;
   flex-direction: column;
   cursor: pointer;
-
-  &.locked {
-    display: flex;
-    flex-direction: row;
-    opacity: 0.4;
-    cursor: not-allowed;
-    background-color: #111111; // Серый фон для заблокированного модуля
-  }
+  border-top: 0.1vw solid var(--color-lightGrey);
 }
 
 .moduleTitleAndIconBlock {
@@ -20,7 +13,14 @@
   width: 100%;
   padding: 0.8vw 0.75vw;
   padding-left: 1.5vw;
-  border-top: 0.1vw solid var(--color-lightGrey);
+
+  &.locked {
+    display: flex;
+    flex-direction: row;
+    opacity: 0.4;
+    cursor: not-allowed;
+    // background-color: #111111; // Серый фон для заблокированного модуля
+  }
 
   & .lockMessage {
     position: absolute;

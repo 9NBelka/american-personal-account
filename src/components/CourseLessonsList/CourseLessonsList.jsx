@@ -104,8 +104,10 @@ const CourseLessonsList = ({
   );
 
   return (
-    <div className={clsx(scss.moduleMainBlock, isModuleLocked && scss.locked)}>
-      <div className={scss.moduleTitleAndIconBlock} onClick={handleToggle}>
+    <div className={scss.moduleMainBlock}>
+      <div
+        className={clsx(scss.moduleTitleAndIconBlock, isModuleLocked && scss.locked)}
+        onClick={handleToggle}>
         <div className={scss.moduleTitleAndCountBlock}>
           <h3 className={scss.moduleTitle}>
             {module.order}. module | {module.moduleTitle}

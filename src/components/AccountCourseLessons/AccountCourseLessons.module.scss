@@ -349,6 +349,57 @@
     }
   }
 }
+
+.courseLessonsListPhone {
+  display: flex;
+  flex-direction: column;
+  max-height: 29vw;
+  overflow-y: auto;
+}
+
+/* Chrome, Safari, Edge */
+.courseLessonsListPhone::-webkit-scrollbar {
+  width: 0.5vw;
+}
+
+.courseLessonsListPhone::-webkit-scrollbar-track {
+  background: rgba(145, 145, 145, 0.2);
+  border-radius: 0.25vw;
+}
+
+.courseLessonsListPhone::-webkit-scrollbar-thumb {
+  background: #919191;
+  border-radius: 0.25vw;
+}
+
+.courseLessonsListPhone::-webkit-scrollbar-thumb:hover {
+  background: #737373;
+}
+
+/* Firefox */
+.courseLessonsListPhone {
+  scrollbar-width: thin;
+  scrollbar-color: #919191 rgba(145, 145, 145, 0.2);
+}
+
+.courseLessonsListPhone::-webkit-scrollbar-button {
+  display: none; /* Убирает стрелки сверху и снизу */
+}
+
+@media (max-width: 980px) {
+  .courseLessonsListPhone {
+    max-height: 60vw;
+  }
+
+  .courseLessonsListPhone::-webkit-scrollbar {
+    width: 1vw;
+  }
+
+  .courseLessonsListPhone {
+    scrollbar-width: normal;
+  }
+}
+
 @media (max-width: 576px) {
   .courseLessonsListPhone {
     display: none;

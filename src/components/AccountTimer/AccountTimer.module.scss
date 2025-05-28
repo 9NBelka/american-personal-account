@@ -12,8 +12,9 @@
     font-size: 0.85vw;
     color: var(--color-lightGrey);
     font-family: var(--font-main-for-account);
-    font-weight: var(--font-weight-normal);
+    font-weight: var(--font-weight-small);
     line-height: var(--font-lineh-normal);
+    text-transform: uppercase;
   }
 
   & .timer {
@@ -67,7 +68,7 @@
   }
 
   & .moduleInfo {
-    font-size: 0.75vw;
+    font-size: 0.85vw;
     color: var(--color-lightGrey);
     font-family: var(--font-main-for-account);
     font-weight: var(--font-weight-small);
@@ -77,7 +78,7 @@
 
     & span {
       color: var(--color-orange);
-      font-weight: var(--font-weight-normal);
+      font-weight: var(--font-weight-small);
     }
   }
 
@@ -144,7 +145,7 @@
     }
 
     & .timerTitle {
-      font-size: 1.65vw;
+      font-size: 1.6vw;
     }
 
     & .timer {
